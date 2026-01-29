@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
