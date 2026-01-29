@@ -3,17 +3,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
+// db is the sqlite3 instance
+const db = require('./database/db');
 const helmet = require('helmet');
 const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const dbPath = path.resolve(__dirname, 'database/school_discipline.db');
 
 // Middleware
 app.use(helmet({
@@ -26,11 +25,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session Configuration
 app.use(session({
-    store: new SQLiteStore({
-        db: 'sessions.db',
-        dir: path.resolve(__dirname, 'database'),
-        table: 'sessions'
-    }),
     secret: process.env.SESSION_SECRET || 'fallback_secret_not_for_production',
     resave: false,
     saveUninitialized: false,
@@ -49,7 +43,8 @@ const loginLimiter = rateLimit({
 });
 
 // Database Connection
-const db = require('./database/db');
+
+// Database Connection (Already imported at top)
 
 // Import Routes
 const tasksRoutes = require('./routes/tasks');
@@ -68,35 +63,40 @@ app.use('/api/announcements', announcementsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Auth Route
+// Auth Route
 app.post('/api/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
-    const sql = `SELECT * FROM users WHERE username = ?`;
 
-    db.get(sql, [username], async (err, row) => {
+    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Server error during login" });
         }
 
-        if (row) {
-            const match = await bcrypt.compare(password, row.password_hash);
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
+        }
+
+        try {
+            const match = await bcrypt.compare(password, user.password_hash);
             if (match) {
-                // Store user in session if needed, but the current UI uses localStorage.
-                // We'll keep sending the user object but it's now validated securely.
+                req.session.user = {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role,
+                    full_name: user.full_name,
+                    allocation: user.allocation
+                };
                 res.json({
                     success: true,
-                    user: {
-                        id: row.id,
-                        username: row.username,
-                        role: row.role,
-                        full_name: row.full_name,
-                        allocation: row.allocation
-                    }
+                    user: req.session.user
                 });
             } else {
                 res.status(401).json({ success: false, message: "Invalid credentials" });
             }
-        } else {
-            res.status(401).json({ success: false, message: "Invalid credentials" });
+        } catch (hashErr) {
+            console.error("Bcrypt error:", hashErr);
+            res.status(500).json({ error: "Server error during password verification" });
         }
     });
 });
