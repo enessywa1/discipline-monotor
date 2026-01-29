@@ -21,7 +21,10 @@ app.use(helmet({
 app.use(compression()); // Compress all responses
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: '1d', // Cache static assets for 1 day
+    etag: true
+}));
 
 // Session Configuration
 app.use(session({
@@ -64,22 +67,40 @@ app.use('/api/notifications', notificationsRoutes);
 
 // Auth Route
 // Auth Route
+// Auth Route
 app.post('/api/login', loginLimiter, (req, res) => {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
 
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
+    // input normalization
+    username = (username || '').trim().toLowerCase(); // Store usernames as lowercase or at least compare as such?
+    // NOTE: If existing users are mixed case, we should strictly query appropriately or migrate them.
+    // Based on previous check 'admin' exists.
+    password = (password || '').trim();
+
+    // Since we want case-insensitive login, we can either:
+    // 1. Lowercase the input and rely on the DB having lowercase usernames (if we enforce it)
+    // 2. Use `COLLATE NOCASE` in SQL (SQLite specific)
+    // 3. Lowercase in JS (if we enforce lowercase on registration)
+
+    // For now, let's try strict lowercase match if we assume all usernames are lowercase.
+    // However, if the DB has 'Admin', strict lowercase 'admin' input won't match 'Admin' in DB unless we use Lower()
+    // A robust way for SQLite: SELECT * FROM users WHERE LOWER(username) = LOWER(?)
+
+    db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username], async (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ error: "Server error during login" });
         }
 
         if (!user) {
+            console.log(`Login failed: User '${username}' not found.`);
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
 
         try {
             const match = await bcrypt.compare(password, user.password_hash);
             if (match) {
+                console.log(`Login successful for: ${username}`);
                 req.session.user = {
                     id: user.id,
                     username: user.username,
@@ -92,6 +113,7 @@ app.post('/api/login', loginLimiter, (req, res) => {
                     user: req.session.user
                 });
             } else {
+                console.log(`Login failed: Incorrect password for '${username}'`);
                 res.status(401).json({ success: false, message: "Invalid credentials" });
             }
         } catch (hashErr) {

@@ -129,6 +129,14 @@ db.serialize(() => {
     db.run(`CREATE INDEX IF NOT EXISTS idx_statements_name ON statements(student_name)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
 
+    // New Indexes for Optimization
+    db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to_status ON tasks(assigned_to, status)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by_status ON tasks(assigned_by, status)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_discipline_reports_date ON discipline_reports(date_reported DESC)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_discipline_reports_staff ON discipline_reports(staff_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_statements_incident_date ON statements(incident_date DESC)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_statements_recorded_by ON statements(recorded_by)`);
+
     // Seed Data Check
     db.get("SELECT count(*) as count FROM users", async (err, row) => {
         if (err) {
