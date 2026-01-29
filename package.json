@@ -1,0 +1,36 @@
+{
+    "name": "discipline-department-web",
+    "version": "1.0.0",
+    "description": "School Discipline Department Admin System",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+    "keywords": [
+        "school",
+        "discipline",
+        "admin",
+        "management"
+    ],
+    "author": "iradukunda ricky",
+    "license": "ISC",
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "body-parser": "^1.20.2",
+        "boxicons": "^2.1.4",
+        "compression": "^1.8.1",
+        "connect-sqlite3": "^0.9.16",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "express": "^4.18.2",
+        "express-rate-limit": "^8.2.1",
+        "express-session": "^1.19.0",
+        "helmet": "^8.1.0",
+        "sqlite3": "^5.1.6",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    }
+}

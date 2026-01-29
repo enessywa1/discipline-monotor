@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+
+# Databases
+database/*.db
+database/sessions.db
+
+# Private files
+users and passwords
+*.xlsx
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

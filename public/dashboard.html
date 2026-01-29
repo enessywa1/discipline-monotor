@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Discipline Admin</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons (Local) -->
+    <link href='vendor/boxicons/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/recent_submissions.css">
+</head>
+
+<body>
+    <!-- Overlay for Mobile -->
+    <div id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo-content" style="display: flex; align-items: center; gap: 12px; padding: 10px 0;">
+            <img src="img/logo.png" alt="Logo"
+                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+            <span class="logo_name" style="font-weight: 700; font-size: 1.1rem; color: #fff;">Discipline Dept</span>
+        </div>
+        <ul class="nav-list">
+            <li>
+                <a href="#dashboard" class="nav-item active" data-view="dashboard">
+                    <i class='bx bx-grid-alt'></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="#announcements" class="nav-item" data-view="announcements">
+                    <i class='bx bx-megaphone'></i> Announcements
+                </a>
+            </li>
+
+            <li>
+                <a href="#tasks" class="nav-item" data-view="tasks">
+                    <i class='bx bx-check-square'></i> Task Management
+                </a>
+            </li>
+            <li class="admin-only hidden" data-role="admin">
+                <a href="#users" class="nav-item" data-view="users">
+                    <i class='bx bx-user-plus'></i> Manage Staff
+                </a>
+            </li>
+
+            <!-- Admin Only -->
+            <li class="admin-only hidden" data-role="admin">
+                <a href="#statements" class="nav-item" data-view="statements">
+                    <i class='bx bx-calendar-edit'></i> Statements
+                </a>
+            </li>
+
+            <!-- Accessible to everyone -->
+            <li>
+                <a href="#discipline_form" class="nav-item" data-view="discipline_form">
+                    <i class='bx bx-file-blank'></i> Discipline Form
+                </a>
+            </li>
+
+            <li>
+                <a href="#tracking" class="nav-item" data-view="tracking">
+                    <i class='bx bx-list-check'></i> Student Tracking
+                </a>
+            </li>
+
+            <!-- Patron/Matron Only -->
+            <li class="patron-matron-only hidden" data-role="patron-matron">
+                <a href="#standings" class="nav-item" data-view="standings">
+                    <i class='bx bx-bar-chart-alt-2'></i> Perf. Standings
+                </a>
+            </li>
+
+            <!-- Admin Only -->
+            <li class="admin-only hidden" data-role="admin">
+                <a href="#recent_submissions" class="nav-item" data-view="recent_submissions">
+                    <i class='bx bx-time-five'></i> Recent Submissions
+                </a>
+            </li>
+
+            <li class="admin-only hidden" data-role="admin">
+                <a href="#reports" class="nav-item" data-view="reports">
+                    <i class='bx bx-trending-up'></i> Weekly Reports
+                </a>
+            </li>
+        </ul>
+        <div class="profile-content">
+            <div class="profile">
+                <div class="profile-details">
+                    <div class="name" id="navUserName">...</div>
+                    <div class="job" id="navUserRole">...</div>
+                </div>
+                <i class='bx bx-log-out' id="log_out"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="home-content">
+        <div class="top-bar"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="menu-btn" class="btn"
+                    style="background: none; padding: 0; color: var(--text-secondary); font-size: 1.5rem;">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <h2 id="pageTitle" style="margin: 0;">Dashboard</h2>
+            </div>
+
+            <!-- Notification Area -->
+            <div class="notification-wrapper" id="notifBell">
+                <i class='bx bx-bell notification-bell'></i>
+                <span class="notification-badge" id="notifBadge">0</span>
+
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="notification-header">Notifications</div>
+                    <div id="notifList">
+                        <div style="padding: 20px; text-align: center; color: #999;">No notifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-container" class="fade-in">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/tasks.js"></script>
+    <script defer src="js/statements.js"></script>
+    <script defer src="js/discipline_form.js"></script>
+    <script defer src="js/standings.js"></script>
+    <script defer src="js/announcements.js"></script>
+    <script defer src="js/users.js"></script>
+    <script defer src="js/notifications.js"></script>
+    <script defer src="js/reports.js"></script>
+    <script defer src="js/tracking.js"></script>
+    <script defer src="js/recent_submissions.js"></script>
+    <script defer src="js/app.js"></script>
+    <script defer src="js/dashboard.js"></script>
+</body>
+
+</html>

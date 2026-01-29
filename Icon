@@ -1,0 +1,13 @@
+# Application Logo Information
+
+The new professional logo has been generated and integrated into the system.
+
+- **Storage Location**: `public/img/logo.png`
+- **Design Inspiration**: A classic, authoritative academic seal featuring an open book and an eternal torch, representing knowledge and enlightenment.
+- **Colors**: Deep Forest Green (`#1a3c2f`) and Golden Wheat, matching the premium dashboard theme.
+
+### Use Cases:
+1. **Sidebar Branding**: Displayed at the top of the navigation menu.
+2. **Login Portal**: Welcomes staff at the entrance to the system.
+3. **Weekly Reports**: Placed in the official header of all printed discipline summaries.
+4. **Favicon**: Displayed in the browser tab for brand recognition.
