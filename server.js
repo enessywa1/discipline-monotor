@@ -26,6 +26,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
     etag: true
 }));
 
+// Trust proxy for Render/Railway (required for rate limiting)
+app.set('trust proxy', 1);
+
+
 // Session Configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback_secret_not_for_production',
