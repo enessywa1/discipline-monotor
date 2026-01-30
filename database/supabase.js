@@ -78,6 +78,7 @@ if (isPostgres) {
     db.run = (sql, params, callback) => execute('run', sql, params, callback);
     db.get = (sql, params, callback) => execute('get', sql, params, callback);
     db.all = (sql, params, callback) => execute('all', sql, params, callback);
+    db.serialize = (callback) => { if (callback) callback(); };
 
     // Test connection immediately
     db.connect()
