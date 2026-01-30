@@ -376,10 +376,28 @@ const Reports = {
                         </div>
                     `).join('');
                 }
+            } else {
+                this.showError(result.error || 'Unknown error occurred');
             }
         } catch (e) {
-            console.error(e);
-            alert('Failed to load report data');
+            console.error('Reports Error:', e);
+            this.showError('Check your internet connection or server logs.');
         }
+    },
+
+    showError: (msg) => {
+        const ids = ['incidentsTableBody', 'performanceTableBody', 'taskList'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'TBODY') {
+                    el.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger); padding: 20px;">
+                        <i class='bx bx-error-circle'></i> Error: ${msg}
+                    </td></tr>`;
+                } else {
+                    el.innerHTML = `<li style="color: var(--danger); list-style: none;">Error: ${msg}</li>`;
+                }
+            }
+        });
     }
 };

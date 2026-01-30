@@ -16,7 +16,8 @@ if (isPostgres) {
             rejectUnauthorized: false
         },
         connectionTimeoutMillis: 5000, // Fail after 5 seconds
-        idleTimeoutMillis: 30000
+        idleTimeoutMillis: 30000,
+        max: 5 // Limit connections to avoid "max clients reached" on small tiers
     });
 
     // Helper to standardize parameter replacement ($1, $2...)

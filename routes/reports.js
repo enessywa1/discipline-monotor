@@ -67,7 +67,8 @@ router.get('/detailed', async (req, res) => {
             data: { statements, tasks, standings, disciplineReports }
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Reports API Error:", err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
