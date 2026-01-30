@@ -15,31 +15,69 @@ if (isPostgres) {
         ssl: {
             rejectUnauthorized: false
         },
-        connectionTimeoutMillis: 5000, // Fail after 5 seconds if can't connect
+        connectionTimeoutMillis: 5000, // Fail after 5 seconds
         idleTimeoutMillis: 30000
     });
 
-    // Wrapper to match sqlite3's API
-    db.run = async (sql, params = []) => {
-        // Convert ? to $1, $2, etc. for PostgreSQL
+    // Helper to standardize parameter replacement ($1, $2...)
+    const prepareSql = (sql) => {
         let count = 0;
-        const pgSql = sql.replace(/\?/g, () => `$${++count}`);
-        return db.query(pgSql, params);
+        return sql.replace(/\?/g, () => `$${++count}`);
     };
 
-    db.get = async (sql, params = []) => {
-        let count = 0;
-        const pgSql = sql.replace(/\?/g, () => `$${++count}`);
-        const result = await db.query(pgSql, params);
-        return result.rows[0];
+    // Helper to handle optional callbacks and Promises
+    const execute = async (type, sql, params = [], callback) => {
+        // Handle optional params
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+
+        try {
+            let pgSql = prepareSql(sql);
+
+            // For 'run' (INSERT), try to return ID to emulate sqlite3's this.lastID
+            // Only IF it's an INSERT and doesn't already have RETURNING
+            if (type === 'run' && /^\s*INSERT\s+INTO/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
+                pgSql += ' RETURNING id';
+            }
+
+            const result = await db.query(pgSql, params);
+
+            if (callback) {
+                // Emulate sqlite3 context (this.lastID, this.changes)
+                const context = {};
+                if (type === 'run') {
+                    context.changes = result.rowCount;
+                    if (result.rows && result.rows.length > 0 && result.rows[0].id) {
+                        context.lastID = result.rows[0].id;
+                    }
+                }
+
+                // Determine data to return
+                let data = null;
+                if (type === 'get') data = result.rows[0];
+                if (type === 'all') data = result.rows;
+
+                callback.call(context, null, data);
+            }
+
+            // For Promise users
+            if (type === 'get') return result.rows[0];
+            if (type === 'all') return result.rows;
+            return result;
+
+        } catch (err) {
+            console.error('❌ Database Error:', err.message);
+            if (callback) callback(err);
+            else throw err;
+        }
     };
 
-    db.all = async (sql, params = []) => {
-        let count = 0;
-        const pgSql = sql.replace(/\?/g, () => `$${++count}`);
-        const result = await db.query(pgSql, params);
-        return result.rows;
-    };
+    // Wrapper API to match sqlite3
+    db.run = (sql, params, callback) => execute('run', sql, params, callback);
+    db.get = (sql, params, callback) => execute('get', sql, params, callback);
+    db.all = (sql, params, callback) => execute('all', sql, params, callback);
 
     // Test connection immediately
     db.connect()
@@ -50,39 +88,17 @@ if (isPostgres) {
         .catch(err => {
             console.error('❌ FATAL: Could not connect to PostgreSQL:', err.message);
         });
+
 } else {
-    // SQLite Fallback for local development
+    // SQLite Fallback
     console.log('🔗 Using SQLite database (local development)...');
     const dbPath = path.resolve(__dirname, 'school_discipline.db');
     const sqliteDb = new sqlite3.Database(dbPath, (err) => {
-        if (err) {
-            console.error('❌ Error opening SQLite database:', err.message);
-        } else {
-            console.log('✅ Connected to SQLite database');
-        }
+        if (err) console.error('❌ SQLite Error:', err.message);
+        else console.log('✅ Connected to SQLite database');
     });
 
-    // Promisify SQLite for consistency with PostgreSQL
-    db = {
-        run: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.run(sql, params, function (err) {
-                if (err) reject(err);
-                else resolve(this);
-            });
-        }),
-        get: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.get(sql, params, (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        }),
-        all: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.all(sql, params, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
-        })
-    };
+    db = sqliteDb;
 }
 
 module.exports = { db, isPostgres };
