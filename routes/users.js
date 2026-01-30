@@ -78,11 +78,11 @@ router.get('/log/activity', (req, res) => {
     const sql = `
         SELECT DISTINCT u.full_name, u.role FROM users u
         WHERE u.id IN (
-            SELECT staff_id FROM discipline_reports WHERE date_reported >= date('now')
+            SELECT staff_id FROM discipline_reports WHERE date_reported >= CURRENT_DATE
             UNION
-            SELECT recorded_by FROM statements WHERE created_at >= date('now')
+            SELECT recorded_by FROM statements WHERE created_at >= CURRENT_DATE
             UNION
-            SELECT assigned_by FROM tasks WHERE created_at >= date('now')
+            SELECT assigned_by FROM tasks WHERE created_at >= CURRENT_DATE
         )
     `;
     db.all(sql, [], (err, rows) => {

@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
             // 2. Recent Announcements (Last 7 days)
             // If posted_by != user_id
             let annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
-                          WHERE posted_by != ? AND created_at >= date('now', '-7 days')`;
+                          WHERE posted_by != ? AND created_at >= CURRENT_DATE - INTERVAL '7 days'`;
 
             // Logic for 'Staff' vs 'All' visibility could be refined here, but simplified:
             // If role is staff, see 'Staff' and 'All'. 
