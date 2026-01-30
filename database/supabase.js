@@ -14,7 +14,9 @@ if (isPostgres) {
         connectionString: process.env.DATABASE_URL,
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        connectionTimeoutMillis: 5000, // Fail after 5 seconds if can't connect
+        idleTimeoutMillis: 30000
     });
 
     // Wrapper to match sqlite3's API
@@ -39,7 +41,15 @@ if (isPostgres) {
         return result.rows;
     };
 
-    console.log('✅ PostgreSQL connection established');
+    // Test connection immediately
+    db.connect()
+        .then(client => {
+            console.log('✅ PostgreSQL connection established');
+            client.release();
+        })
+        .catch(err => {
+            console.error('❌ FATAL: Could not connect to PostgreSQL:', err.message);
+        });
 } else {
     // SQLite Fallback for local development
     console.log('🔗 Using SQLite database (local development)...');
