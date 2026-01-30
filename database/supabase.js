@@ -17,7 +17,14 @@ if (isPostgres) {
         },
         connectionTimeoutMillis: 5000, // Fail after 5 seconds
         idleTimeoutMillis: 30000,
-        max: 5 // Limit connections to avoid "max clients reached" on small tiers
+        max: 10, // Increased to support concurrent dashboard fetches
+        keepAlive: true, // Maintain connection socket
+        allowExitOnIdle: true
+    });
+
+    // Pool error handling
+    db.on('error', (err) => {
+        console.error('❌ Unexpected Database Pool Error:', err.message);
     });
 
     // Helper to standardize parameter replacement ($1, $2...)
@@ -26,8 +33,10 @@ if (isPostgres) {
         return sql.replace(/\?/g, () => `$${++count}`);
     };
 
-    // Helper to handle optional callbacks and Promises
-    const execute = async (type, sql, params = [], callback) => {
+    // Helper to handle optional callbacks and Promises with RETRY logic
+    const execute = async (type, sql, params = [], callback, retryCount = 0) => {
+        const MAX_RETRIES = 2;
+
         // Handle optional params
         if (typeof params === 'function') {
             callback = params;
@@ -38,7 +47,6 @@ if (isPostgres) {
             let pgSql = prepareSql(sql);
 
             // For 'run' (INSERT), try to return ID to emulate sqlite3's this.lastID
-            // Only IF it's an INSERT and doesn't already have RETURNING
             if (type === 'run' && /^\s*INSERT\s+INTO/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
                 pgSql += ' RETURNING id';
             }
@@ -46,7 +54,6 @@ if (isPostgres) {
             const result = await db.query(pgSql, params);
 
             if (callback) {
-                // Emulate sqlite3 context (this.lastID, this.changes)
                 const context = {};
                 if (type === 'run') {
                     context.changes = result.rowCount;
@@ -55,7 +62,6 @@ if (isPostgres) {
                     }
                 }
 
-                // Determine data to return
                 let data = null;
                 if (type === 'get') data = result.rows[0];
                 if (type === 'all') data = result.rows;
@@ -63,12 +69,22 @@ if (isPostgres) {
                 callback.call(context, null, data);
             }
 
-            // For Promise users
             if (type === 'get') return result.rows[0];
             if (type === 'all') return result.rows;
             return result;
 
         } catch (err) {
+            const isRetryable = err.message.includes('ECONNRESET') ||
+                err.message.includes('timeout') ||
+                err.message.includes('terminated unexpectedly');
+
+            if (isRetryable && retryCount < MAX_RETRIES) {
+                console.warn(`⚠️  Database retry ${retryCount + 1}/${MAX_RETRIES} for: ${err.message}`);
+                // Wait slightly before retry
+                await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+                return execute(type, sql, params, callback, retryCount + 1);
+            }
+
             console.error('❌ Database Error:', err.message);
             if (callback) callback(err);
             else throw err;
