@@ -81,11 +81,11 @@ const App = {
         if (show) {
             sidebar.classList.add('open');
             overlay.classList.add('active');
-            closeBtn.style.display = 'block';
+            if (closeBtn) closeBtn.style.display = 'block';
         } else {
             sidebar.classList.remove('open');
             overlay.classList.remove('active');
-            closeBtn.style.display = 'none';
+            if (closeBtn) closeBtn.style.display = 'none';
         }
     },
 
