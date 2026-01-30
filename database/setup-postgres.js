@@ -156,7 +156,7 @@ async function setupDatabase() {
 
             // Seed users
             await db.run("INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
-                ["admin", adminHash, "Director", "System Admin", "Administration", "0770000000"]);
+                ["admin", adminHash, "Developer", "System Administrator", "Administration", "0770000000"]);
 
             await db.run("INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
                 ["director", passHash, "Director", "School Director", "Administration", "0770000001"]);
