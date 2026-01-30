@@ -12,7 +12,7 @@ router.get('/students', (req, res) => {
     let whereClause = "";
 
     if (search) {
-        whereClause = ` WHERE name LIKE ? OR class LIKE ?`;
+        whereClause = ` WHERE LOWER(name) LIKE LOWER(?) OR LOWER(class) LIKE LOWER(?)`;
         params.push(`%${search}%`, `%${search}%`);
     }
 
@@ -20,9 +20,9 @@ router.get('/students', (req, res) => {
     const sql = `
         SELECT name, class FROM students ${whereClause}
         UNION
-        SELECT DISTINCT student_name as name, student_class as class FROM discipline_reports ${search ? 'WHERE student_name LIKE ? OR student_class LIKE ?' : ''}
+        SELECT DISTINCT student_name as name, student_class as class FROM discipline_reports ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
         UNION
-        SELECT DISTINCT student_name as name, student_class as class FROM statements ${search ? 'WHERE student_name LIKE ? OR student_class LIKE ?' : ''}
+        SELECT DISTINCT student_name as name, student_class as class FROM statements ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
         LIMIT 10
     `;
 
@@ -59,7 +59,7 @@ router.get('/reports', (req, res) => {
     const params = [];
 
     if (student_name) {
-        sql += ` WHERE dr.student_name LIKE ?`;
+        sql += ` WHERE LOWER(dr.student_name) LIKE LOWER(?)`;
         params.push(`%${student_name}%`);
     }
 
@@ -77,7 +77,7 @@ router.get('/statements', (req, res) => {
     let sql = `SELECT * FROM statements`;
     const params = [];
     if (student_name) {
-        sql += ` WHERE student_name LIKE ?`;
+        sql += ` WHERE LOWER(student_name) LIKE LOWER(?)`;
         params.push(`%${student_name}%`);
     }
     sql += ` ORDER BY incident_date DESC`;
