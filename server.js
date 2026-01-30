@@ -11,10 +11,31 @@ const session = require('express-session');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
+const http = require('http');
+const socketIo = require('socket.io');
+
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Share io instance with routes
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+// Socket.io Connection
+io.on('connection', (socket) => {
+    console.log('New client connected');
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
+
+// ... Middleware ... 
+
 app.use(helmet({
     contentSecurityPolicy: false, // Temporarily disable CSP to restore all button functionality
 }));
@@ -50,8 +71,7 @@ const loginLimiter = rateLimit({
 });
 
 // Database Connection
-
-// Database Connection (Already imported at top)
+// Already imported at top
 
 // Import Routes
 const tasksRoutes = require('./routes/tasks');
@@ -70,25 +90,12 @@ app.use('/api/announcements', announcementsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Auth Route
-// Auth Route
-// Auth Route
 app.post('/api/login', loginLimiter, (req, res) => {
     let { username, password } = req.body;
 
     // input normalization
-    username = (username || '').trim().toLowerCase(); // Store usernames as lowercase or at least compare as such?
-    // NOTE: If existing users are mixed case, we should strictly query appropriately or migrate them.
-    // Based on previous check 'admin' exists.
+    username = (username || '').trim().toLowerCase();
     password = (password || '').trim();
-
-    // Since we want case-insensitive login, we can either:
-    // 1. Lowercase the input and rely on the DB having lowercase usernames (if we enforce it)
-    // 2. Use `COLLATE NOCASE` in SQL (SQLite specific)
-    // 3. Lowercase in JS (if we enforce lowercase on registration)
-
-    // For now, let's try strict lowercase match if we assume all usernames are lowercase.
-    // However, if the DB has 'Admin', strict lowercase 'admin' input won't match 'Admin' in DB unless we use Lower()
-    // A robust way for SQLite: SELECT * FROM users WHERE LOWER(username) = LOWER(?)
 
     db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username], async (err, user) => {
         if (err) {
@@ -130,10 +137,6 @@ app.post('/api/login', loginLimiter, (req, res) => {
 // Fallback to index.html for SPA feel
 app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
-        // If requesting dashboard.html explicitly or root, serve index or dashboard depending on logic
-        // But here we rely on static serving. If a file doesn't exist, serve index.html?
-        // Actually, let's just let express.static handle files.
-        // If it's a navigation request not found, maybe sending login is safer.
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     } else {
         res.status(404).json({ error: "API not found" });
@@ -141,6 +144,6 @@ app.get('*', (req, res) => {
 });
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

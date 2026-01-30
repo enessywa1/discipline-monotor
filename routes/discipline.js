@@ -44,6 +44,7 @@ router.post('/reports', (req, res) => {
         [student_name, student_class, offence, description, staff_id, date_reported || new Date(), action_taken],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'report', action: 'create' });
             res.json({ success: true, reportId: this.lastID });
         }
     );
@@ -94,6 +95,7 @@ router.post('/statements', (req, res) => {
         [student_name, student_class, incident_date, offence_type, punitive_measure, recorded_by, description],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'statement', action: 'create' });
             res.json({ success: true, statementId: this.lastID });
         }
     );
@@ -110,6 +112,7 @@ router.post('/standings', (req, res) => {
         [staff_id, week_start_date, hygiene_pct, discipline_pct, time_mgmt_pct, supervision_pct, dress_code_pct, church_order_pct, explanation],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'standings', action: 'create' });
             res.json({ success: true, id: this.lastID });
         });
 });
@@ -142,6 +145,7 @@ router.post('/watchlist', (req, res) => {
         [student_name, student_class, reason, recorded_by],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'watchlist', action: 'create' });
             res.json({ success: true, id: this.lastID });
         }
     );
@@ -151,6 +155,7 @@ router.post('/watchlist', (req, res) => {
 router.delete('/watchlist/:id', (req, res) => {
     db.run(`DELETE FROM watchlist WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'watchlist', action: 'delete' });
         res.json({ success: true });
     });
 });
@@ -175,6 +180,7 @@ router.post('/improved', (req, res) => {
         [student_name, student_class, improvement_notes, recorded_by],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'improved', action: 'create' });
             res.json({ success: true, id: this.lastID });
         }
     );
@@ -184,6 +190,7 @@ router.post('/improved', (req, res) => {
 router.delete('/improved/:id', (req, res) => {
     db.run(`DELETE FROM improved_students WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'improved', action: 'delete' });
         res.json({ success: true });
     });
 });

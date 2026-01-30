@@ -5,6 +5,43 @@ const App = {
         App.setupNavigation();
         App.setupSidebar();
         App.loadViewFromHash();
+
+        // Initialize Socket.io
+        if (typeof io !== 'undefined') {
+            window.socket = io();
+            window.socket.on('connect', () => console.log('🟢 Connected to real-time server'));
+            window.socket.on('dashboard_update', (data) => {
+                console.log('⚡ Real-time update received:', data);
+                App.handleUpdate(data);
+            });
+        }
+    },
+
+    handleUpdate: (data) => {
+        // Refresh current view if applicable
+        const view = window.location.hash.substring(1) || 'dashboard';
+
+        if (view === 'dashboard' && typeof Dashboard !== 'undefined') {
+            Dashboard.loadStats();
+            Dashboard.loadActiveStaff();
+            Dashboard.loadAnnouncements();
+        }
+
+        if (view === 'tasks' && typeof Tasks !== 'undefined' && data.type === 'task') {
+            if (Tasks.loadTasks) Tasks.loadTasks();
+        }
+
+        if (view === 'recent_submissions' && typeof RecentSubmissions !== 'undefined') {
+            if (RecentSubmissions.load) RecentSubmissions.load();
+        }
+
+        if (view === 'statements' && typeof Statements !== 'undefined' && data.type === 'statement') {
+            if (Statements.load) Statements.load();
+        }
+
+        // Show subtle notification?
+        // const notifBadge = document.getElementById('notifBadge');
+        // if(notifBadge) notifBadge.classList.add('pulse');
     },
 
     setupNavigation: () => {

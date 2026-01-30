@@ -52,6 +52,7 @@ router.post('/', (req, res) => {
 
     db.run(sql, [title, description, assigned_by, assigned_to, due_date], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'task', action: 'create' });
         res.json({ success: true, taskId: this.lastID });
     });
 });
@@ -67,6 +68,7 @@ router.put('/:id/status', (req, res) => {
 
     db.run(`UPDATE tasks SET status = ? WHERE id = ?`, [status, id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'task', action: 'update' });
         res.json({ success: true, changes: this.changes });
     });
 });
