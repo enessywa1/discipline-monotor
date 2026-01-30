@@ -14,9 +14,20 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/recent_submissions.css">
+    <link rel="stylesheet" href="css/loader.css">
 </head>
 
 <body>
+    <!-- Preloader -->
+    <div id="loader-wrapper">
+        <img src="img/logo.png" alt="Logo" class="loader-logo">
+        <div class="loader-percentage" id="loader-perc">0%</div>
+        <div class="loader-bar-bg">
+            <div class="loader-bar-fill" id="loader-bar"></div>
+        </div>
+        <div class="loader-text">Fetching Records</div>
+    </div>
+
     <!-- Overlay for Mobile -->
     <div id="sidebarOverlay"></div>
 
@@ -150,6 +161,7 @@
     <script defer src="js/recent_submissions.js"></script>
     <script defer src="js/app.js"></script>
     <script defer src="js/dashboard.js"></script>
+    <script src="js/loader.js"></script>
 </body>
 
 </html>
