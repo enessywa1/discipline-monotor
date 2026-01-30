@@ -87,7 +87,9 @@ router.get('/stats', async (req, res) => {
         });
 
         const fetchPerformance = () => new Promise((resolve, reject) => {
-            db.all(`SELECT avg(discipline_pct) as discipline, avg(hygiene_pct) as hygiene FROM standings ORDER BY week_start_date DESC LIMIT 5`, (err, rows) => {
+            // Fix for Postgres: Aggregate must be over a subquery if we want to limit first
+            db.all(`SELECT avg(discipline_pct) as discipline, avg(hygiene_pct) as hygiene 
+                    FROM (SELECT discipline_pct, hygiene_pct FROM standings ORDER BY week_start_date DESC LIMIT 5) as recent`, (err, rows) => {
                 if (err) reject(err); else resolve(rows[0] || { discipline: 85, hygiene: 90 });
             });
         });
