@@ -73,20 +73,17 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-// GET /api/users/log/activity (Mock for "Staff logged in today")
 router.get('/log/activity', (req, res) => {
     const sql = `
-        SELECT DISTINCT u.full_name, u.role FROM users u
-        WHERE u.id IN (
-            SELECT staff_id FROM discipline_reports WHERE date_reported >= CURRENT_DATE
-            UNION
-            SELECT recorded_by FROM statements WHERE created_at >= CURRENT_DATE
-            UNION
-            SELECT assigned_by FROM tasks WHERE created_at >= CURRENT_DATE
-        )
+        SELECT full_name, role FROM users 
+        WHERE last_login::date = CURRENT_DATE
+        ORDER BY last_login DESC
     `;
     db.all(sql, [], (err, rows) => {
-        if (err) return res.json({ success: false, active: [] });
+        if (err) {
+            console.error("Activity Log Error:", err);
+            return res.json({ success: false, active: [] });
+        }
         res.json({ success: true, active: rows });
     });
 });

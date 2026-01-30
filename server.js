@@ -119,6 +119,10 @@ app.post('/api/login', loginLimiter, (req, res) => {
                     full_name: user.full_name,
                     allocation: user.allocation
                 };
+
+                // Update last_login timestamp
+                db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+
                 res.json({
                     success: true,
                     user: req.session.user
