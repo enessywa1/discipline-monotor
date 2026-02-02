@@ -28,6 +28,13 @@ const Announcements = {
                                 <option value="All">📢 Visible to All</option>
                                 <option value="Staff">👥 Staff Only</option>
                             </select>
+                            <select name="duration" style="padding: 10px 15px; border: 2px solid #b2dfdb; border-radius: 8px; background: white; color: var(--text-primary); font-weight: 500; cursor: pointer; min-width: 150px;">
+                                <option value="Permanent">♾️ Permanent</option>
+                                <option value="1">⏱️ Lasts 1 Day</option>
+                                <option value="3">⏱️ Lasts 3 Days</option>
+                                <option value="7">⏱️ Lasts 7 Days</option>
+                                <option value="30">⏱️ Lasts 30 Days</option>
+                            </select>
                             <button type="submit" class="btn btn-primary" style="padding: 10px 25px; display: flex; align-items: center; gap: 8px;">
                                 <i class='bx bx-send'></i> Post Announcement
                             </button>
@@ -82,11 +89,13 @@ const Announcements = {
                             </div>
                         </div>
                         <p style="margin-bottom: 8px; line-height: 1.5;">${a.content}</p>
-                        <div style="font-size: 0.8rem; color: #666;">
-                            Posted by: ${a.author} <span style="background: #eee; padding: 2px 6px; border-radius: 10px; margin-left: 10px;">${a.visibility}</span>
-                        </div>
-                    </div>
-                `).join('');
+                        <div style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span>Posted by: ${a.author}</span>
+                            <span style="background: #eee; padding: 2px 6px; border-radius: 10px;">${a.visibility}</span>
+                            ${a.expires_at ? `<span style="color: var(--danger); font-size: 0.75rem;"><i class='bx bx-time-five'></i> Expires: ${new Date(a.expires_at).toLocaleDateString()}</span>` : '<span style="color: #4db6ac; font-size: 0.75rem;"><i class='bx bx - infinite'></i> Permanent</span>'}
+                        </div >
+                    </div >
+    `).join('');
             } else {
                 feed.innerHTML = '<p>No announcements yet.</p>';
             }
@@ -122,7 +131,7 @@ const Announcements = {
         if (!confirm('Are you sure you want to delete this announcement?')) return;
 
         try {
-            const res = await fetch(`/api/announcements/${id}`, {
+            const res = await fetch(`/ api / announcements / ${ id } `, {
                 method: 'DELETE'
             });
             if (res.ok) {
