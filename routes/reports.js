@@ -96,11 +96,17 @@ router.get('/stats', async (req, res) => {
         });
 
         const fetchTodayCases = () => new Promise((resolve, reject) => {
-            db.get(`
-                SELECT (
+            const sql = isPostgres
+                ? `SELECT (
                     (SELECT COUNT(*) FROM statements WHERE created_at::date = CURRENT_DATE) +
                     (SELECT COUNT(*) FROM discipline_reports WHERE date_reported::date = CURRENT_DATE)
-                ) as total`, (err, row) => {
+                   ) as total`
+                : `SELECT (
+                    (SELECT COUNT(*) FROM statements WHERE date(created_at) = date('now')) +
+                    (SELECT COUNT(*) FROM discipline_reports WHERE date(date_reported) = date('now'))
+                   ) as total`;
+
+            db.get(sql, [], (err, row) => {
                 if (err) reject(err); else resolve(row ? row.total : 0);
             });
         });

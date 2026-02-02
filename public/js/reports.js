@@ -260,7 +260,7 @@ const Reports = {
                 // 1. Executive Stats
                 const allIncidents = [
                     ...statements.map(s => ({ ...s, type: 'Statement', date: s.incident_date, offence: s.offence_type, action: s.punitive_measure, student_class: s.student_class })),
-                    ...discipline_reports.map(r => ({ ...r, type: 'Report', date: r.date_reported, offence: r.offence, action: r.action_taken, student_class: r.student_class }))
+                    ...disciplineReports.map(r => ({ ...r, type: 'Report', date: r.date_reported, offence: r.offence, action: r.action_taken, student_class: r.student_class }))
                 ];
 
                 // Sort by date newest first
