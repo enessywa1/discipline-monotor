@@ -50,9 +50,9 @@ const About = {
                         <h2>The Developers</h2>
                         <p>Murashi Creatives specializes in premium digital experiences. We focus on high-impact visuals combined with robust engineering to help institutions excel.</p>
                         <div class="social-links">
-                            <a href="#"><i class='bx bxl-facebook-square'></i></a>
-                            <a href="#"><i class='bx bxl-instagram'></i></a>
-                            <a href="#"><i class='bx bxl-linkedin-square'></i></a>
+                            <a href="https://murashicreatives.onrender.com/" target="_blank" title="Website"><i class='bx bx-globe'></i></a>
+                            <a href="https://www.instagram.com/murashicreatives/" target="_blank" title="Instagram"><i class='bx bxl-instagram'></i></a>
+                            <a href="#" title="LinkedIn"><i class='bx bxl-linkedin-square'></i></a>
                         </div>
                     </section>
                 </div>
