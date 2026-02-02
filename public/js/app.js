@@ -152,6 +152,10 @@ const App = {
                 title.textContent = 'Student Tracking';
                 Tracking.render(container);
                 break;
+            case 'detentions':
+                title.textContent = 'Detention Records';
+                Detentions.render(container);
+                break;
             case 'about':
                 title.textContent = 'About System';
                 About.render(container);

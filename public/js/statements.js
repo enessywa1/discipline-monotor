@@ -113,6 +113,9 @@ const Statements = {
             if (action === 'select-student') {
                 Statements.selectStudent(el.dataset.id, el.dataset.name, el.dataset.class);
             }
+            if (action === 'quick-detention') {
+                Statements.triggerDetention(el.dataset.name, el.dataset.class, el.dataset.offense);
+            }
         });
 
         const form = document.getElementById('stepStatementForm');
@@ -251,8 +254,15 @@ const Statements = {
                         </div>
                         <div style="font-weight: 600; color: var(--primary-dark); margin-top: 5px;">${inc.offence_type}</div>
                         <div style="margin: 8px 0;">${typeof App !== 'undefined' ? App.formatDescription(inc.description) : inc.description}</div>
-                        <div style="font-size: 0.75rem; color: #666; background: #f5f5f5; padding: 6px 10px; border-radius: 4px; display: inline-block;">
-                            <strong>Outcome:</strong> ${inc.punitive_measure || 'Pending'}
+                        <div style="font-size: 0.75rem; color: #666; background: #f5f5f5; padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                            <div><strong>Outcome:</strong> ${inc.punitive_measure || 'Pending'}</div>
+                            <button class="btn btn-sm" style="background: var(--danger); color: white; padding: 2px 6px; font-size: 0.65rem;" 
+                                data-action="quick-detention" 
+                                data-name="${inc.student_name.replace(/"/g, '&quot;')}" 
+                                data-class="${inc.student_class || ''}" 
+                                data-offense="${inc.offence_type.replace(/"/g, '&quot;')}">
+                                Send to Detention
+                            </button>
                         </div>
                     </div>
                 `).join('');
@@ -304,5 +314,19 @@ const Statements = {
         } catch (e) {
             alert('Submission failed');
         }
+    },
+
+    triggerDetention: (name, studentClass, offense) => {
+        window.location.hash = '#detentions';
+        // Wait for render
+        setTimeout(() => {
+            const nameInput = document.getElementById('detentionStudentName');
+            const classSelect = document.querySelector('select[name="student_class"]');
+            const offenseInput = document.querySelector('input[name="offense"]');
+
+            if (nameInput) nameInput.value = name;
+            if (classSelect && studentClass) classSelect.value = studentClass;
+            if (offenseInput) offenseInput.value = offense;
+        }, 300);
     }
 };
