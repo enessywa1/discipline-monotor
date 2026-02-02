@@ -208,10 +208,10 @@ const Detentions = {
         const printWindow = window.open('', '_blank');
         const rows = document.getElementById('detentionTableBody').innerHTML;
 
-        printWindow.document.write(\`
+        printWindow.document.write(`
             <html>
                 <head>
-                    <title>Detention List - \${new Date().toLocaleDateString()}</title>
+                    <title>Detention List - ${new Date().toLocaleDateString()}</title>
                     <style>
                         body { font-family: 'Inter', sans-serif; padding: 40px; }
                         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -225,7 +225,7 @@ const Detentions = {
                     <div class="header">
                         <h2>School Discipline Department</h2>
                         <h3>Daily Detention List</h3>
-                        <p>Date: \${new Date().toLocaleDateString()}</p>
+                        <p>Date: ${new Date().toLocaleDateString()}</p>
                     </div>
                     <table>
                         <thead>
@@ -237,7 +237,7 @@ const Detentions = {
                             </tr>
                         </thead>
                         <tbody>
-                            \${rows}
+                            ${rows}
                         </tbody>
                     </table>
                     <div style="margin-top: 50px; display: flex; justify-content: space-between;">
@@ -246,7 +246,7 @@ const Detentions = {
                     </div>
                 </body>
             </html>
-        \`);
+        `);
         printWindow.document.close();
         printWindow.print();
     }
