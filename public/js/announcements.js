@@ -92,7 +92,7 @@ const Announcements = {
                         <div style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <span>Posted by: ${a.author}</span>
                             <span style="background: #eee; padding: 2px 6px; border-radius: 10px;">${a.visibility}</span>
-                            ${a.expires_at ? `<span style="color: var(--danger); font-size: 0.75rem;"><i class='bx bx-time-five'></i> Expires: ${new Date(a.expires_at).toLocaleDateString()}</span>` : '<span style="color: #4db6ac; font-size: 0.75rem;"><i class='bx bx - infinite'></i> Permanent</span>'}
+                            ${a.expires_at ? `<span style="color: var(--danger); font-size: 0.75rem;"><i class='bx bx-time-five'></i> Expires: ${new Date(a.expires_at).toLocaleDateString()}</span>` : '<span style="color: #4db6ac; font-size: 0.75rem;"><i class="bx bx-infinite"></i> Permanent</span>'}
                         </div >
                     </div >
     `).join('');
@@ -131,7 +131,7 @@ const Announcements = {
         if (!confirm('Are you sure you want to delete this announcement?')) return;
 
         try {
-            const res = await fetch(`/ api / announcements / ${ id } `, {
+            const res = await fetch(`/ api / announcements / ${id} `, {
                 method: 'DELETE'
             });
             if (res.ok) {
