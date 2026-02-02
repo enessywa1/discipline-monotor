@@ -91,6 +91,7 @@ const Reports = {
                             <tr>
                                 <th>Date</th>
                                 <th>Student</th>
+                                <th>Class</th>
                                 <th>Offence</th>
                                 <th>Description</th>
                                 <th>Action Taken</th>
@@ -258,8 +259,8 @@ const Reports = {
 
                 // 1. Executive Stats
                 const allIncidents = [
-                    ...statements.map(s => ({ ...s, type: 'Statement', date: s.incident_date, offence: s.offence_type, action: s.punitive_measure })),
-                    ...disciplineReports.map(r => ({ ...r, type: 'Report', date: r.date_reported, offence: r.offence, action: r.action_taken }))
+                    ...statements.map(s => ({ ...s, type: 'Statement', date: s.incident_date, offence: s.offence_type, action: s.punitive_measure, student_class: s.student_class })),
+                    ...discipline_reports.map(r => ({ ...r, type: 'Report', date: r.date_reported, offence: r.offence, action: r.action_taken, student_class: r.student_class }))
                 ];
 
                 // Sort by date newest first
@@ -320,6 +321,7 @@ const Reports = {
                                 <div style="font-size: 0.65rem; color: #999;">${inc.type}</div>
                             </td>
                             <td><strong>${inc.student_name}</strong></td>
+                            <td>${inc.student_class || '-'}</td>
                             <td style="color: #c62828;">${inc.offence}</td>
                             <td style="max-width: 250px; font-size: 0.8rem; line-height: 1.2;">
                                 ${inc.description && inc.description.startsWith('{') ? 'Form Details Recorded' : (inc.description || '-')}

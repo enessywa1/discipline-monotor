@@ -70,10 +70,10 @@ const Notifications = {
 
                 // Render Dropdown
                 list.innerHTML = data.notifications.slice(0, 5).map(n => `
-                    <a href="${n.link}" class="notification-item">
+                    <a href="${n.link}" class="notification-item" onclick="Notifications.markAsRead(${n.id}, ${n.persistent})">
                         <i class='bx ${n.type === 'task' ? 'bx-task' : 'bx-info-circle'}' style="margin-right: 5px; color: var(--primary-color);"></i>
                         <div>
-                            <div style="font-weight: 600; font-size: 0.85rem;">${n.message}</div>
+                            <div style="font-weight: 600; font-size: 0.85rem;">${n.message} ${n.persistent ? '<span style="color:var(--accent-color)">●</span>' : ''}</div>
                             <div style="font-size: 0.75rem; color: #999; margin-top: 2px;">${new Date(n.date).toLocaleDateString()}</div>
                         </div>
                     </a>
@@ -94,6 +94,16 @@ const Notifications = {
             new Notification("School Discipline System", {
                 body: note.message
             });
+        }
+    },
+
+    markAsRead: async (id, isPersistent) => {
+        if (!isPersistent || !id) return;
+        try {
+            await fetch(`/api/notifications/read/${id}`, { method: 'PUT' });
+            Notifications.load(); // Refresh
+        } catch (e) {
+            console.error('Error marking as read', e);
         }
     }
 };

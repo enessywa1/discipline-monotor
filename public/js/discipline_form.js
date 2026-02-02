@@ -101,6 +101,7 @@ const DisciplineForm = {
                             <option value="None">None (Resolved)</option>
                             <option value="Discipline Master">Discipline Master</option>
                             <option value="Head Patron">Head Patron</option>
+                            <option value="Head Matron">Head Matron</option>
                             <option value="Counseling">Counseling Dept</option>
                             <option value="Principal">Principal</option>
                         </select>

@@ -39,7 +39,7 @@ router.get('/detailed', async (req, res) => {
             db.all(`SELECT st.*, u.full_name as staff_name, u.role
                     FROM standings st
                     LEFT JOIN users u ON st.staff_id = u.id
-                    WHERE u.role IN ('Patron', 'Matron', 'Head Patron')
+                    WHERE u.role IN ('Patron', 'Matron', 'Head Patron', 'Head Matron')
                     ORDER BY st.week_start_date DESC LIMIT 20`, [], (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
@@ -132,7 +132,7 @@ router.get('/export', async (req, res) => {
     try {
         // 1. Discipline Statements
         const stmts = await fetchAll(`
-            SELECT s.id, s.student_name as Student, s.incident_date as Date, 
+            SELECT s.id, s.student_name as Student, s.student_class as Class, s.incident_date as Date, 
             s.offence_type as Offence, s.description as Details, 
             s.punitive_measure as Action, u.full_name as RecordedBy, s.created_at as Timestamp
             FROM statements s LEFT JOIN users u ON s.recorded_by = u.id`);
@@ -140,7 +140,7 @@ router.get('/export', async (req, res) => {
 
         // 2. Formal Discipline Reports
         const reports = await fetchAll(`
-            SELECT dr.id, dr.student_name as Student, dr.offence as Offence, 
+            SELECT dr.id, dr.student_name as Student, dr.student_class as Class, dr.offence as Offence, 
             dr.description as Details, dr.action_taken as Action, 
             u.full_name as StaffMember, dr.date_reported as Date
             FROM discipline_reports dr LEFT JOIN users u ON dr.staff_id = u.id`);

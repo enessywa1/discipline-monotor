@@ -112,15 +112,16 @@ db.serialize(() => {
         FOREIGN KEY (recorded_by) REFERENCES users(id)
     )`);
 
-    // 9. Improved Students
-    db.run(`CREATE TABLE IF NOT EXISTS improved_students (
+    // 10. Notifications Table
+    db.run(`CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_name TEXT NOT NULL,
-        student_class TEXT NOT NULL,
-        improvement_notes TEXT,
-        recorded_by INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        link TEXT,
+        is_read INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (recorded_by) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(id)
     )`);
 
     // Performance Indexes
@@ -128,6 +129,7 @@ db.serialize(() => {
     db.run(`CREATE INDEX IF NOT EXISTS idx_discipline_reports_name ON discipline_reports(student_name)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_statements_name ON statements(student_name)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read)`);
 
     // New Indexes for Optimization
     db.run(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to_status ON tasks(assigned_to, status)`);

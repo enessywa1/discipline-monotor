@@ -152,6 +152,10 @@ const App = {
                 title.textContent = 'Student Tracking';
                 Tracking.render(container);
                 break;
+            case 'about':
+                title.textContent = 'About System';
+                About.render(container);
+                break;
             default:
                 title.textContent = 'Page Not Found';
                 container.innerHTML = '<p>The requested view does not exist.</p>';

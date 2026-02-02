@@ -1,7 +1,7 @@
 const Tasks = {
     render: async (container) => {
         const user = Auth.getUser();
-        const isAdmin = ['Director', 'Principal', 'Discipline Master', 'Assistant Discipline Master', 'Head Patron'].includes(user.role);
+        const isAdmin = ['Director', 'Principal', 'Discipline Master', 'Assistant Discipline Master', 'Head Patron', 'Head Matron'].includes(user.role);
 
         container.innerHTML = `
             <div class="card" id="tasksViewContainer">

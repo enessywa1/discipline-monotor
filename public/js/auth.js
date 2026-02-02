@@ -25,7 +25,7 @@ const Auth = {
 
         // Role Based Visibility Logic
         const isAdmin = ['Developer', 'Director', 'Principal', 'Associate Principal', 'Dean of Students', 'Discipline Master', 'Assistant Discipline Master', 'QA', 'CIE'].includes(user.role);
-        const isPatronMatron = ['Patron', 'Matron', 'Head Patron'].includes(user.role);
+        const isPatronMatron = ['Patron', 'Matron', 'Head Patron', 'Head Matron'].includes(user.role);
 
         document.querySelectorAll('[data-role]').forEach(el => {
             const roles = el.dataset.role.split(',').map(r => r.trim().toLowerCase());
