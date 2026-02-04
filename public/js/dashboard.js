@@ -37,7 +37,7 @@ const Dashboard = {
                     <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Staff Active Today</h4>
                     <div id="statActive" style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">...</div>
                 </div>
-                <div class="card admin-only hidden" data-role="admin" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 3px solid var(--primary-color);">
+                <div class="card" data-role="all" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 3px solid var(--primary-color);">
                     <div>
                         <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Detention Records</h4>
                         <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Manage student detentions</p>
