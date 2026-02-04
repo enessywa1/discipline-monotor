@@ -16,11 +16,11 @@ router.get('/students', (req, res) => {
 
     // Comprehensive search across all tables
     const sql = `
-        SELECT name, class FROM students ${whereClause}
+        SELECT id, name, class FROM students ${whereClause}
         UNION
-        SELECT DISTINCT student_name as name, student_class as class FROM discipline_reports ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
+        SELECT DISTINCT NULL as id, student_name as name, student_class as class FROM discipline_reports ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
         UNION
-        SELECT DISTINCT student_name as name, student_class as class FROM statements ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
+        SELECT DISTINCT NULL as id, student_name as name, student_class as class FROM statements ${search ? 'WHERE LOWER(student_name) LIKE LOWER(?) OR LOWER(student_class) LIKE LOWER(?)' : ''}
         LIMIT 10
     `;
 
@@ -119,7 +119,8 @@ router.post('/standings', (req, res) => {
 
 // GET /api/discipline/standings
 router.get('/standings', (req, res) => {
-    db.all(`SELECT * FROM standings ORDER BY created_at DESC LIMIT 10`, [], (err, rows) => {
+    const limit = parseInt(req.query.limit) || 10;
+    db.all(`SELECT id, week_start_date, hygiene_pct, discipline_pct, time_mgmt_pct, explanation FROM standings ORDER BY created_at DESC LIMIT ?`, [limit], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, standings: rows });
     });

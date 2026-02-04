@@ -69,7 +69,7 @@ router.get('/', (req, res) => {
 // PUT /api/notifications/read/:id
 router.put('/read/:id', (req, res) => {
     const { id } = req.params;
-    db.run('UPDATE notifications SET is_read = 1 WHERE id = ?', [id], function (err) {
+    db.run('UPDATE notifications SET is_read = TRUE WHERE id = ?', [id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
