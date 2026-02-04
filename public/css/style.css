@@ -311,6 +311,26 @@ textarea:focus {
     color: #2e7d32;
 }
 
+.badge-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge-warning {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.badge-danger {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.badge-info {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
 /* Responsive Grid Helper */
 .layout-grid {
     display: grid;
@@ -368,4 +388,56 @@ textarea:focus {
 
 .responsive-table-container::-webkit-scrollbar-thumb:hover {
     background: #999;
+}
+
+/* Modal Overlay Styles */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.sidebar-overlay .card {
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideUp 0.3s ease-out;
+    transform: none;
+    position: static;
+}
+
+.sidebar-overlay .card:hover {
+    transform: none;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Home Content Layout Fix */
+.home-content {
+    padding-bottom: 120px;
+}
+
+/* Footer Positioning */
+footer {
+    position: relative;
+    z-index: 1;
 }
