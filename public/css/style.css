@@ -325,4 +325,47 @@ textarea:focus {
     .layout-grid-3 {
         grid-template-columns: repeat(3, 1fr);
     }
+
+    .col-span-2 {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 16px;
+    }
+
+    .layout-grid {
+        gap: 16px;
+    }
+
+    .welcome-banner h3 {
+        font-size: 1.25rem;
+    }
+}
+
+.responsive-table-container {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.responsive-table-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.responsive-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.responsive-table-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.responsive-table-container::-webkit-scrollbar-thumb:hover {
+    background: #999;
 }

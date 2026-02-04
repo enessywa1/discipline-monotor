@@ -57,7 +57,7 @@ const Detentions = {
                 </div>
 
                 <!-- Column 2: Detention List -->
-                <div class="card" style="grid-column: span 2;">
+                <div class="card col-span-2">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                         <div style="display: flex; gap: 20px;">
                             <h3 id="tabCurrent" class="active-tab" style="margin: 0; cursor: pointer; color: var(--primary-color);">Current Detentions</h3>
@@ -77,7 +77,7 @@ const Detentions = {
                         <input type="text" id="detentionSearch" placeholder="Search student..." style="flex: 1;">
                     </div>
 
-                    <div id="detentionTableContainer" style="overflow-x: auto;">
+                    <div id="detentionTableContainer" class="responsive-table-container">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                             <thead>
                                 <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">

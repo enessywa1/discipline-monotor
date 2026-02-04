@@ -24,7 +24,7 @@ const Dashboard = {
             </div>
 
             <!-- 2. Statistics Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
                 <div class="card">
                     <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Pending Tasks</h4>
                     <div id="statPending" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">...</div>
