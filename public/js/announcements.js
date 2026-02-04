@@ -131,7 +131,7 @@ const Announcements = {
         if (!confirm('Are you sure you want to delete this announcement?')) return;
 
         try {
-            const res = await fetch(`/ api / announcements / ${id} `, {
+            const res = await fetch(`/api/announcements/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
