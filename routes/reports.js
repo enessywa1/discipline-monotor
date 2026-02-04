@@ -13,10 +13,11 @@ router.get('/detailed', async (req, res) => {
 
     try {
         const fetchStatements = () => new Promise((resolve, reject) => {
-            db.all(`SELECT id, student_name, student_class, offence_type, punitive_measure, incident_date, created_at 
-                    FROM statements 
-                    WHERE created_at >= ? 
-                    ORDER BY incident_date DESC LIMIT 500`, [dateStr], (err, rows) => {
+            db.all(`SELECT s.id, s.student_name, s.student_class, s.offence_type, s.punitive_measure, s.incident_date, s.created_at, s.description, u.full_name as recorder_name 
+                    FROM statements s
+                    LEFT JOIN users u ON s.recorded_by = u.id
+                    WHERE s.created_at >= ? 
+                    ORDER BY s.incident_date DESC LIMIT 500`, [dateStr], (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
         });
