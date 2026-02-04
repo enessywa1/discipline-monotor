@@ -51,7 +51,7 @@ router.post('/reports', (req, res) => {
 // GET /api/discipline/reports
 router.get('/reports', (req, res) => {
     const { student_name } = req.query;
-    let sql = `SELECT dr.*, u.full_name as staff_name 
+    let sql = `SELECT dr.id, dr.student_name, dr.student_class, dr.offence, dr.date_reported, dr.action_taken, u.full_name as staff_name 
             FROM discipline_reports dr
             LEFT JOIN users u ON dr.staff_id = u.id`;
     const params = [];
@@ -61,7 +61,7 @@ router.get('/reports', (req, res) => {
         params.push(`%${student_name}%`);
     }
 
-    sql += ` ORDER BY dr.date_reported DESC LIMIT 50`;
+    sql += ` ORDER BY dr.date_reported DESC LIMIT 500`;
 
     db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -72,13 +72,13 @@ router.get('/reports', (req, res) => {
 // GET /api/discipline/statements
 router.get('/statements', (req, res) => {
     const { student_name } = req.query;
-    let sql = `SELECT * FROM statements`;
+    let sql = `SELECT id, student_name, student_class, incident_date, offence_type, punitive_measure, created_at FROM statements`;
     const params = [];
     if (student_name) {
         sql += ` WHERE LOWER(student_name) LIKE LOWER(?)`;
         params.push(`%${student_name}%`);
     }
-    sql += ` ORDER BY incident_date DESC`;
+    sql += ` ORDER BY incident_date DESC LIMIT 500`;
     db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, statements: rows });

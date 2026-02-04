@@ -39,6 +39,7 @@ io.on('connection', (socket) => {
 app.use(helmet({
     contentSecurityPolicy: false, // Temporarily disable CSP to restore all button functionality
 }));
+app.set('etag', 'strong'); // Enable strong etags for better caching
 app.use(compression()); // Compress all responses
 app.use(cors());
 app.use(bodyParser.json());

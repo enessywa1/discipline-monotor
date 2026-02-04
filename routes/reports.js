@@ -13,11 +13,10 @@ router.get('/detailed', async (req, res) => {
 
     try {
         const fetchStatements = () => new Promise((resolve, reject) => {
-            db.all(`SELECT s.*, u.full_name as recorder_name 
-                    FROM statements s 
-                    LEFT JOIN users u ON s.recorded_by = u.id
-                    WHERE s.created_at >= ? 
-                    ORDER BY s.incident_date DESC`, [dateStr], (err, rows) => {
+            db.all(`SELECT id, student_name, student_class, offence_type, punitive_measure, incident_date, created_at 
+                    FROM statements 
+                    WHERE created_at >= ? 
+                    ORDER BY incident_date DESC LIMIT 500`, [dateStr], (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
         });
@@ -34,7 +33,7 @@ router.get('/detailed', async (req, res) => {
         });
 
         const fetchStandings = () => new Promise((resolve, reject) => {
-            db.all(`SELECT st.*, u.full_name as staff_name, u.role
+            db.all(`SELECT st.id, st.week_start_date, st.discipline_pct, st.hygiene_pct, u.full_name as staff_name, u.role
                     FROM standings st
                     LEFT JOIN users u ON st.staff_id = u.id
                     WHERE u.role IN ('Patron', 'Matron', 'Head Patron', 'Head Matron')

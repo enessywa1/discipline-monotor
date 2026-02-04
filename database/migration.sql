@@ -143,9 +143,16 @@ CREATE TABLE IF NOT EXISTS detentions (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+CREATE INDEX IF NOT EXISTS idx_students_class ON students(class);
 CREATE INDEX IF NOT EXISTS idx_discipline_reports_name ON discipline_reports(student_name);
+CREATE INDEX IF NOT EXISTS idx_discipline_reports_date ON discipline_reports(date_reported);
 CREATE INDEX IF NOT EXISTS idx_statements_name ON statements(student_name);
+CREATE INDEX IF NOT EXISTS idx_statements_date ON statements(incident_date);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_detentions_status ON detentions(status);
+CREATE INDEX IF NOT EXISTS idx_suspensions_type ON suspensions_expulsions(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id) WHERE is_read = FALSE;
 
 -- Seed Initial Admin User (password: admin123)
 -- Hash: $2b$10$C7.u/lP6Tq4A/57f/s6.6uVz7Y7Xy7Xy7Xy7Xy7Xy7Xy7Xy7Xy7Xy
