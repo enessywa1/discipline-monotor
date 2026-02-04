@@ -160,7 +160,7 @@ const App = {
                 Users.render(container);
                 break;
             case 'recent_submissions':
-                title.textContent = 'Recent Submissions';
+                title.textContent = 'All Submissions';
                 RecentSubmissions.render(container);
                 break;
             case 'tracking':
