@@ -123,6 +123,7 @@ const Statements = {
 
         const searchInput = document.getElementById('studentSearch');
         if (searchInput) {
+            searchInput.oninput = Utils.debounce(() => Statements.search(), 500);
             searchInput.addEventListener('keyup', (e) => {
                 if (e.key === 'Enter') Statements.search();
             });

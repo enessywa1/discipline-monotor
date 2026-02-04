@@ -1,5 +1,15 @@
 // app.js
 
+const Utils = {
+    debounce: (func, wait) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+};
+
 const App = {
     init: () => {
         App.setupNavigation();
@@ -11,7 +21,6 @@ const App = {
             window.socket = io();
             window.socket.on('connect', () => console.log('🟢 Connected to real-time server'));
             window.socket.on('dashboard_update', (data) => {
-                console.log('⚡ Real-time update received:', data);
                 App.handleUpdate(data);
             });
         }
@@ -22,16 +31,18 @@ const App = {
         const view = window.location.hash.substring(1) || 'dashboard';
 
         if (view === 'dashboard' && typeof Dashboard !== 'undefined') {
-            Dashboard.loadStats();
-            Dashboard.loadActiveStaff();
-            Dashboard.loadAnnouncements();
+            // Dashboard updates are selective if data.type exists
+            if (!data.type || ['task', 'report', 'statement', 'announcement', 'standings'].includes(data.type)) {
+                Dashboard.loadStats();
+                Dashboard.loadAnnouncements();
+            }
         }
 
         if (view === 'tasks' && typeof Tasks !== 'undefined' && data.type === 'task') {
-            if (Tasks.loadTasks) Tasks.loadTasks();
+            if (Tasks.loadTasks) Tasks.loadTasks(true);
         }
 
-        if (view === 'recent_submissions' && typeof RecentSubmissions !== 'undefined') {
+        if (view === 'recent_submissions' && typeof RecentSubmissions !== 'undefined' && data.type === 'report') {
             if (RecentSubmissions.load) RecentSubmissions.load();
         }
 
@@ -39,9 +50,13 @@ const App = {
             if (Statements.load) Statements.load();
         }
 
-        // Show subtle notification?
-        // const notifBadge = document.getElementById('notifBadge');
-        // if(notifBadge) notifBadge.classList.add('pulse');
+        if (view === 'detentions' && typeof Detentions !== 'undefined' && data.type === 'detention') {
+            if (Detentions.load) Detentions.load();
+        }
+
+        if (view === 'suspensions' && typeof Suspensions !== 'undefined' && data.type === 'suspension') {
+            if (Suspensions.load) Suspensions.load();
+        }
     },
 
     setupNavigation: () => {

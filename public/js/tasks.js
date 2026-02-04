@@ -89,7 +89,7 @@ const Tasks = {
         Tasks.stopPolling();
         Tasks.refreshInterval = setInterval(() => {
             Tasks.loadTasks(true); // true = quiet reload
-        }, 15000); // 15 seconds
+        }, 60000); // 60 seconds (optimized from 15s)
     },
 
     stopPolling: () => {

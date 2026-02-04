@@ -109,7 +109,7 @@ const Suspensions = {
         if (form) form.onsubmit = Suspensions.handleSubmit;
 
         const searchInput = document.getElementById('suspensionSearch');
-        if (searchInput) searchInput.oninput = () => Suspensions.load();
+        if (searchInput) searchInput.oninput = Utils.debounce(() => Suspensions.load(), 500);
 
         const typeSelect = document.getElementById('suspensionType');
         const endDateGroup = document.getElementById('endDateGroup');

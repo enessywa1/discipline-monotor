@@ -57,10 +57,14 @@ const Dashboard = {
         `;
 
         // Load Data concurrently
-        // Load Data concurrently
         Dashboard.loadAnnouncements();
         Dashboard.loadStats();
-        Dashboard.loadActiveStaff();
+
+        // Only load active staff if the user has access and it's visible
+        const activeStaffList = document.getElementById('activeStaffList');
+        if (activeStaffList && !activeStaffList.closest('.hidden')) {
+            Dashboard.loadActiveStaff();
+        }
 
         Dashboard.startPolling();
     },
@@ -72,8 +76,12 @@ const Dashboard = {
         Dashboard.refreshInterval = setInterval(() => {
             Dashboard.loadAnnouncements();
             Dashboard.loadStats();
-            Dashboard.loadActiveStaff();
-        }, 30000); // 30 seconds
+
+            const activeStaffList = document.getElementById('activeStaffList');
+            if (activeStaffList && !activeStaffList.closest('.hidden')) {
+                Dashboard.loadActiveStaff();
+            }
+        }, 60000); // 60 seconds (optimized from 30s)
     },
 
     stopPolling: () => {

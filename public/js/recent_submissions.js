@@ -49,7 +49,7 @@ const RecentSubmissions = {
         RecentSubmissions.stopPolling();
         RecentSubmissions.refreshInterval = setInterval(() => {
             RecentSubmissions.loadSubmissions(true);
-        }, 30000);
+        }, 60000); // 60 seconds (optimized from 30s)
     },
 
     stopPolling: () => {

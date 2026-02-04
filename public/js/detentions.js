@@ -112,7 +112,7 @@ const Detentions = {
         if (form) form.onsubmit = Detentions.handleSubmit;
 
         const searchInput = document.getElementById('detentionSearch');
-        if (searchInput) searchInput.oninput = () => Detentions.load();
+        if (searchInput) searchInput.oninput = Utils.debounce(() => Detentions.load(), 500);
 
         const tabCurrent = document.getElementById('tabCurrent');
         const tabCleared = document.getElementById('tabCleared');
