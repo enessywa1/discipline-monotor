@@ -23,17 +23,22 @@ const Auth = {
         if (nameEl) nameEl.textContent = user.full_name;
         if (roleEl) roleEl.textContent = user.role;
 
-        // Role Based Visibility Logic
-        const isAdmin = ['Developer', 'Director', 'Principal', 'Associate Principal', 'Dean of Students', 'Discipline Master', 'Assistant Discipline Master', 'QA', 'CIE'].includes(user.role);
-        const isPatronMatron = ['Patron', 'Matron', 'Head Patron', 'Head Matron'].includes(user.role);
+        // Role Based Visibility Logic (Case-Insensitive)
+        const userRole = (user.role || '').trim().toLowerCase();
+
+        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
+        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron'];
+
+        const isAdmin = adminRoles.includes(userRole);
+        const isPatronMatron = patronMatronRoles.includes(userRole);
 
         document.querySelectorAll('[data-role]').forEach(el => {
             const roles = el.dataset.role.split(',').map(r => r.trim().toLowerCase());
 
             let show = false;
             if (roles.includes('admin') && isAdmin) show = true;
-            if (roles.includes('patron') && user.role === 'Patron') show = true;
-            if (roles.includes('matron') && user.role === 'Matron') show = true;
+            if (roles.includes('patron') && userRole === 'patron') show = true;
+            if (roles.includes('matron') && userRole === 'matron') show = true;
             if (roles.includes('patron-matron') && isPatronMatron) show = true;
             if (roles.includes('all')) show = true;
 
