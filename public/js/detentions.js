@@ -42,13 +42,8 @@ const Detentions = {
                                 <input type="date" name="detention_date" required>
                             </div>
                             <div class="form-group">
-                                <label>Type</label>
-                                <select name="detention_type" required style="width: 100%; padding: 10px;">
-                                    <option value="Standard">Standard</option>
-                                    <option value="Saturday">Saturday</option>
-                                    <option value="Principal">Principal's</option>
-                                    <option value="Internal">Internal</option>
-                                </select>
+                                <label>Number of Days</label>
+                                <input type="number" name="days" value="1" min="1" required>
                             </div>
                         </div>
 
@@ -62,9 +57,12 @@ const Detentions = {
                 </div>
 
                 <!-- Column 2: Detention List -->
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin: 0; color: var(--primary-dark);">Detention List</h3>
+                <div class="card" style="grid-column: span 2;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                        <div style="display: flex; gap: 20px;">
+                            <h3 id="tabCurrent" class="active-tab" style="margin: 0; cursor: pointer; color: var(--primary-color);">Current Detentions</h3>
+                            <h3 id="tabCleared" style="margin: 0; cursor: pointer; color: #999;">Cleared History</h3>
+                        </div>
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-sm" style="background: #2e7d32; color: white;" data-action="export">
                                 <i class='bx bxs-download'></i> Export
@@ -77,12 +75,6 @@ const Detentions = {
 
                     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                         <input type="text" id="detentionSearch" placeholder="Search student..." style="flex: 1;">
-                        <select id="typeFilter" style="width: 120px;">
-                            <option value="All">All Types</option>
-                            <option value="Standard">Standard</option>
-                            <option value="Saturday">Saturday</option>
-                            <option value="Principal">Principal's</option>
-                        </select>
                     </div>
 
                     <div id="detentionTableContainer" style="overflow-x: auto;">
@@ -92,7 +84,7 @@ const Detentions = {
                                     <th style="padding: 12px; text-align: left;">Student</th>
                                     <th style="padding: 12px; text-align: left;">Class</th>
                                     <th style="padding: 12px; text-align: left;">Date</th>
-                                    <th style="padding: 12px; text-align: left;">Type</th>
+                                    <th style="padding: 12px; text-align: center;">Days Left</th>
                                     <th style="padding: 12px; text-align: center;">Actions</th>
                                 </tr>
                             </thead>
@@ -103,21 +95,45 @@ const Detentions = {
                     </div>
                 </div>
             </div>
+            <style>
+                .active-tab { border-bottom: 2px solid var(--primary-color); color: var(--primary-dark) !important; padding-bottom: 5px; }
+                .clear-btn:hover { background: #e8f5e9 !important; color: #2e7d32 !important; }
+            </style>
         `;
 
         Detentions.attachEventListeners(container);
         Detentions.load();
     },
 
+    currentStatusFilter: 'Uncleared',
+
     attachEventListeners: (container) => {
         const form = document.getElementById('detentionForm');
         if (form) form.onsubmit = Detentions.handleSubmit;
 
         const searchInput = document.getElementById('detentionSearch');
-        const typeFilter = document.getElementById('typeFilter');
+        if (searchInput) searchInput.oninput = () => Detentions.load();
 
-        if (searchInput) searchInput.oninput = Detentions.load;
-        if (typeFilter) typeFilter.onchange = Detentions.load;
+        const tabCurrent = document.getElementById('tabCurrent');
+        const tabCleared = document.getElementById('tabCleared');
+
+        if (tabCurrent) tabCurrent.onclick = () => {
+            Detentions.currentStatusFilter = 'Uncleared';
+            tabCurrent.classList.add('active-tab');
+            tabCleared.classList.remove('active-tab');
+            tabCurrent.style.color = 'var(--primary-color)';
+            tabCleared.style.color = '#999';
+            Detentions.load();
+        };
+
+        if (tabCleared) tabCleared.onclick = () => {
+            Detentions.currentStatusFilter = 'Cleared';
+            tabCleared.classList.add('active-tab');
+            tabCurrent.classList.remove('active-tab');
+            tabCleared.style.color = 'var(--primary-color)';
+            tabCurrent.style.color = '#999';
+            Detentions.load();
+        };
 
         container.onclick = (e) => {
             const el = e.target.closest('[data-action]');
@@ -125,17 +141,17 @@ const Detentions = {
             const action = el.dataset.action;
             if (action === 'export') Detentions.exportExcel();
             if (action === 'print') Detentions.printList();
+            if (action === 'clear-day') Detentions.clearOneDay(el.dataset.id);
         };
     },
 
     load: async () => {
         const search = document.getElementById('detentionSearch')?.value || '';
-        const type = document.getElementById('typeFilter')?.value || 'All';
         const tbody = document.getElementById('detentionTableBody');
         if (!tbody) return;
 
         try {
-            const res = await fetch(`/api/detentions?student_name=${encodeURIComponent(search)}&detention_type=${type}`);
+            const res = await fetch(`/api/detentions?student_name=${encodeURIComponent(search)}&status=${Detentions.currentStatusFilter}`);
             const data = await res.json();
 
             if (data.success && data.detentions.length) {
@@ -144,11 +160,20 @@ const Detentions = {
                         <td style="padding: 12px;"><strong>${d.student_name}</strong></td>
                         <td style="padding: 12px;">${d.student_class}</td>
                         <td style="padding: 12px;">${new Date(d.detention_date).toLocaleDateString()}</td>
-                        <td style="padding: 12px;"><span class="badge badge-pending">${d.detention_type}</span></td>
                         <td style="padding: 12px; text-align: center;">
-                            <button class="btn btn-sm" onclick="alert('Remarks: ${d.remarks || 'None'}')" style="background: none; color: var(--primary-color); padding: 5px;">
-                                <i class='bx bx-info-circle'></i>
-                            </button>
+                            <span class="badge ${d.days > 0 ? 'badge-pending' : 'badge-success'}">${d.days} Day(s)</span>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: flex; justify-content: center; gap: 5px;">
+                                <button class="btn btn-sm" onclick="alert('Remarks: ${d.remarks || 'None'}\\nDuration: ${d.days || 1} day(s)')" title="View Info">
+                                    <i class='bx bx-info-circle'></i>
+                                </button>
+                                ${d.status === 'Uncleared' ? `
+                                    <button class="btn btn-sm clear-btn" data-action="clear-day" data-id="${d.id}" style="background: none; color: #4caf50;" title="Clear 1 Day">
+                                        <i class='bx bx-check-circle'></i>
+                                    </button>
+                                ` : ''}
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -157,6 +182,21 @@ const Detentions = {
             }
         } catch (e) {
             tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--danger);">Error loading data.</td></tr>`;
+        }
+    },
+
+    clearOneDay: async (id) => {
+        if (!confirm('Clear one day for this student?')) return;
+        try {
+            const res = await fetch(`/api/detentions/${id}/clear`, { method: 'PUT' });
+            const data = await res.json();
+            if (data.success) {
+                Detentions.load();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            alert('Operation failed');
         }
     },
 
@@ -188,7 +228,7 @@ const Detentions = {
 
     exportExcel: async () => {
         try {
-            const res = await fetch('/api/detentions');
+            const res = await fetch('/api/detentions?status=Uncleared');
             const data = await res.json();
 
             if (data.success && data.detentions.length) {
@@ -204,11 +244,27 @@ const Detentions = {
         }
     },
 
-    printList: () => {
-        const printWindow = window.open('', '_blank');
-        const rows = document.getElementById('detentionTableBody').innerHTML;
+    printList: async () => {
+        try {
+            const res = await fetch('/api/detentions?status=Uncleared');
+            const data = await res.json();
 
-        printWindow.document.write(`
+            if (!data.success || !data.detentions.length) {
+                return alert("No uncleared records to print.");
+            }
+
+            const rows = data.detentions.map(d => `
+                <tr>
+                    <td>${d.student_name}</td>
+                    <td>${d.student_class}</td>
+                    <td>${new Date(d.detention_date).toLocaleDateString()}</td>
+                    <td>${d.days} Day(s)</td>
+                </tr>
+            `).join('');
+
+            const printWindow = window.open('', '_blank');
+
+            printWindow.document.write(`
             <html>
                 <head>
                     <title>Detention List - ${new Date().toLocaleDateString()}</title>
@@ -233,21 +289,23 @@ const Detentions = {
                                 <th>Student Name</th>
                                 <th>Class</th>
                                 <th>Date</th>
-                                <th>Type</th>
+                                <th>Days</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${rows}
                         </tbody>
                     </table>
-                    <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+                    <div style="margin-top: 50px; display: flex; justify-content: center;">
                         <div>____________________<br>Discipline Master</div>
-                        <div>____________________<br>Duty Officer Signature</div>
                     </div>
                 </body>
             </html>
         `);
-        printWindow.document.close();
-        printWindow.print();
+            printWindow.document.close();
+            printWindow.print();
+        } catch (e) {
+            alert("Print failed.");
+        }
     }
 };

@@ -4,7 +4,7 @@ const db = require('../database/db');
 
 // GET /api/detentions
 router.get('/', (req, res) => {
-    const { student_name, detention_type, sort_by } = req.query;
+    const { student_name, sort_by, status } = req.query;
     let sql = `SELECT d.*, u.full_name as recorder_name 
                FROM detentions d 
                LEFT JOIN users u ON d.recorded_by = u.id`;
@@ -16,9 +16,9 @@ router.get('/', (req, res) => {
         params.push(`%${student_name}%`);
     }
 
-    if (detention_type && detention_type !== 'All') {
-        conditions.push(`d.detention_type = ?`);
-        params.push(detention_type);
+    if (status) {
+        conditions.push(`d.status = ?`);
+        params.push(status);
     }
 
     if (conditions.length > 0) {
@@ -36,14 +36,40 @@ router.get('/', (req, res) => {
     });
 });
 
+// PUT /api/detentions/:id/clear
+router.put('/:id/clear', (req, res) => {
+    const { id } = req.params;
+
+    // Get current record
+    db.get('SELECT id, days, status FROM detentions WHERE id = ?', [id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Record not found' });
+
+        let newDays = (row.days || 1) - 1;
+        let newStatus = newDays <= 0 ? 'Cleared' : 'Uncleared';
+        if (newDays < 0) newDays = 0;
+
+        db.run(
+            'UPDATE detentions SET days = ?, status = ? WHERE id = ?',
+            [newDays, newStatus, id],
+            function (err) {
+                if (err) return res.status(500).json({ error: err.message });
+                if (req.io) req.io.emit('dashboard_update', { type: 'detention', action: 'update', id });
+                res.json({ success: true, message: 'Detention updated', days: newDays, status: newStatus });
+            }
+        );
+    });
+});
+
 // POST /api/detentions
 router.post('/', (req, res) => {
-    const { student_name, student_class, offense, incident_id, detention_date, detention_type, remarks, recorded_by } = req.body;
+    const { student_name, student_class, offense, incident_id, detention_date, remarks, recorded_by, days } = req.body;
+    const detention_type = 'Standard'; // Default value since it's removed from UI
 
     db.run(
-        `INSERT INTO detentions (student_name, student_class, offense, incident_id, detention_date, detention_type, remarks, recorded_by) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [student_name, student_class, offense, incident_id || null, detention_date, detention_type, remarks, recorded_by],
+        `INSERT INTO detentions (student_name, student_class, offense, incident_id, detention_date, detention_type, remarks, recorded_by, days) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [student_name, student_class, offense, incident_id || null, detention_date, detention_type, remarks || '', recorded_by, days || 1],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             if (req.io) req.io.emit('dashboard_update', { type: 'detention', action: 'create' });
