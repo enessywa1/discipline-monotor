@@ -151,11 +151,20 @@ const Reports = {
         `;
 
         // Delegated Event Listener for Print
-        container.addEventListener('click', (e) => {
-            if (e.target.closest('#printBtn')) {
-                window.print();
-            }
-        });
+        const viewWrapper = document.getElementById('reportContent');
+        if (viewWrapper) {
+            viewWrapper.addEventListener('click', (e) => {
+                if (e.target.closest('#printBtn')) {
+                    window.print();
+                }
+            });
+        }
+
+        // Also add listener for print button outside reportContent if any
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            printBtn.onclick = () => window.print();
+        }
 
         // Inject Styles specifically for this report
         const style = document.createElement('style');

@@ -55,20 +55,23 @@ const Tasks = {
         `;
 
         // Delegated Event Listener
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-action]');
-            if (!btn) return;
+        const viewWrapper = document.getElementById('tasksViewContainer');
+        if (viewWrapper) {
+            viewWrapper.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
 
-            const action = btn.dataset.action;
-            if (action === 'open-modal') Tasks.openAssignModal();
-            if (action === 'close-modal') Tasks.closeModal();
-            if (action === 'filter') {
-                Tasks.filter(btn.dataset.status, btn);
-            }
-            if (action === 'update-status') {
-                Tasks.updateStatus(btn.dataset.id, btn.dataset.newStatus);
-            }
-        });
+                const action = btn.dataset.action;
+                if (action === 'open-modal') Tasks.openAssignModal();
+                if (action === 'close-modal') Tasks.closeModal();
+                if (action === 'filter') {
+                    Tasks.filter(btn.dataset.status, btn);
+                }
+                if (action === 'update-status') {
+                    Tasks.updateStatus(btn.dataset.id, btn.dataset.newStatus);
+                }
+            });
+        }
 
         // Fetch Data
         await Tasks.loadTasks();

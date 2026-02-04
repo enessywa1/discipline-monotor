@@ -84,13 +84,16 @@ const RecentSubmissions = {
             };
         }
 
-        container.addEventListener('click', (e) => {
-            const refreshBtn = e.target.closest('[data-action="refresh"]');
-            if (refreshBtn) { RecentSubmissions.loadSubmissions(); return; }
+        const viewWrapper = document.getElementById('recentSubmissionsContainer');
+        if (viewWrapper) {
+            viewWrapper.addEventListener('click', (e) => {
+                const refreshBtn = e.target.closest('[data-action="refresh"]');
+                if (refreshBtn) { RecentSubmissions.loadSubmissions(); return; }
 
-            const card = e.target.closest('.submission-card');
-            if (card) card.classList.toggle('expanded');
-        });
+                const card = e.target.closest('.submission-card');
+                if (card) card.classList.toggle('expanded');
+            });
+        }
 
         RecentSubmissions.loadSubmissions();
         RecentSubmissions.startPolling();

@@ -103,20 +103,23 @@ const Statements = {
         `;
 
         // Delegated Event Listener
-        container.addEventListener('click', (e) => {
-            const el = e.target.closest('[data-action]');
-            if (!el) return;
+        const viewWrapper = document.getElementById('statementsViewContainer');
+        if (viewWrapper) {
+            viewWrapper.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-action]');
+                if (!el) return;
 
-            const action = el.dataset.action;
-            if (action === 'search') Statements.search();
-            if (action === 'export') Statements.downloadExcel();
-            if (action === 'select-student') {
-                Statements.selectStudent(el.dataset.id, el.dataset.name, el.dataset.class);
-            }
-            if (action === 'quick-detention') {
-                Statements.triggerDetention(el.dataset.name, el.dataset.class, el.dataset.offense);
-            }
-        });
+                const action = el.dataset.action;
+                if (action === 'search') Statements.search();
+                if (action === 'export') Statements.downloadExcel();
+                if (action === 'select-student') {
+                    Statements.selectStudent(el.dataset.id, el.dataset.name, el.dataset.class);
+                }
+                if (action === 'quick-detention') {
+                    Statements.triggerDetention(el.dataset.name, el.dataset.class, el.dataset.offense);
+                }
+            });
+        }
 
         const form = document.getElementById('stepStatementForm');
         if (form) form.addEventListener('submit', Statements.handleSubmit);
