@@ -17,7 +17,7 @@ if (isPostgres) {
         },
         connectionTimeoutMillis: 5000, // Fail after 5 seconds
         idleTimeoutMillis: 30000,
-        max: 10, // Increased to support concurrent dashboard fetches
+        max: 5, // Reduced from 10 to avoid MaxClientsInSessionMode on Free Tier
         keepAlive: true, // Maintain connection socket
         allowExitOnIdle: true
     });
