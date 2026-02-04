@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
 
             // 2. Recent Announcements (Last 7 days)
             let annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
-                          WHERE posted_by != ? AND created_at >= date('now', '-7 days')`;
+                          WHERE posted_by != ? AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'`;
 
             db.all(annSql, [user_id], (err, anns) => {
                 if (!err && anns) {

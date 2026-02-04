@@ -1,7 +1,7 @@
 const Tasks = {
     render: async (container) => {
         const user = Auth.getUser();
-        const isAdmin = ['Director', 'Principal', 'Discipline Master', 'Assistant Discipline Master', 'Head Patron', 'Head Matron'].includes(user.role);
+        const isAdmin = ['Developer', 'Director', 'Principal', 'Associate Principal', 'Dean of Students', 'Discipline Master', 'Assistant Discipline Master', 'QA', 'CIE'].includes(user.role);
 
         container.innerHTML = `
             <div class="card" id="tasksViewContainer">
@@ -123,7 +123,11 @@ const Tasks = {
             const data = await res.json();
             const select = document.getElementById('userSelect');
             if (select && data.success) {
-                select.innerHTML = data.users.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
+                // Filter to only show Patrons and Matrons
+                const patronsMatrons = data.users.filter(u =>
+                    ['Patron', 'Matron', 'Head Patron', 'Head Matron'].includes(u.role)
+                );
+                select.innerHTML = patronsMatrons.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
             }
         } catch (e) {
             console.error(e);

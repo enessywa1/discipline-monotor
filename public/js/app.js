@@ -156,6 +156,10 @@ const App = {
                 title.textContent = 'Detention Records';
                 Detentions.render(container);
                 break;
+            case 'suspensions':
+                title.textContent = 'Suspensions & Expulsions';
+                Suspensions.render(container);
+                break;
             case 'about':
                 title.textContent = 'About System';
                 About.render(container);

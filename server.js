@@ -81,6 +81,7 @@ const reportsRoutes = require('./routes/reports');
 const announcementsRoutes = require('./routes/announcements');
 const notificationsRoutes = require('./routes/notifications');
 const detentionsRoutes = require('./routes/detentions');
+const suspensionsRoutes = require('./routes/suspensions');
 
 // Mount Routes
 app.use('/api/tasks', tasksRoutes);
@@ -90,6 +91,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/announcements', announcementsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
+app.use('/api/suspensions', suspensionsRoutes);
 
 // Auth Route
 app.post('/api/login', loginLimiter, (req, res) => {

@@ -102,6 +102,45 @@ CREATE TABLE IF NOT EXISTS improved_students (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 10. Suspensions and Expulsions
+CREATE TABLE IF NOT EXISTS suspensions_expulsions (
+    id SERIAL PRIMARY KEY,
+    student_name TEXT NOT NULL,
+    student_class TEXT NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('Suspension', 'Expulsion')),
+    start_date DATE,
+    end_date DATE, -- NULL for Expulsion
+    reason TEXT NOT NULL,
+    recorded_by INTEGER NOT NULL REFERENCES users(id),
+    status TEXT DEFAULT 'Active' CHECK(status IN ('Active', 'Completed', 'Appealed')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. Notifications Table
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT DEFAULT 'info',
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. Detentions Table
+CREATE TABLE IF NOT EXISTS detentions (
+    id SERIAL PRIMARY KEY,
+    student_name TEXT NOT NULL,
+    student_class TEXT NOT NULL,
+    offense TEXT NOT NULL,
+    detention_date DATE NOT NULL,
+    days INTEGER DEFAULT 1,
+    remarks TEXT,
+    recorded_by INTEGER NOT NULL REFERENCES users(id),
+    status TEXT DEFAULT 'Uncleared' CHECK(status IN ('Uncleared', 'Cleared')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
 CREATE INDEX IF NOT EXISTS idx_discipline_reports_name ON discipline_reports(student_name);
