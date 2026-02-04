@@ -1,7 +1,7 @@
 const Suspensions = {
     render: async (container) => {
         container.innerHTML = `
-            <div class="layout-grid" id="suspensionsViewContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div class="layout-grid" id="suspensionsViewContainer" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                 
                 <!-- Column 1: Record New Suspension/Expulsion -->
                 <div class="card">
@@ -61,7 +61,7 @@ const Suspensions = {
                 </div>
 
                 <!-- Column 2: Suspension/Expulsion List -->
-                <div class="card col-span-2">
+                <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                         <h3 style="margin: 0; color: var(--primary-dark);">Suspension & Expulsion Records</h3>
                         <div style="display: flex; gap: 10px;">
