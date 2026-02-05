@@ -19,6 +19,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
+const SERVER_BOOT_TIME = Date.now();
 
 // Share io instance with routes
 app.use((req, res, next) => {
@@ -29,6 +30,10 @@ app.use((req, res, next) => {
 // Socket.io Connection
 io.on('connection', (socket) => {
     console.log('New client connected');
+
+    // Send boot time to client for live reload detection
+    socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected');
     });

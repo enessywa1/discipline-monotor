@@ -281,6 +281,22 @@
         });
     </script>
     <script src="js/loader.js"></script>
+    <!-- Hot Reload Logic for Login Page -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on('server_init', (data) => {
+                const lastBootTime = sessionStorage.getItem('server_boot_time');
+                if (lastBootTime && lastBootTime !== data.bootTime.toString()) {
+                    console.log('🔄 Server restarted, reloading page...');
+                    window.location.reload();
+                } else {
+                    sessionStorage.setItem('server_boot_time', data.bootTime);
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
