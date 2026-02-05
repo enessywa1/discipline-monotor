@@ -74,17 +74,29 @@ router.delete('/:id', (req, res) => {
 });
 
 router.get('/log/activity', (req, res) => {
+    // Standardize query to work with both SQLite and Postgres
     const sql = `
         SELECT full_name, role FROM users 
-        WHERE last_login::date = CURRENT_DATE
+        WHERE last_login IS NOT NULL 
+        AND (
+            (DATE(last_login) = DATE('now')) -- SQLite
+            OR 
+            (last_login::date = CURRENT_DATE) -- Postgres
+        )
         ORDER BY last_login DESC
     `;
-    db.all(sql, [], (err, rows) => {
+
+    // However, since we have isPostgres available in db, let's be more precise
+    const actualSql = db.isPostgres ?
+        `SELECT full_name, role FROM users WHERE last_login::date = CURRENT_DATE ORDER BY last_login DESC` :
+        `SELECT full_name, role FROM users WHERE DATE(last_login) = DATE('now') ORDER BY last_login DESC`;
+
+    db.all(actualSql, [], (err, rows) => {
         if (err) {
-            console.error("Activity Log Error:", err);
-            return res.json({ success: false, active: [] });
+            console.error("❌ Activity Log API Error:", err);
+            return res.status(500).json({ success: false, error: "Database error fetching activity log" });
         }
-        res.json({ success: true, active: rows });
+        res.json({ success: true, active: rows || [] });
     });
 });
 

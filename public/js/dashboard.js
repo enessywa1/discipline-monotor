@@ -132,23 +132,33 @@ const Dashboard = {
     loadActiveStaff: async () => {
         try {
             const res = await fetch('/api/users/log/activity');
+            if (!res.ok) throw new Error('API request failed');
+
             const data = await res.json();
             const el = document.getElementById('statActive');
             const list = document.getElementById('activeStaffList');
 
             if (data.success) {
-                el.textContent = data.active.length;
-                if (data.active.length) {
-                    list.innerHTML = data.active.map(u => `
-                        <div style="padding: 5px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
-                            <div style="width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 8px;"></div>
-                            ${u.full_name} <span style="font-size: 0.8rem; color: #888; margin-left: 5px;">(${u.role})</span>
-                        </div>
-                    `).join('');
-                } else {
-                    list.innerHTML = '<p>No activity recorded yet today.</p>';
+                if (el) el.textContent = data.active.length;
+                if (list) {
+                    if (data.active.length) {
+                        list.innerHTML = data.active.map(u => `
+                            <div style="padding: 5px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+                                <div style="width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 8px;"></div>
+                                ${u.full_name} <span style="font-size: 0.8rem; color: #888; margin-left: 5px;">(${u.role})</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        list.innerHTML = '<p style="color: #888; padding: 10px 0;">No activity recorded yet today.</p>';
+                    }
                 }
+            } else {
+                if (list) list.innerHTML = `<p style="color: #d32f2f; padding: 10px 0;">Error: ${data.error || 'Failed to load staff activity'}</p>`;
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error("Dashboard staff load error:", e);
+            const list = document.getElementById('activeStaffList');
+            if (list) list.innerHTML = '<p style="color: #d32f2f; padding: 10px 0;">Unable to connect to activity server.</p>';
+        }
     }
 };

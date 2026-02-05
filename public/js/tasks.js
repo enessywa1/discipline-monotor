@@ -24,7 +24,7 @@ const Tasks = {
 
             <!-- Modal for New Task -->
             <div id="taskModal" class="sidebar-overlay" style="display: none;">
-                <div class="card" style="position: relative; width: 90%; max-width: 500px; margin: 20px;">
+                <div class="card" style="position: relative; width: 90%; max-width: 500px;">
                     <h3>Assign New Task</h3>
                     <form id="assignTaskForm">
                         <div class="form-group">
