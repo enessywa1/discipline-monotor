@@ -68,6 +68,7 @@ const DisciplineForm = {
                             <option value="Abusive Behavior">Abusive/Threatening Behavior</option>
                             <option value="Laptop Misuse">Laptop Misuse</option>
                             <option value="Dodging">Dodging Classes/Preps/Church</option>
+                            <option value="Late Management">Late / Poor Time Management</option>
                             <option value="Exam Cheating">Cheating in Examinations</option>
                             <option value="Other">Other</option>
                         </select>
