@@ -58,8 +58,14 @@ const Statements = {
                                 <option value="Dodging">Dodging Classes/Preps/Church</option>
                                 <option value="Late Management">Late / Poor Time Management</option>
                                 <option value="Exam Cheating">Cheating in Examinations</option>
+                                <option value="Custom">Custom Offence...</option>
                                 <option value="Other">Other</option>
                             </select>
+                        </div>
+
+                        <div id="customOffenceContainer" class="hidden" style="margin-bottom: 15px;">
+                            <label>Specify Offence</label>
+                            <input type="text" id="customOffenceInput" placeholder="Enter custom offence details">
                         </div>
 
                         <div class="form-group">
@@ -123,7 +129,23 @@ const Statements = {
         }
 
         const form = document.getElementById('stepStatementForm');
-        if (form) form.addEventListener('submit', Statements.handleSubmit);
+        if (form) {
+            form.addEventListener('submit', Statements.handleSubmit);
+
+            // Handle Custom Offence Visibility
+            const offenceSelect = form.querySelector('select[name="offence_type"]');
+            const customContainer = document.getElementById('customOffenceContainer');
+
+            if (offenceSelect && customContainer) {
+                offenceSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'Custom' || e.target.value === 'Other') {
+                        customContainer.classList.remove('hidden');
+                    } else {
+                        customContainer.classList.add('hidden');
+                    }
+                });
+            }
+        }
 
         const searchInput = document.getElementById('studentSearch');
         if (searchInput) {
@@ -289,7 +311,9 @@ const Statements = {
             student_name: data.student_name,
             student_class: data.student_class,
             incident_date: data.incident_date,
-            offence_type: data.offence_type,
+            offence_type: (data.offence_type === 'Custom' || data.offence_type === 'Other')
+                ? (document.getElementById('customOffenceInput').value || data.offence_type)
+                : data.offence_type,
             punitive_measure: data.punitive_measure,
             recorded_by: data.recorded_by,
             description: data.description
