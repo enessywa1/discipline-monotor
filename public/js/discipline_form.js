@@ -70,8 +70,14 @@ const DisciplineForm = {
                             <option value="Dodging">Dodging Classes/Preps/Church</option>
                             <option value="Late Management">Late / Poor Time Management</option>
                             <option value="Exam Cheating">Cheating in Examinations</option>
+                            <option value="Custom">Custom Offence...</option>
                             <option value="Other">Other</option>
                         </select>
+                    </div>
+
+                    <div id="customOffenceContainer" class="hidden" style="margin-bottom: 15px;">
+                        <label>Specify Offence</label>
+                        <input type="text" id="customOffenceInput" placeholder="Enter custom offence details">
                     </div>
 
                     <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
@@ -114,7 +120,21 @@ const DisciplineForm = {
         `;
 
         const form = document.getElementById('disciplineReportForm');
-        if (form) form.onsubmit = DisciplineForm.handleSubmit;
+        if (form) {
+            form.onsubmit = DisciplineForm.handleSubmit;
+
+            // Handle Custom Offence Visibility
+            const offenceSelect = form.querySelector('select[name="offence"]');
+            const customContainer = document.getElementById('customOffenceContainer');
+
+            offenceSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'Custom' || e.target.value === 'Other') {
+                    customContainer.classList.remove('hidden');
+                } else {
+                    customContainer.classList.add('hidden');
+                }
+            });
+        }
     },
 
     handleSubmit: async (e) => {
@@ -139,7 +159,9 @@ const DisciplineForm = {
         const payload = {
             student_name: data.student_name,
             student_class: data.class_grade,
-            offence: data.offence,
+            offence: (data.offence === 'Custom' || data.offence === 'Other')
+                ? (document.getElementById('customOffenceInput').value || data.offence)
+                : data.offence,
             description: descriptionJson,
             staff_id: data.staff_id,
             date_reported: data.date_reported,

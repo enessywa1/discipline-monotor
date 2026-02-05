@@ -26,6 +26,7 @@ const Users = {
                                     <option value="Discipline Master">Discipline Master</option>
                                     <option value="Assistant Discipline Master">Assistant Discipline Master</option>
                                     <option value="Director">Director</option>
+                                    <option value="Director Administration and Public Relations">Director Administration and Public Relations</option>
                                     <option value="Principal">Principal</option>
                                     <option value="Associate Principal">Associate Principal</option>
                                     <option value="Dean of Students">Dean of Students</option>
