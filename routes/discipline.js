@@ -45,16 +45,13 @@ router.post('/reports', (req, res) => {
 
             const reportId = this.lastID;
 
-            // Trigger Notification for Admins and Executives
-            const rolesToCheck = ['discipline master', 'admin', 'developer', 'principal', 'director', 'dean of students', 'associate principal', 'assistant discipline master'];
-            const placeholders = rolesToCheck.map(() => '?').join(',');
-
-            db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, rolesToCheck, (userErr, masters) => {
-                if (!userErr && masters) {
-                    masters.forEach(master => {
+            // Trigger Notification for ALL Users
+            db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                if (!userErr && users) {
+                    users.forEach(user => {
                         db.run(
                             `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'report', '#recent_submissions')`,
-                            [master.id, 'New Report', `New Discipline Report for ${student_name}`]
+                            [user.id, 'New Report', `New Discipline Report for ${student_name}`]
                         );
                     });
                 }
@@ -116,16 +113,13 @@ router.post('/statements', (req, res) => {
 
             const statementId = this.lastID;
 
-            // Trigger Notification for Admins and Executives
-            const rolesToCheck = ['discipline master', 'admin', 'developer', 'principal', 'director', 'dean of students', 'associate principal', 'assistant discipline master'];
-            const placeholders = rolesToCheck.map(() => '?').join(',');
-
-            db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, rolesToCheck, (userErr, masters) => {
-                if (!userErr && masters) {
-                    masters.forEach(master => {
+            // Trigger Notification for ALL Users
+            db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                if (!userErr && users) {
+                    users.forEach(user => {
                         db.run(
                             `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'statement', '#recent_submissions')`,
-                            [master.id, 'New Statement', `New Case Statement for ${student_name}`]
+                            [user.id, 'New Statement', `New Case Statement for ${student_name}`]
                         );
                     });
                 }
