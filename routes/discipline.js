@@ -50,8 +50,8 @@ router.post('/reports', (req, res) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
-                            `INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, 'report', '#recent_submissions')`,
-                            [master.id, `New Discipline Report for ${student_name}`]
+                            `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'report', '#recent_submissions')`,
+                            [master.id, 'New Report', `New Discipline Report for ${student_name}`]
                         );
                     });
                 }
@@ -118,8 +118,8 @@ router.post('/statements', (req, res) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
-                            `INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, 'statement', '#recent_submissions')`,
-                            [master.id, `New Case Statement for ${student_name}`]
+                            `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'statement', '#recent_submissions')`,
+                            [master.id, 'New Statement', `New Case Statement for ${student_name}`]
                         );
                     });
                 }

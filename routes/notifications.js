@@ -77,9 +77,9 @@ router.put('/read/:id', (req, res) => {
 
 // POST /api/notifications
 router.post('/', (req, res) => {
-    const { user_id, message, type, link } = req.body;
-    db.run(`INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, ?, ?)`,
-        [user_id, message, type || 'info', link],
+    const { user_id, title, message, type, link } = req.body;
+    db.run(`INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)`,
+        [user_id, title || 'Notification', message, type || 'info', link],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true, id: this.lastID });
