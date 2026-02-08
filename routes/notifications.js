@@ -41,13 +41,17 @@ router.get('/', (req, res) => {
                 }
 
                 // 3. Persistent Notifications (from notifications table)
-                db.all(`SELECT id, message, type, link, created_at FROM notifications 
+                db.all(`SELECT id, title, message, type, link, created_at FROM notifications 
                         WHERE user_id = ? AND is_read = FALSE 
                         ORDER BY created_at DESC`, [user_id], (err, persistents) => {
+
+                    if (err) console.error("Error fetching notifications:", err);
+                    // console.log("Fetched notifications for user", user_id, ":", persistents);
 
                     if (!err && persistents) {
                         persistents.forEach(p => notifications.push({
                             id: p.id,
+                            title: p.title,
                             message: p.message,
                             date: p.created_at,
                             link: p.link || '#',
