@@ -42,7 +42,7 @@ router.get('/', (req, res) => {
 
                 // 3. Persistent Notifications (from notifications table)
                 db.all(`SELECT id, message, type, link, created_at FROM notifications 
-                        WHERE user_id = ? AND is_read = 0 
+                        WHERE user_id = ? AND is_read = FALSE 
                         ORDER BY created_at DESC`, [user_id], (err, persistents) => {
 
                     if (!err && persistents) {

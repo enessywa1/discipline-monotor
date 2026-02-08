@@ -45,8 +45,8 @@ router.post('/reports', (req, res) => {
 
             const reportId = this.lastID;
 
-            // Trigger Notification for Discipline Masters
-            db.all("SELECT id FROM users WHERE LOWER(role) = 'discipline master'", [], (userErr, masters) => {
+            // Trigger Notification for Discipline Masters and Admins
+            db.all("SELECT id FROM users WHERE LOWER(role) IN ('discipline master', 'admin')", [], (userErr, masters) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
@@ -113,8 +113,8 @@ router.post('/statements', (req, res) => {
 
             const statementId = this.lastID;
 
-            // Trigger Notification for Discipline Masters
-            db.all("SELECT id FROM users WHERE LOWER(role) = 'discipline master'", [], (userErr, masters) => {
+            // Trigger Notification for Discipline Masters and Admins
+            db.all("SELECT id FROM users WHERE LOWER(role) IN ('discipline master', 'admin')", [], (userErr, masters) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
