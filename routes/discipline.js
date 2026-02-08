@@ -45,8 +45,11 @@ router.post('/reports', (req, res) => {
 
             const reportId = this.lastID;
 
-            // Trigger Notification for Discipline Masters and Admins
-            db.all("SELECT id FROM users WHERE LOWER(role) IN ('discipline master', 'admin')", [], (userErr, masters) => {
+            // Trigger Notification for Admins and Executives
+            const rolesToCheck = ['discipline master', 'admin', 'developer', 'principal', 'director', 'dean of students'];
+            const placeholders = rolesToCheck.map(() => '?').join(',');
+
+            db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, rolesToCheck, (userErr, masters) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
@@ -113,8 +116,11 @@ router.post('/statements', (req, res) => {
 
             const statementId = this.lastID;
 
-            // Trigger Notification for Discipline Masters and Admins
-            db.all("SELECT id FROM users WHERE LOWER(role) IN ('discipline master', 'admin')", [], (userErr, masters) => {
+            // Trigger Notification for Admins and Executives
+            const rolesToCheck = ['discipline master', 'admin', 'developer', 'principal', 'director', 'dean of students'];
+            const placeholders = rolesToCheck.map(() => '?').join(',');
+
+            db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, rolesToCheck, (userErr, masters) => {
                 if (!userErr && masters) {
                     masters.forEach(master => {
                         db.run(
