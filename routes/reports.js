@@ -94,7 +94,7 @@ router.get('/stats', async (req, res) => {
         });
 
         const fetchTodayCases = () => new Promise((resolve, reject) => {
-            const sql = isPostgres
+            const sql = db.isPostgres
                 ? `SELECT (
                     (SELECT COUNT(*) FROM statements WHERE created_at::date = CURRENT_DATE) +
                     (SELECT COUNT(*) FROM discipline_reports WHERE date_reported::date = CURRENT_DATE)
