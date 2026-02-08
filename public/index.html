@@ -203,8 +203,19 @@
     </div>
 
     <!-- Auto-Redirect if already logged in -->
-    <!-- Auto-Redirect if already logged in - DISABLED -->
-    <!-- <script> ... </script> -->
+    <script>
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user && user.id) {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (e) {
+                localStorage.removeItem('user'); // Corrupt data
+            }
+        }
+    </script>
 
 
     <div class="login-wrapper">
