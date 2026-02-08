@@ -203,16 +203,9 @@
     </div>
 
     <!-- Auto-Redirect if already logged in -->
-    <script>
-        (function () {
-            try {
-                const user = localStorage.getItem('user');
-                if (user && JSON.parse(user).id) {
-                    window.location.replace('dashboard.html');
-                }
-            } catch (e) { }
-        })();
-    </script>
+    <!-- Auto-Redirect if already logged in - DISABLED -->
+    <!-- <script> ... </script> -->
+
 
     <div class="login-wrapper">
         <div class="login-card">

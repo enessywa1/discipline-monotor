@@ -22,15 +22,9 @@ const App = {
             window.socket.on('connect', () => console.log('🟢 Connected to real-time server'));
 
             // Handle Live Reload
-            window.socket.on('server_init', (data) => {
-                const lastBootTime = sessionStorage.getItem('server_boot_time');
-                if (lastBootTime && lastBootTime !== data.bootTime.toString()) {
-                    console.log('🔄 Server restarted, reloading page...');
-                    window.location.reload();
-                } else {
-                    sessionStorage.setItem('server_boot_time', data.bootTime);
-                }
-            });
+            // Handle Live Reload - DISABLED
+            // window.socket.on('server_init', (data) => { ... });
+
 
             window.socket.on('dashboard_update', (data) => {
                 App.handleUpdate(data);
