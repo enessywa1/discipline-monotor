@@ -70,7 +70,7 @@ const Notifications = {
 
                 // Render Dropdown
                 list.innerHTML = data.notifications.slice(0, 5).map(n => `
-                    <a href="${n.link}" class="notification-item" onclick="Notifications.markAsRead(${n.id}, ${n.persistent})">
+                    <a href="${n.link}" class="notification-item" onclick="Notifications.handleClick(event, '${n.link}', ${n.id}, ${n.persistent})">
                         <i class='bx ${n.type === 'task' ? 'bx-task' : 'bx-info-circle'}' style="margin-right: 5px; color: var(--primary-color);"></i>
                         <div>
                             <div style="font-weight: 600; font-size: 0.85rem;">${n.message} ${n.persistent ? '<span style="color:var(--accent-color)">●</span>' : ''}</div>
@@ -95,6 +95,16 @@ const Notifications = {
                 body: note.message
             });
         }
+    },
+
+    handleClick: async (e, link, id, isPersistent) => {
+        e.preventDefault(); // Prevent immediate navigation
+
+        if (isPersistent && id) {
+            await Notifications.markAsRead(id, true);
+        }
+
+        window.location.href = link; // Navigate after marking read
     },
 
     markAsRead: async (id, isPersistent) => {
