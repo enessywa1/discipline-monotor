@@ -42,8 +42,23 @@ router.post('/reports', (req, res) => {
         [student_name, student_class, offence, description, staff_id, date_reported || new Date(), action_taken],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+
+            const reportId = this.lastID;
+
+            // Trigger Notification for Discipline Masters
+            db.all("SELECT id FROM users WHERE LOWER(role) = 'discipline master'", [], (userErr, masters) => {
+                if (!userErr && masters) {
+                    masters.forEach(master => {
+                        db.run(
+                            `INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, 'report', '#recent_submissions')`,
+                            [master.id, `New Discipline Report for ${student_name}`]
+                        );
+                    });
+                }
+            });
+
             if (req.io) req.io.emit('dashboard_update', { type: 'report', action: 'create' });
-            res.json({ success: true, reportId: this.lastID });
+            res.json({ success: true, reportId });
         }
     );
 });
@@ -95,8 +110,23 @@ router.post('/statements', (req, res) => {
         [student_name, student_class, incident_date, offence_type, punitive_measure, recorded_by, description],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+
+            const statementId = this.lastID;
+
+            // Trigger Notification for Discipline Masters
+            db.all("SELECT id FROM users WHERE LOWER(role) = 'discipline master'", [], (userErr, masters) => {
+                if (!userErr && masters) {
+                    masters.forEach(master => {
+                        db.run(
+                            `INSERT INTO notifications (user_id, message, type, link) VALUES (?, ?, 'statement', '#recent_submissions')`,
+                            [master.id, `New Case Statement for ${student_name}`]
+                        );
+                    });
+                }
+            });
+
             if (req.io) req.io.emit('dashboard_update', { type: 'statement', action: 'create' });
-            res.json({ success: true, statementId: this.lastID });
+            res.json({ success: true, statementId });
         }
     );
 });
@@ -192,6 +222,64 @@ router.delete('/improved/:id', (req, res) => {
     db.run(`DELETE FROM improved_students WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (req.io) req.io.emit('dashboard_update', { type: 'improved', action: 'delete' });
+        res.json({ success: true });
+    });
+});
+
+// --- Mutation Endpoints (DM Only) ---
+
+// Helper middleware for DM check
+const isDM = (req, res, next) => {
+    const user = req.session.user;
+    if (user && (user.role || '').toLowerCase() === 'discipline master') {
+        next();
+    } else {
+        res.status(403).json({ success: false, error: "Unauthorized. Discipline Master role required." });
+    }
+};
+
+// Update Report
+router.put('/reports/:id', isDM, (req, res) => {
+    const { student_name, student_class, offence, description, date_reported, action_taken } = req.body;
+    db.run(
+        `UPDATE discipline_reports SET student_name = ?, student_class = ?, offence = ?, description = ?, date_reported = ?, action_taken = ? WHERE id = ?`,
+        [student_name, student_class, offence, description, date_reported, action_taken, req.params.id],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'report', action: 'update' });
+            res.json({ success: true, changes: this.changes });
+        }
+    );
+});
+
+// Delete Report
+router.delete('/reports/:id', isDM, (req, res) => {
+    db.run(`DELETE FROM discipline_reports WHERE id = ?`, [req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'report', action: 'delete' });
+        res.json({ success: true });
+    });
+});
+
+// Update Statement
+router.put('/statements/:id', isDM, (req, res) => {
+    const { student_name, student_class, incident_date, offence_type, punitive_measure, description } = req.body;
+    db.run(
+        `UPDATE statements SET student_name = ?, student_class = ?, incident_date = ?, offence_type = ?, punitive_measure = ?, description = ? WHERE id = ?`,
+        [student_name, student_class, incident_date, offence_type, punitive_measure, description, req.params.id],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'statement', action: 'update' });
+            res.json({ success: true, changes: this.changes });
+        }
+    );
+});
+
+// Delete Statement
+router.delete('/statements/:id', isDM, (req, res) => {
+    db.run(`DELETE FROM statements WHERE id = ?`, [req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'statement', action: 'delete' });
         res.json({ success: true });
     });
 });
