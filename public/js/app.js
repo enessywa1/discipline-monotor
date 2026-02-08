@@ -39,6 +39,11 @@ const App = {
     },
 
     handleUpdate: (data) => {
+        // Refresh Notification Badge
+        if (typeof Notifications !== 'undefined' && Notifications.load) {
+            Notifications.load();
+        }
+
         // Refresh current view if applicable
         const view = window.location.hash.substring(1) || 'dashboard';
 
