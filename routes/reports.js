@@ -70,6 +70,64 @@ router.get('/detailed', async (req, res) => {
     }
 });
 
+// GET /api/reports/all-time - Fetch all-time records
+router.get('/all-time', async (req, res) => {
+    try {
+        const fetchStatements = () => new Promise((resolve, reject) => {
+            db.all(`SELECT s.id, s.student_name, s.student_class, s.offence_type, s.punitive_measure, s.incident_date, s.created_at, s.description, u.full_name as recorder_name 
+                    FROM statements s
+                    LEFT JOIN users u ON s.recorded_by = u.id
+                    ORDER BY s.incident_date DESC`, [], (err, rows) => {
+                if (err) reject(err); else resolve(rows);
+            });
+        });
+
+        const fetchTasks = () => new Promise((resolve, reject) => {
+            db.all(`SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
+                    FROM tasks t
+                    LEFT JOIN users u_to ON t.assigned_to = u_to.id
+                    LEFT JOIN users u_by ON t.assigned_by = u_by.id
+                    ORDER BY t.created_at DESC`, [], (err, rows) => {
+                if (err) reject(err); else resolve(rows);
+            });
+        });
+
+        const fetchStandings = () => new Promise((resolve, reject) => {
+            db.all(`SELECT st.id, st.week_start_date, st.discipline_pct, st.hygiene_pct, u.full_name as staff_name, u.role
+                    FROM standings st
+                    LEFT JOIN users u ON st.staff_id = u.id
+                    WHERE u.role IN ('Patron', 'Matron', 'Head Patron', 'Head Matron', 'Pastor')
+                    ORDER BY st.week_start_date DESC`, [], (err, rows) => {
+                if (err) reject(err); else resolve(rows);
+            });
+        });
+
+        const fetchDisciplineReports = () => new Promise((resolve, reject) => {
+            db.all(`SELECT dr.*, u.full_name as staff_name 
+                    FROM discipline_reports dr
+                    LEFT JOIN users u ON dr.staff_id = u.id
+                    ORDER BY dr.date_reported DESC`, [], (err, rows) => {
+                if (err) reject(err); else resolve(rows);
+            });
+        });
+
+        const [statements, tasks, standings, disciplineReports] = await Promise.all([
+            fetchStatements(),
+            fetchTasks(),
+            fetchStandings(),
+            fetchDisciplineReports()
+        ]);
+
+        res.json({
+            success: true,
+            data: { statements, tasks, standings, disciplineReports }
+        });
+    } catch (err) {
+        console.error("All-Time Reports API Error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // GET /api/reports/stats - Fetch aggregated stats for charts
 router.get('/stats', async (req, res) => {
     try {

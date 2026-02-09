@@ -154,6 +154,10 @@ const App = {
                 title.textContent = 'Weekly Reports';
                 Reports.render(container);
                 break;
+            case 'general_reports':
+                title.textContent = 'General Overall Reports';
+                GeneralReports.render(container);
+                break;
             case 'discipline_form':
                 title.textContent = 'Discipline Form';
                 DisciplineForm.render(container);
