@@ -63,6 +63,7 @@ const DisciplineForm = {
                             <option value="Noise Making">Noise Making / Disorder in Preps</option>
                             <option value="Graffiti">Graffiti</option>
                             <option value="Leaving School">Leaving School Without Permission</option>
+                            <option value="Moving Out">Moving Out Without Permission Card</option>
                             <option value="Demonstrations">Planning/Organizing Demonstrations</option>
                             <option value="Blasphemy">Blasphemous/Related Behavior</option>
                             <option value="Abusive Behavior">Abusive/Threatening Behavior</option>
