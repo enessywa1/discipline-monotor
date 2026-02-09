@@ -27,7 +27,7 @@ const Auth = {
         const userRole = (user.role || '').trim().toLowerCase();
 
         const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
-        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron'];
+        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
 
         const isAdmin = adminRoles.includes(userRole);
         const isPatronMatron = patronMatronRoles.includes(userRole);

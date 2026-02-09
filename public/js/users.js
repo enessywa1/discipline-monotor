@@ -23,6 +23,7 @@ const Users = {
                                     <option value="Matron">Matron</option>
                                     <option value="Head Patron">Head Patron</option>
                                     <option value="Head Matron">Head Matron</option>
+                                    <option value="Pastor">Pastor</option>
                                     <option value="Discipline Master">Discipline Master</option>
                                     <option value="Assistant Discipline Master">Assistant Discipline Master</option>
                                     <option value="Director">Director</option>

@@ -37,7 +37,7 @@ router.get('/detailed', async (req, res) => {
             db.all(`SELECT st.id, st.week_start_date, st.discipline_pct, st.hygiene_pct, u.full_name as staff_name, u.role
                     FROM standings st
                     LEFT JOIN users u ON st.staff_id = u.id
-                    WHERE u.role IN ('Patron', 'Matron', 'Head Patron', 'Head Matron')
+                    WHERE u.role IN ('Patron', 'Matron', 'Head Patron', 'Head Matron', 'Pastor')
                     ORDER BY st.week_start_date DESC LIMIT 20`, [], (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });

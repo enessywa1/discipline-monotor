@@ -129,7 +129,7 @@ const Tasks = {
             if (select && data.success) {
                 // Filter to only show Patrons and Matrons
                 const patronsMatrons = data.users.filter(u =>
-                    ['Patron', 'Matron', 'Head Patron', 'Head Matron'].includes(u.role)
+                    ['Patron', 'Matron', 'Head Patron', 'Head Matron', 'Pastor'].includes(u.role)
                 );
                 select.innerHTML = patronsMatrons.map(u => `<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
             }
