@@ -48,10 +48,25 @@ const Reports = {
                         </div>
                     </div>
                     
-                    <div style="margin-top: 20px;">
-                        <h5 style="margin-bottom: 10px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Incident Category Summary</h5>
-                        <div id="incidentSummaryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
-                            <!-- Categorized counts go here -->
+                    <div style="margin-top: 20px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+                        <div>
+                             <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Incident Category Summary</h5>
+                             <div id="incidentSummaryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
+                                <!-- Categorized counts go here -->
+                             </div>
+                        </div>
+                        <div class="noprint" style="background: #fcfcfc; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                             <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Offence Distribution</h5>
+                             <div style="height: 180px;">
+                                 <canvas id="offenceChart"></canvas>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;" class="noprint">
+                        <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Recent Incident Trend (Last 7 Days)</h5>
+                        <div style="height: 250px; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+                            <canvas id="trendChart"></canvas>
                         </div>
                     </div>
 
@@ -290,6 +305,70 @@ const Reports = {
                             <span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;">${count}</span>
                         </div>
                     `).join('');
+                }
+
+                // Render Distribution Chart
+                if (window.Chart) {
+                    const ctx = document.getElementById('offenceChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(summaryMap),
+                            datasets: [{
+                                data: Object.values(summaryMap),
+                                backgroundColor: ['#008080', '#004d40', '#00acc1', '#006064', '#b2dfdb', '#4db6ac'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+                            }
+                        }
+                    });
+
+                    // Render Trend Chart (Last 7 Days)
+                    const dayMap = {};
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        dayMap[d.toLocaleDateString()] = 0;
+                    }
+
+                    allIncidents.forEach(inc => {
+                        const dStr = new Date(inc.date).toLocaleDateString();
+                        if (dayMap[dStr] !== undefined) dayMap[dStr]++;
+                    });
+
+                    const trendCtx = document.getElementById('trendChart').getContext('2d');
+                    new Chart(trendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: Object.keys(dayMap),
+                            datasets: [{
+                                label: 'Incidents Captured',
+                                data: Object.values(dayMap),
+                                borderColor: '#008080',
+                                backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#008080'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                                x: { grid: { display: false } }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
                 }
 
                 document.getElementById('totalOffences').textContent = allIncidents.length;
