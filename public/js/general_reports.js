@@ -25,7 +25,7 @@ const GeneralReports = {
 
                 <hr style="border: 0; border-top: 2px solid var(--primary-color); margin: 20px 0;">
 
-                <!-- 1. Lifetime Totals -->
+                <!-- 1. Lifetime Totals & Trends -->
                 <div class="report-section">
                     <h4 class="section-title"><i class='bx bx-calculator'></i> Lifetime Totals</h4>
                     <div class="stats-grid-wide">
@@ -43,14 +43,56 @@ const GeneralReports = {
                         </div>
                     </div>
 
+                    <div style="margin-top: 20px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+                        <div>
+                             <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Lifetime Category Summary</h5>
+                             <div id="incidentSummaryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
+                                <!-- Categorized counts go here -->
+                             </div>
+                        </div>
+                        <div class="noprint" style="background: #fcfcfc; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                             <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">All-Time Offence Distribution</h5>
+                             <div style="height: 180px;">
+                                 <canvas id="offenceChart"></canvas>
+                             </div>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 30px;" class="noprint">
                         <h5 style="margin-bottom: 15px; color: #666; font-size: 0.9rem; text-transform: uppercase;">Historical Offence Trend</h5>
                         <div style="height: 300px; background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
                             <canvas id="historicalTrendChart"></canvas>
                         </div>
                         <p style="font-size: 0.75rem; color: grey; text-align: center; margin-top: 10px;">
-                            <i class='bx bx-info-circle'></i> This chart shows cumulative growth of discipline records over time, highlighting system usage improvements.
+                            <i class='bx bx-info-circle'></i> This chart shows cumulative growth of discipline records over time.
                         </p>
+                    </div>
+
+                    <div class="stats-grid-wide" style="margin-top: 30px;">
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgHygieneAll">0%</div>
+                            <div class="stat-label">All-Time Hygiene</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgTimeMgmtAll">0%</div>
+                            <div class="stat-label">All-Time Time Mgmt</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgSupervisionAll">0%</div>
+                            <div class="stat-label">All-Time Supervision</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgPrepsAll">0%</div>
+                            <div class="stat-label">All-Time Preps</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgDressCodeAll">0%</div>
+                            <div class="stat-label">All-Time Dress Code</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgChurchOrderAll">0%</div>
+                            <div class="stat-label">All-Time Church Order</div>
+                        </div>
                     </div>
                 </div>
 
@@ -89,6 +131,14 @@ const GeneralReports = {
                             <tr><td colspan="4" style="text-align: center;">Loading performance data...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- 4. Historical Staff Remarks -->
+                <div class="report-section">
+                    <h4 class="section-title"><i class='bx bx-comment-detail'></i> Historical Staff Remarks</h4>
+                    <div id="staffRemarksList" style="font-size: 0.9rem; color: var(--text-primary);">
+                        <p style="color: grey; font-style: italic;">No specific remarks recorded in history.</p>
+                    </div>
                 </div>
 
                 <!-- Signature -->
@@ -195,17 +245,54 @@ const GeneralReports = {
                 document.getElementById('totalOffencesAll').textContent = allIncidents.length;
                 document.getElementById('totalTasksAll').textContent = tasks.length;
 
+                // 1. Incident Category Summary Calculation
+                const summaryMap = {};
+                allIncidents.forEach(inc => {
+                    const type = inc.offence || 'Other';
+                    summaryMap[type] = (summaryMap[type] || 0) + 1;
+                });
+
+                const summaryGrid = document.getElementById('incidentSummaryGrid');
+                if (summaryGrid) {
+                    summaryGrid.innerHTML = Object.entries(summaryMap).map(([offence, count]) => `
+                        <div style="background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; font-weight: 600; color: #555;">${offence}</span>
+                            <span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;">${count}</span>
+                        </div>
+                    `).join('');
+                }
+
+                // Render Distribution Chart
+                if (window.Chart) {
+                    const ctx = document.getElementById('offenceChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(summaryMap),
+                            datasets: [{
+                                data: Object.values(summaryMap),
+                                backgroundColor: ['#008080', '#004d40', '#00acc1', '#006064', '#b2dfdb', '#4db6ac'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+                            }
+                        }
+                    });
+                }
+
                 // Render Historical Trend
                 if (window.Chart && allIncidents.length > 0) {
-                    // Group by month/year
                     const monthlyMap = {};
                     allIncidents.forEach(inc => {
                         const d = new Date(inc.date);
                         const key = d.toLocaleString('default', { month: 'short', year: 'numeric' });
                         monthlyMap[key] = (monthlyMap[key] || 0) + 1;
                     });
-
-                    // Sort keys chronologically
                     const sortedKeys = Object.keys(monthlyMap).sort((a, b) => new Date(a) - new Date(b));
 
                     const ctx = document.getElementById('historicalTrendChart').getContext('2d');
@@ -227,21 +314,27 @@ const GeneralReports = {
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                y: { beginAtZero: true }
-                            }
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
                         }
                     });
                 }
 
                 if (standings.length > 0) {
-                    const avg = standings.reduce((acc, curr) => acc + (curr.discipline_pct + curr.hygiene_pct) / 2, 0) / standings.length;
-                    document.getElementById('avgPerfAll').textContent = Math.round(avg) + '%';
+                    const calcAvg = (field) => {
+                        const total = standings.reduce((acc, curr) => acc + (curr[field] || 0), 0);
+                        return Math.round(total / standings.length);
+                    };
 
-                    // Group by Staff
+                    document.getElementById('avgPerfAll').textContent = calcAvg('discipline_pct') + '%';
+                    document.getElementById('avgHygieneAll').textContent = calcAvg('hygiene_pct') + '%';
+                    document.getElementById('avgTimeMgmtAll').textContent = calcAvg('time_mgmt_pct') + '%';
+                    document.getElementById('avgSupervisionAll').textContent = calcAvg('supervision_pct') + '%';
+                    document.getElementById('avgPrepsAll').textContent = calcAvg('preps_pct') + '%';
+                    document.getElementById('avgDressCodeAll').textContent = calcAvg('dress_code_pct') + '%';
+                    document.getElementById('avgChurchOrderAll').textContent = calcAvg('church_order_pct') + '%';
+
+                    // Group by Staff for history table
                     const staffMap = {};
                     standings.forEach(st => {
                         if (!staffMap[st.staff_name]) staffMap[st.staff_name] = { counts: 0, d: 0, h: 0, role: st.role };
@@ -258,6 +351,23 @@ const GeneralReports = {
                             <td>${Math.round(data.h / data.counts)}%</td>
                         </tr>
                     `).join('');
+
+                    // Historical Remarks
+                    const remarksList = document.getElementById('staffRemarksList');
+                    const remarks = standings.filter(st => st.explanation && st.explanation.trim() !== '');
+
+                    if (remarks.length === 0) {
+                        remarksList.innerHTML = '<p style="color: grey; font-style: italic; padding: 10px;">No specific remarks or explanations provided by staff in recorded history.</p>';
+                    } else {
+                        remarksList.innerHTML = remarks.map(st => `
+                            <div style="margin-bottom: 15px; padding: 12px; background: #f9f9f9; border-left: 4px solid var(--primary-color); border-radius: 0 6px 6px 0;">
+                                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; color: var(--primary-dark);">
+                                    ${st.staff_name} <span style="font-weight: 400; color: #777;">(${st.role})</span>
+                                </div>
+                                <div style="line-height: 1.4; font-style: italic;">"${st.explanation}"</div>
+                            </div>
+                        `).join('');
+                    }
                 } else {
                     document.getElementById('generalPerformanceTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">No performance data found.</td></tr>';
                 }
