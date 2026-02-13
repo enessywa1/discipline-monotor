@@ -124,18 +124,23 @@ app.use('/api/suspensions', suspensionsRoutes);
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {
     try {
+        const hasUrl = !!process.env.DATABASE_URL;
+        const sanitizedUrl = hasUrl ? process.env.DATABASE_URL.split('@')[1] : 'MISSING';
+
         const dbStatus = await db.get('SELECT 1 as connected');
         const userCount = await db.get('SELECT count(*) as count FROM users');
         res.json({
             status: 'online',
-            postgres: db.isPostgres,
+            isPostgres: db.isPostgres || !!process.env.DATABASE_URL,
             db_connected: !!dbStatus,
             user_count: userCount ? userCount.count : 0,
+            db_url_detected: hasUrl,
+            db_host: sanitizedUrl,
             session_store: sessionConfig.store ? 'postgres' : 'memory',
             node_env: process.env.NODE_ENV
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message, stack: err.stack });
     }
 });
 
