@@ -228,7 +228,11 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     } catch (err) {
         console.error("🔥 Crash in login route:", err);
         if (!res.headersSent) {
-            res.status(500).json({ error: "Internal server error during login" });
+            res.status(500).json({
+                success: false,
+                error: "Internal server error during login",
+                debug: err.message // Temporarily expose for troubleshooting
+            });
         }
     }
 });

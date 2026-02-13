@@ -283,13 +283,14 @@
                         window.location.href = 'dashboard.html';
                     }, 500); // Small delay for UX
                 } else {
-                    errorMsg.textContent = data.message || 'Invalid credentials';
+                    errorMsg.textContent = data.message || data.error || 'Invalid credentials';
                     errorMsg.style.display = 'block';
                     btn.innerHTML = 'Sign In';
                     btn.disabled = false;
                 }
             } catch (err) {
-                errorMsg.textContent = 'Connection error. Please try again.';
+                console.error('Login Error:', err);
+                errorMsg.textContent = 'Server connection failed. If the site just started, please wait 30s and try again.';
                 errorMsg.style.display = 'block';
                 btn.innerHTML = 'Sign In';
                 btn.disabled = false;
