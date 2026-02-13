@@ -7,6 +7,28 @@ const { createClient } = require('@supabase/supabase-js');
 const isVercel = !!process.env.VERCEL;
 const isPostgres = !!process.env.DATABASE_URL;
 
+// Supabase Auth Configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const { createClient } = require('@supabase/supabase-js');
+
+let supabaseAuth = null;
+if (supabaseUrl && supabaseAnonKey) {
+    supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+}
+
+let supabaseAdmin = null;
+if (supabaseUrl && supabaseServiceKey) {
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    });
+}
+
 let db;
 
 if (isPostgres) {
