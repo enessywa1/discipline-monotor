@@ -66,18 +66,30 @@ app.set('trust proxy', 1);
 
 
 // Session Configuration
-app.use(session({
+const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'fallback_secret_not_for_production',
     resave: false,
     saveUninitialized: false,
     proxy: true, // Required for secure cookies on Vercel/Render
     cookie: {
         secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Support cross-site if needed, or 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 // 24 hours
     }
-}));
+};
+
+// Use Postgres for sessions in production
+if (db.isPostgres) {
+    const PgSession = require('connect-pg-simple')(session);
+    sessionConfig.store = new PgSession({
+        pool: db, // Use the existing pool from supabase.js
+        tableName: 'session',
+        createTableIfMissing: true // Automatically create session table
+    });
+}
+
+app.use(session(sessionConfig));
 
 // Rate Limiting (Login)
 const loginLimiter = rateLimit({
