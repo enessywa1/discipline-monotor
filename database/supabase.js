@@ -1,6 +1,5 @@
 require('dotenv').config();
 const { Pool } = require('pg');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const { createClient } = require('@supabase/supabase-js');
@@ -67,6 +66,8 @@ if (isPostgres) {
     db.get = (sql, params) => execute('get', sql, params);
     db.all = (sql, params) => execute('all', sql, params);
 } else {
+    // SQLite Fallback (Lazy Load for Vercel/Production)
+    const sqlite3 = require('sqlite3').verbose();
     console.log('🔗 Database Mode: SQLite (Local)');
     const dbPath = path.resolve(__dirname, 'school_discipline.db');
     const sqliteDb = new sqlite3.Database(dbPath);
