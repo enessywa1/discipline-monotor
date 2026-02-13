@@ -3,8 +3,30 @@ const { Pool } = require('pg');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
+const { createClient } = require('@supabase/supabase-js');
+
 // Use DATABASE_URL for Postgres (Supabase), fallback to SQLite for local development
 const isPostgres = !!process.env.DATABASE_URL;
+
+// Supabase Auth Configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let supabaseAuth = null;
+if (supabaseUrl && supabaseAnonKey) {
+    supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+}
+
+let supabaseAdmin = null;
+if (supabaseUrl && supabaseServiceKey) {
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    });
+}
 
 let db;
 
@@ -119,4 +141,4 @@ if (isPostgres) {
     db = sqliteDb;
 }
 
-module.exports = { db, isPostgres };
+module.exports = { db, isPostgres, supabaseAuth, supabaseAdmin };

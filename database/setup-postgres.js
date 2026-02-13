@@ -9,6 +9,8 @@ async function setupDatabase() {
         // Auto-increment syntax differs between SQLite and PostgreSQL
         const autoInc = isPostgres ? 'SERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 
+        const uuidType = isPostgres ? 'UUID' : 'TEXT';
+
         // 1. Users Table
         await db.run(`CREATE TABLE IF NOT EXISTS users (
             id ${autoInc},
@@ -18,6 +20,7 @@ async function setupDatabase() {
             full_name TEXT NOT NULL,
             allocation TEXT,
             phone_number TEXT,
+            supabase_id ${uuidType},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
         console.log("✅ Users table created");

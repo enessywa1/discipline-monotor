@@ -100,13 +100,55 @@ app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
 
 // Auth Route
-app.post('/api/login', loginLimiter, (req, res) => {
+app.post('/api/login', loginLimiter, async (req, res) => {
     let { username, password } = req.body;
+    const { supabaseAuth } = require('./database/supabase');
 
     // input normalization
     username = (username || '').trim().toLowerCase();
     password = (password || '').trim();
 
+    // 1. Try Supabase Auth first if configured
+    if (supabaseAuth) {
+        try {
+            // Fetch local user details to get email for Supabase lookup
+            const localUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
+
+            if (localUser) {
+                // If the user has a space in their username, the migration script used underscores
+                const sanitizedUsername = username.replace(/\s+/g, '_');
+                const email = localUser.email || `${sanitizedUsername}@system.local`;
+
+                const { data, error } = await supabaseAuth.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (data && data.user) {
+                    console.log(`✅ Supabase login successful for: ${username}`);
+                    req.session.user = {
+                        id: localUser.id,
+                        username: localUser.username,
+                        role: localUser.role,
+                        full_name: localUser.full_name,
+                        allocation: localUser.allocation,
+                        supabase_id: data.user.id
+                    };
+
+                    db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [localUser.id]);
+                    return res.json({ success: true, user: req.session.user });
+                }
+
+                // If Supabase fails (e.g. invalid password in Supabase), 
+                // we fall through to local check in case they are using their old password
+                console.warn(`⚠️ Supabase Auth failed for ${username}: ${error ? error.message : 'Unknown error'}. Falling back to local check...`);
+            }
+        } catch (supaErr) {
+            console.error("❌ Supabase Auth Error:", supaErr.message);
+        }
+    }
+
+    // 2. Fallback to local database authentication
     db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username], async (err, user) => {
         if (err) {
             console.error("Database error:", err);
@@ -121,7 +163,7 @@ app.post('/api/login', loginLimiter, (req, res) => {
         try {
             const match = await bcrypt.compare(password, user.password_hash);
             if (match) {
-                console.log(`Login successful for: ${username}`);
+                console.log(`Login successful (Local) for: ${username}`);
                 req.session.user = {
                     id: user.id,
                     username: user.username,
@@ -130,7 +172,6 @@ app.post('/api/login', loginLimiter, (req, res) => {
                     allocation: user.allocation
                 };
 
-                // Update last_login timestamp
                 db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
 
                 res.json({
