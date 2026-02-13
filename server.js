@@ -27,16 +27,24 @@ app.use((req, res, next) => {
     next();
 });
 
-// Socket.io Connection
-io.on('connection', (socket) => {
-    console.log('New client connected');
+// Socket.io Connection (Graceful fallback)
+if (io) {
+    io.on('connection', (socket) => {
+        console.log('New client connected');
 
-    // Send boot time to client for live reload detection
-    socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
+        // Send boot time to client for live reload detection
+        socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
 
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        socket.on('disconnect', () => {
+            console.log('Client disconnected');
+        });
     });
+}
+
+// Share io instance with routes safely
+app.use((req, res, next) => {
+    req.io = io;
+    next();
 });
 
 // ... Middleware ... 
@@ -229,6 +237,10 @@ app.get('*', (req, res) => {
 });
 
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
