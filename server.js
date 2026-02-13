@@ -112,13 +112,14 @@ app.use('/api/suspensions', suspensionsRoutes);
 // Auth Route
 app.post('/api/login', loginLimiter, async (req, res) => {
     let { username, password } = req.body;
-    const { supabaseAuth } = require('./database/supabase');
+    const { supabaseAuth, supabaseAdmin } = require('./database/supabase');
 
     // input normalization
     username = (username || '').trim().toLowerCase();
     password = (password || '').trim();
 
-    console.log(`🔑 Login attempt for: ${username}`);
+    console.log(`🔑 [${new Date().toISOString()}] Login attempt for: ${username}`);
+    console.time(`LoginTotal-${username}`);
 
     // Set a safety timeout for the entire request
     const loginTimeout = setTimeout(() => {
@@ -126,18 +127,27 @@ app.post('/api/login', loginLimiter, async (req, res) => {
             console.error(`🕒 Login timed out for: ${username}`);
             res.status(504).json({ error: "Login request timed out. Please try again." });
         }
-    }, 10000); // 10 seconds
+    }, 15000); // Increased to 15s to allow for cold starts
 
-    res.on('finish', () => clearTimeout(loginTimeout));
+    res.on('finish', () => {
+        clearTimeout(loginTimeout);
+        console.timeEnd(`LoginTotal-${username}`);
+    });
 
-    // 1. Try Supabase Auth first if configured
-    if (supabaseAuth) {
-        try {
-            // Fetch local user details to get email for Supabase lookup
-            const localUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
+    try {
+        console.time(`DbLookup-${username}`);
+        const localUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
+        console.timeEnd(`DbLookup-${username}`);
 
-            if (localUser) {
-                // If the user has a space in their username, the migration script used underscores
+        if (!localUser) {
+            console.log(`❌ Login failed: User '${username}' not found.`);
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
+        }
+
+        // 1. Try Supabase Auth first
+        if (supabaseAuth) {
+            try {
+                console.time(`SupabaseAuth-${username}`);
                 const sanitizedUsername = username.replace(/\s+/g, '_');
                 const email = localUser.email || `${sanitizedUsername}@system.local`;
 
@@ -145,6 +155,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                     email: email,
                     password: password,
                 });
+                console.timeEnd(`SupabaseAuth-${username}`);
 
                 if (data && data.user) {
                     console.log(`✅ Supabase login successful for: ${username}`);
@@ -157,74 +168,57 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                         supabase_id: data.user.id
                     };
 
-                    db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [localUser.id]);
+                    await db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [localUser.id]);
                     return res.json({ success: true, user: req.session.user });
                 }
 
-                // If Supabase fails (e.g. invalid password in Supabase), 
-                // we fall through to local check in case they are using their old password
-                console.warn(`⚠️ Supabase Auth failed for ${username}: ${error ? error.message : 'Unknown error'}. Falling back to local check...`);
+                if (error) {
+                    console.warn(`⚠️ Supabase Auth failed for ${username}: ${error.message}. Falling back to local...`);
+                }
+            } catch (supaErr) {
+                console.error("❌ Supabase Auth Exception:", supaErr.message);
+                console.timeEnd(`SupabaseAuth-${username}`);
             }
-        } catch (supaErr) {
-            console.error("❌ Supabase Auth Error:", supaErr.message);
-        }
-    }
-
-    // 2. Fallback to local database authentication
-    db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username], async (err, user) => {
-        if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ error: "Server error during login" });
         }
 
-        if (!user) {
-            console.log(`Login failed: User '${username}' not found.`);
+        // 2. Fallback to local database authentication
+        console.time(`LocalBcrypt-${username}`);
+        const match = await bcrypt.compare(password, localUser.password_hash);
+        console.timeEnd(`LocalBcrypt-${username}`);
+
+        if (match) {
+            console.log(`✅ Login successful (Local) for: ${username}`);
+            req.session.user = {
+                id: localUser.id,
+                username: localUser.username,
+                role: localUser.role,
+                full_name: localUser.full_name,
+                allocation: localUser.allocation,
+                supabase_id: localUser.supabase_id
+            };
+
+            await db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [localUser.id]);
+
+            // 3. Just-in-Time Password Sync
+            if (supabaseAuth && localUser.supabase_id && supabaseAdmin) {
+                // Run sync in background so as not to block this response
+                supabaseAdmin.auth.admin.updateUserById(localUser.supabase_id, { password: password })
+                    .then(() => console.log(`🔄 JIT password sync done for: ${username}`))
+                    .catch(e => console.error("⚠️ JIT sync error:", e.message));
+            }
+
+            return res.json({ success: true, user: req.session.user });
+        } else {
+            console.log(`❌ Login failed: Incorrect password for '${username}'`);
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
 
-        try {
-            const match = await bcrypt.compare(password, user.password_hash);
-            if (match) {
-                console.log(`Login successful (Local) for: ${username}`);
-                req.session.user = {
-                    id: user.id,
-                    username: user.username,
-                    role: user.role,
-                    full_name: user.full_name,
-                    allocation: user.allocation
-                };
-
-                db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
-
-                // 3. Just-in-Time Password Sync: If they logged in locally but have a Supabase ID, 
-                // update their Supabase password so they can log in via Supabase next time.
-                if (supabaseAuth && user.supabase_id) {
-                    const { supabaseAdmin } = require('./database/supabase');
-                    if (supabaseAdmin) {
-                        try {
-                            await supabaseAdmin.auth.admin.updateUserById(user.supabase_id, {
-                                password: password
-                            });
-                            console.log(`🔄 Just-in-Time password sync successful for: ${username}`);
-                        } catch (supaErr) {
-                            console.error("⚠️ Failed to sync password to Supabase:", supaErr.message);
-                        }
-                    }
-                }
-
-                res.json({
-                    success: true,
-                    user: req.session.user
-                });
-            } else {
-                console.log(`Login failed: Incorrect password for '${username}'`);
-                res.status(401).json({ success: false, message: "Invalid credentials" });
-            }
-        } catch (hashErr) {
-            console.error("Bcrypt error:", hashErr);
-            res.status(500).json({ error: "Server error during password verification" });
+    } catch (err) {
+        console.error("🔥 Crash in login route:", err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Internal server error during login" });
         }
-    });
+    }
 });
 
 // Fallback to index.html for SPA feel
