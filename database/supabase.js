@@ -4,28 +4,8 @@ const path = require('path');
 
 const { createClient } = require('@supabase/supabase-js');
 
-// Use DATABASE_URL for Postgres (Supabase), fallback to SQLite for local development
+const isVercel = !!process.env.VERCEL;
 const isPostgres = !!process.env.DATABASE_URL;
-
-// Supabase Auth Configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-let supabaseAuth = null;
-if (supabaseUrl && supabaseAnonKey) {
-    supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
-}
-
-let supabaseAdmin = null;
-if (supabaseUrl && supabaseServiceKey) {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    });
-}
 
 let db;
 
@@ -65,36 +45,50 @@ if (isPostgres) {
     db.run = (sql, params) => execute('run', sql, params);
     db.get = (sql, params) => execute('get', sql, params);
     db.all = (sql, params) => execute('all', sql, params);
-} else {
-    // SQLite Fallback (Lazy Load for Vercel/Production)
-    const sqlite3 = require('sqlite3').verbose();
-    console.log('🔗 Database Mode: SQLite (Local)');
-    const dbPath = path.resolve(__dirname, 'school_discipline.db');
-    const sqliteDb = new sqlite3.Database(dbPath);
-
-    // Promisify SQLite
+    db.isPostgres = true;
+} else if (isVercel) {
+    console.error('❌ FATAL: DATABASE_URL environment variable is missing in Vercel Settings!');
+    // Throwing a clearer error for the logs
     db = {
-        isPostgres: false,
-        run: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.run(sql, params, function (err) {
-                if (err) reject(err);
-                else resolve({ lastID: this.lastID, changes: this.changes });
-            });
-        }),
-        get: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.get(sql, params, (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        }),
-        all: (sql, params = []) => new Promise((resolve, reject) => {
-            sqliteDb.all(sql, params, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
-        }),
-        close: () => new Promise((resolve) => sqliteDb.close(resolve))
+        isPostgres: true, // Force it to prevent fallback errors elsewhere
+        run: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); },
+        get: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); },
+        all: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); }
     };
+} else {
+    // SQLite Fallback (Only for local development)
+    try {
+        const sqlite3 = require('sqlite3').verbose();
+        console.log('🔗 Database Mode: SQLite (Local)');
+        const dbPath = path.resolve(__dirname, 'school_discipline.db');
+        const sqliteDb = new sqlite3.Database(dbPath);
+
+        db = {
+            isPostgres: false,
+            run: (sql, params = []) => new Promise((resolve, reject) => {
+                sqliteDb.run(sql, params, function (err) {
+                    if (err) reject(err);
+                    else resolve({ lastID: this.lastID, changes: this.changes });
+                });
+            }),
+            get: (sql, params = []) => new Promise((resolve, reject) => {
+                sqliteDb.get(sql, params, (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            }),
+            all: (sql, params = []) => new Promise((resolve, reject) => {
+                sqliteDb.all(sql, params, (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                });
+            }),
+            close: () => new Promise((resolve) => sqliteDb.close(resolve))
+        };
+    } catch (e) {
+        console.error('❌ SQLite failed to load. Ensure sqlite3 is installed for local dev.');
+        db = { isPostgres: false, run: () => Promise.reject('DB Error'), get: () => Promise.reject('DB Error'), all: () => Promise.reject('DB Error') };
+    }
 }
 
 module.exports = { db, isPostgres, supabaseAuth, supabaseAdmin };
