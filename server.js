@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 // db is the sqlite3 instance
 const db = require('./database/db');
 const helmet = require('helmet');

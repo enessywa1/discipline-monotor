@@ -1,5 +1,5 @@
 const { db, isPostgres } = require('./supabase');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 console.log("🚀 Initializing database schema...");
 console.log(`Database type: ${isPostgres ? 'PostgreSQL (Supabase)' : 'SQLite (Local)'}`);
