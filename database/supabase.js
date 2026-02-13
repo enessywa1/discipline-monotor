@@ -4,8 +4,9 @@ const path = require('path');
 
 const { createClient } = require('@supabase/supabase-js');
 
-const isVercel = !!process.env.VERCEL;
+const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV || process.env.NOW_REGION);
 const isPostgres = !!process.env.DATABASE_URL;
+const isProduction = process.env.NODE_ENV === 'production' || isVercel;
 
 // Supabase Auth Configuration
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -68,14 +69,13 @@ if (isPostgres) {
     db.get = (sql, params) => execute('get', sql, params);
     db.all = (sql, params) => execute('all', sql, params);
     db.isPostgres = true;
-} else if (isVercel) {
-    console.error('❌ FATAL: DATABASE_URL environment variable is missing in Vercel Settings!');
-    // Throwing a clearer error for the logs
+} else if (isProduction) {
+    console.warn('⚠️ DATABASE_URL missing! Running in offline-diagnostic mode.');
     db = {
-        isPostgres: true, // Force it to prevent fallback errors elsewhere
-        run: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); },
-        get: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); },
-        all: () => { throw new Error('Database not configured. Add DATABASE_URL to Vercel environment variables.'); }
+        isPostgres: true,
+        run: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); },
+        get: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); },
+        all: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); }
     };
 } else {
     // SQLite Fallback (Only for local development)

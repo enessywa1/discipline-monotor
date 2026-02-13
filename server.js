@@ -11,35 +11,32 @@ const session = require('express-session');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
-const http = require('http');
-const socketIo = require('socket.io');
-
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
 const PORT = process.env.PORT || 3000;
 const SERVER_BOOT_TIME = Date.now();
 
-// Share io instance with routes
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
+// Socket.io Setup - Only for local development (Vercel doesn't support WebSockets)
+let io = null;
+let server = app;
 
-// Socket.io Connection (Graceful fallback)
-if (io) {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const http = require('http');
+    const socketIo = require('socket.io');
+    server = http.createServer(app);
+    io = socketIo(server);
+
     io.on('connection', (socket) => {
-        console.log('New client connected');
-
-        // Send boot time to client for live reload detection
+        console.log('New client connected (Local dev)');
         socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
-
-        socket.on('disconnect', () => {
-            console.log('Client disconnected');
-        });
+        socket.on('disconnect', () => console.log('Client disconnected'));
     });
 }
+
+// Share io instance with routes safely
+app.use((req, res, next) => {
+    req.io = io || { emit: () => { } }; // Polyfill for production
+    next();
+});
 
 // Share io instance with routes safely
 app.use((req, res, next) => {
