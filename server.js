@@ -62,8 +62,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback_secret_not_for_production',
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Required for secure cookies on Vercel/Render
     cookie: {
         secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Support cross-site if needed, or 'lax'
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 // 24 hours
     }
@@ -107,6 +109,18 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     // input normalization
     username = (username || '').trim().toLowerCase();
     password = (password || '').trim();
+
+    console.log(`🔑 Login attempt for: ${username}`);
+
+    // Set a safety timeout for the entire request
+    const loginTimeout = setTimeout(() => {
+        if (!res.headersSent) {
+            console.error(`🕒 Login timed out for: ${username}`);
+            res.status(504).json({ error: "Login request timed out. Please try again." });
+        }
+    }, 10000); // 10 seconds
+
+    res.on('finish', () => clearTimeout(loginTimeout));
 
     // 1. Try Supabase Auth first if configured
     if (supabaseAuth) {
