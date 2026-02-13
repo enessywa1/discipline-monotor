@@ -11,32 +11,35 @@ const session = require('express-session');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
+const http = require('http');
+const socketIo = require('socket.io');
+
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
 const PORT = process.env.PORT || 3000;
 const SERVER_BOOT_TIME = Date.now();
 
-// Socket.io Setup - Only for local development (Vercel doesn't support WebSockets)
-let io = null;
-let server = app;
-
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    const http = require('http');
-    const socketIo = require('socket.io');
-    server = http.createServer(app);
-    io = socketIo(server);
-
-    io.on('connection', (socket) => {
-        console.log('New client connected (Local dev)');
-        socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
-        socket.on('disconnect', () => console.log('Client disconnected'));
-    });
-}
-
-// Share io instance with routes safely
+// Share io instance with routes
 app.use((req, res, next) => {
-    req.io = io || { emit: () => { } }; // Polyfill for production
+    req.io = io;
     next();
 });
+
+// Socket.io Connection (Graceful fallback)
+if (io) {
+    io.on('connection', (socket) => {
+        console.log('New client connected');
+
+        // Send boot time to client for live reload detection
+        socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
+
+        socket.on('disconnect', () => {
+            console.log('Client disconnected');
+        });
+    });
+}
 
 // Share io instance with routes safely
 app.use((req, res, next) => {
@@ -118,51 +121,21 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
 
-// Serve index.html for the root or any other page (SPA mode)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {
     try {
-        const envChecks = {
-            DATABASE_URL: !!process.env.DATABASE_URL,
-            SUPABASE_URL: !!process.env.SUPABASE_URL,
-            SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
-            SESSION_SECRET: !!process.env.SESSION_SECRET,
-            VERCEL: !!process.env.VERCEL,
-            NODE_ENV: process.env.NODE_ENV
-        };
-
-        const hasUrl = !!process.env.DATABASE_URL;
-        const hostInfo = hasUrl ? process.env.DATABASE_URL.split('@')[1] || 'hidden' : 'MISSING';
-
-        let dbStatus = 'unconfigured';
-        let userCount = 0;
-
-        if (hasUrl) {
-            try {
-                const status = await db.get('SELECT 1 as connected');
-                dbStatus = !!status ? 'connected' : 'failed';
-                const count = await db.get('SELECT count(*) as count FROM users');
-                userCount = count ? count.count : 0;
-            } catch (dbErr) {
-                dbStatus = `error: ${dbErr.message}`;
-            }
-        }
-
+        const dbStatus = await db.get('SELECT 1 as connected');
+        const userCount = await db.get('SELECT count(*) as count FROM users');
         res.json({
             status: 'online',
-            isPostgres: db.isPostgres,
-            db_status: dbStatus,
-            user_count: userCount,
-            env_vars: envChecks,
-            host_info: hostInfo,
-            session_store: sessionConfig.store ? 'postgres' : 'memory'
+            postgres: db.isPostgres,
+            db_connected: !!dbStatus,
+            user_count: userCount ? userCount.count : 0,
+            session_store: sessionConfig.store ? 'postgres' : 'memory',
+            node_env: process.env.NODE_ENV
         });
     } catch (err) {
-        res.status(500).json({ error: err.message, has_database_url: !!process.env.DATABASE_URL });
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -240,17 +213,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
         // 2. Fallback to local database authentication
         console.time(`LocalBcrypt-${username}`);
-
-        if (!password || !localUser.password_hash) {
-            console.error(`❌ Missing bcrypt data for ${username}: password=${!!password}, hash=${!!localUser.password_hash}`);
-            console.log("LocalUser keys:", Object.keys(localUser));
-            return res.status(500).json({
-                success: false,
-                error: "Authentication data error. Please contact admin.",
-                debug: `Missing hash for user: ${username}`
-            });
-        }
-
         const match = await bcrypt.compare(password, localUser.password_hash);
         console.timeEnd(`LocalBcrypt-${username}`);
 

@@ -1,19 +1,17 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const { createClient } = require('@supabase/supabase-js');
 
-const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV || process.env.NOW_REGION);
+// Use DATABASE_URL for Postgres (Supabase), fallback to SQLite for local development
 const isPostgres = !!process.env.DATABASE_URL;
-const isProduction = process.env.NODE_ENV === 'production' || isVercel;
 
 // Supabase Auth Configuration
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const { createClient } = require('@supabase/supabase-js');
 
 let supabaseAuth = null;
 if (supabaseUrl && supabaseAnonKey) {
@@ -33,84 +31,114 @@ if (supabaseUrl && supabaseServiceKey) {
 let db;
 
 if (isPostgres) {
-    console.log('🔗 Database Mode: PostgreSQL (Supabase)');
+    console.log('🔗 Connecting to PostgreSQL database (Supabase)...');
     db = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-        connectionTimeoutMillis: 5000,
+        ssl: {
+            rejectUnauthorized: false
+        },
+        connectionTimeoutMillis: 5000, // Fail after 5 seconds
         idleTimeoutMillis: 30000,
-        max: 5,
-        keepAlive: true,
+        max: 5, // Reduced from 10 to avoid MaxClientsInSessionMode on Free Tier
+        keepAlive: true, // Maintain connection socket
         allowExitOnIdle: true
     });
 
+    // Pool error handling
+    db.on('error', (err) => {
+        console.error('❌ Unexpected Database Pool Error:', err.message);
+    });
+
+    // Helper to standardize parameter replacement ($1, $2...)
     const prepareSql = (sql) => {
         let count = 0;
         return sql.replace(/\?/g, () => `$${++count}`);
     };
 
-    const execute = async (type, sql, params = []) => {
+    // Helper to handle optional callbacks and Promises with RETRY logic
+    const execute = async (type, sql, params = [], callback, retryCount = 0) => {
+        const MAX_RETRIES = 2;
+
+        // Handle optional params
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+
         try {
             let pgSql = prepareSql(sql);
+
+            // For 'run' (INSERT), try to return ID to emulate sqlite3's this.lastID
             if (type === 'run' && /^\s*INSERT\s+INTO/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
                 pgSql += ' RETURNING id';
             }
+
             const result = await db.query(pgSql, params);
+
+            if (callback) {
+                const context = {};
+                if (type === 'run') {
+                    context.changes = result.rowCount;
+                    if (result.rows && result.rows.length > 0 && result.rows[0].id) {
+                        context.lastID = result.rows[0].id;
+                    }
+                }
+
+                let data = null;
+                if (type === 'get') data = result.rows[0];
+                if (type === 'all') data = result.rows;
+
+                callback.call(context, null, data);
+            }
+
             if (type === 'get') return result.rows[0];
             if (type === 'all') return result.rows;
-            return { lastID: result.rows?.[0]?.id, changes: result.rowCount };
+            return result;
+
         } catch (err) {
-            console.error(`❌ Postgres ${type} Error:`, err.message);
-            throw err;
+            const isRetryable = err.message.includes('ECONNRESET') ||
+                err.message.includes('timeout') ||
+                err.message.includes('terminated unexpectedly');
+
+            if (isRetryable && retryCount < MAX_RETRIES) {
+                console.warn(`⚠️  Database retry ${retryCount + 1}/${MAX_RETRIES} for: ${err.message}`);
+                // Wait slightly before retry
+                await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+                return execute(type, sql, params, callback, retryCount + 1);
+            }
+
+            console.error('❌ Database Error:', err.message);
+            if (callback) callback(err);
+            else throw err;
         }
     };
 
-    db.run = (sql, params) => execute('run', sql, params);
-    db.get = (sql, params) => execute('get', sql, params);
-    db.all = (sql, params) => execute('all', sql, params);
-    db.isPostgres = true;
-} else if (isProduction) {
-    console.warn('⚠️ DATABASE_URL missing! Running in offline-diagnostic mode.');
-    db = {
-        isPostgres: true,
-        run: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); },
-        get: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); },
-        all: async () => { throw new Error('Database not configured. Check Vercel Environment Variables.'); }
-    };
-} else {
-    // SQLite Fallback (Only for local development)
-    try {
-        const sqlite3 = require('sqlite3').verbose();
-        console.log('🔗 Database Mode: SQLite (Local)');
-        const dbPath = path.resolve(__dirname, 'school_discipline.db');
-        const sqliteDb = new sqlite3.Database(dbPath);
+    // Wrapper API to match sqlite3
+    db.run = (sql, params, callback) => execute('run', sql, params, callback);
+    db.get = (sql, params, callback) => execute('get', sql, params, callback);
+    db.all = (sql, params, callback) => execute('all', sql, params, callback);
+    db.serialize = (callback) => { if (callback) callback(); };
 
-        db = {
-            isPostgres: false,
-            run: (sql, params = []) => new Promise((resolve, reject) => {
-                sqliteDb.run(sql, params, function (err) {
-                    if (err) reject(err);
-                    else resolve({ lastID: this.lastID, changes: this.changes });
-                });
-            }),
-            get: (sql, params = []) => new Promise((resolve, reject) => {
-                sqliteDb.get(sql, params, (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row);
-                });
-            }),
-            all: (sql, params = []) => new Promise((resolve, reject) => {
-                sqliteDb.all(sql, params, (err, rows) => {
-                    if (err) reject(err);
-                    else resolve(rows);
-                });
-            }),
-            close: () => new Promise((resolve) => sqliteDb.close(resolve))
-        };
-    } catch (e) {
-        console.error('❌ SQLite failed to load. Ensure sqlite3 is installed for local dev.');
-        db = { isPostgres: false, run: () => Promise.reject('DB Error'), get: () => Promise.reject('DB Error'), all: () => Promise.reject('DB Error') };
-    }
+    // Test connection immediately
+    db.connect()
+        .then(client => {
+            console.log('✅ PostgreSQL connection established');
+            client.release();
+        })
+        .catch(err => {
+            console.error('❌ FATAL: Could not connect to PostgreSQL:', err.message);
+        });
+
+} else {
+    // SQLite Fallback
+    console.log('🔗 Using SQLite database (local development)...');
+    const dbPath = path.resolve(__dirname, 'school_discipline.db');
+    const sqliteDb = new sqlite3.Database(dbPath, (err) => {
+        if (err) console.error('❌ SQLite Error:', err.message);
+        else console.log('✅ Connected to SQLite database');
+    });
+
+    db = sqliteDb;
 }
 
 module.exports = { db, isPostgres, supabaseAuth, supabaseAdmin };
