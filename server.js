@@ -121,6 +121,11 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
 
+// Serve index.html for the root or any other page (SPA mode)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {
     try {
@@ -135,7 +140,7 @@ app.get('/api/debug', async (req, res) => {
             db_connected: !!dbStatus,
             user_count: userCount ? userCount.count : 0,
             db_url_detected: hasUrl,
-            db_host: sanitizedUrl,
+            host_info: sanitizedUrl,
             session_store: sessionConfig.store ? 'postgres' : 'memory',
             node_env: process.env.NODE_ENV
         });
