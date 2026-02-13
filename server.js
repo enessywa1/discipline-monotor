@@ -129,23 +129,43 @@ app.get('/', (req, res) => {
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {
     try {
-        const hasUrl = !!process.env.DATABASE_URL;
-        const sanitizedUrl = hasUrl ? process.env.DATABASE_URL.split('@')[1] : 'MISSING';
+        const envChecks = {
+            DATABASE_URL: !!process.env.DATABASE_URL,
+            SUPABASE_URL: !!process.env.SUPABASE_URL,
+            SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
+            SESSION_SECRET: !!process.env.SESSION_SECRET,
+            VERCEL: !!process.env.VERCEL,
+            NODE_ENV: process.env.NODE_ENV
+        };
 
-        const dbStatus = await db.get('SELECT 1 as connected');
-        const userCount = await db.get('SELECT count(*) as count FROM users');
+        const hasUrl = !!process.env.DATABASE_URL;
+        const hostInfo = hasUrl ? process.env.DATABASE_URL.split('@')[1] || 'hidden' : 'MISSING';
+
+        let dbStatus = 'unconfigured';
+        let userCount = 0;
+
+        if (hasUrl) {
+            try {
+                const status = await db.get('SELECT 1 as connected');
+                dbStatus = !!status ? 'connected' : 'failed';
+                const count = await db.get('SELECT count(*) as count FROM users');
+                userCount = count ? count.count : 0;
+            } catch (dbErr) {
+                dbStatus = `error: ${dbErr.message}`;
+            }
+        }
+
         res.json({
             status: 'online',
-            isPostgres: db.isPostgres || !!process.env.DATABASE_URL,
-            db_connected: !!dbStatus,
-            user_count: userCount ? userCount.count : 0,
-            db_url_detected: hasUrl,
-            host_info: sanitizedUrl,
-            session_store: sessionConfig.store ? 'postgres' : 'memory',
-            node_env: process.env.NODE_ENV
+            isPostgres: db.isPostgres,
+            db_status: dbStatus,
+            user_count: userCount,
+            env_vars: envChecks,
+            host_info: hostInfo,
+            session_store: sessionConfig.store ? 'postgres' : 'memory'
         });
     } catch (err) {
-        res.status(500).json({ error: err.message, stack: err.stack });
+        res.status(500).json({ error: err.message, has_database_url: !!process.env.DATABASE_URL });
     }
 });
 
