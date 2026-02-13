@@ -213,6 +213,17 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
         // 2. Fallback to local database authentication
         console.time(`LocalBcrypt-${username}`);
+
+        if (!password || !localUser.password_hash) {
+            console.error(`❌ Missing bcrypt data for ${username}: password=${!!password}, hash=${!!localUser.password_hash}`);
+            console.log("LocalUser keys:", Object.keys(localUser));
+            return res.status(500).json({
+                success: false,
+                error: "Authentication data error. Please contact admin.",
+                debug: `Missing hash for user: ${username}`
+            });
+        }
+
         const match = await bcrypt.compare(password, localUser.password_hash);
         console.timeEnd(`LocalBcrypt-${username}`);
 
