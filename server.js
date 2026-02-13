@@ -121,6 +121,24 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
 
+// Diagnostic Route
+app.get('/api/debug', async (req, res) => {
+    try {
+        const dbStatus = await db.get('SELECT 1 as connected');
+        const userCount = await db.get('SELECT count(*) as count FROM users');
+        res.json({
+            status: 'online',
+            postgres: db.isPostgres,
+            db_connected: !!dbStatus,
+            user_count: userCount ? userCount.count : 0,
+            session_store: sessionConfig.store ? 'postgres' : 'memory',
+            node_env: process.env.NODE_ENV
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Auth Route
 app.post('/api/login', loginLimiter, async (req, res) => {
     let { username, password } = req.body;
