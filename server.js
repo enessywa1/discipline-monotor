@@ -174,6 +174,22 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
                 db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
 
+                // 3. Just-in-Time Password Sync: If they logged in locally but have a Supabase ID, 
+                // update their Supabase password so they can log in via Supabase next time.
+                if (supabaseAuth && user.supabase_id) {
+                    const { supabaseAdmin } = require('./database/supabase');
+                    if (supabaseAdmin) {
+                        try {
+                            await supabaseAdmin.auth.admin.updateUserById(user.supabase_id, {
+                                password: password
+                            });
+                            console.log(`🔄 Just-in-Time password sync successful for: ${username}`);
+                        } catch (supaErr) {
+                            console.error("⚠️ Failed to sync password to Supabase:", supaErr.message);
+                        }
+                    }
+                }
+
                 res.json({
                     success: true,
                     user: req.session.user

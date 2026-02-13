@@ -35,7 +35,16 @@ async function migrateUsers() {
 
             if (error) {
                 if (error.message.includes('already registered')) {
-                    console.log(`ℹ️  User ${user.username} already exists in Supabase Auth.`);
+                    console.log(`ℹ️  User ${user.username} already exists in Supabase Auth. Fetching ID...`);
+                    // Fetch the existing user to get their ID and link it
+                    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+                    if (!listError) {
+                        const existingUser = existingUsers.users.find(u => u.email === email);
+                        if (existingUser) {
+                            await db.run('UPDATE users SET supabase_id = ? WHERE id = ?', [existingUser.id, user.id]);
+                            console.log(`🔗 Linked existing Supabase ID for ${user.username}`);
+                        }
+                    }
                 } else {
                     console.error(`❌ Failed to migrate ${user.username}:`, error.message);
                 }
