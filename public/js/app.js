@@ -367,7 +367,7 @@ const App = {
 
                     <div class="form-group">
                         <label>Action / Punitive Measure</label>
-                        <input type="text" name="action" value="${item.punitive_measure || item.action_taken || ''}" style="width:100%">
+                        <textarea name="action" rows="3" style="width:100%">${item.punitive_measure || item.action_taken || ''}</textarea>
                     </div>
 
                     <div class="modal-footer">

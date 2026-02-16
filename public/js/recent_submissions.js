@@ -111,8 +111,25 @@ const RecentSubmissions = {
                 const name = btn.dataset.name;
 
                 if (action === 'refresh') RecentSubmissions.loadSubmissions();
-                if (action === 'delete-submission') RecentSubmissions.deleteSubmission(id, type, name);
-                if (action === 'edit-submission') RecentSubmissions.editSubmission(id, type);
+                if (action === 'delete-submission') {
+                    e.stopPropagation();
+                    RecentSubmissions.deleteSubmission(id, type, name);
+                }
+                if (action === 'edit-submission') {
+                    e.stopPropagation();
+                    RecentSubmissions.editSubmission(id, type);
+                }
+            });
+
+            // Card Click Listener for details
+            mainContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.submission-card');
+                const btn = e.target.closest('button');
+                if (card && !btn) {
+                    const id = card.dataset.id;
+                    const type = card.dataset.type;
+                    RecentSubmissions.editSubmission(id, type);
+                }
             });
         }
 
@@ -240,7 +257,7 @@ const RecentSubmissions = {
             const isDM = user && (user.role || '').toLowerCase() === 'discipline master';
 
             return `
-                    <div class="submission-card type-${item.type}">
+                    <div class="submission-card type-${item.type}" data-id="${item.id}" data-type="${item.type}" style="cursor: pointer;">
                         <div class="submission-header">
                             <div class="submission-meta">
                                 <span class="submission-badge">${item.type === 'statement' ? 'Statement' : 'Discipline Report'}</span>
