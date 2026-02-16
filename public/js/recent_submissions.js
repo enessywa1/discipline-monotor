@@ -121,14 +121,12 @@ const RecentSubmissions = {
                 }
             });
 
-            // Card Click Listener for details
+            // Card Click Listener for expansion
             mainContainer.addEventListener('click', (e) => {
                 const card = e.target.closest('.submission-card');
-                const btn = e.target.closest('button');
+                const btn = e.target.closest('button, .btn-icon');
                 if (card && !btn) {
-                    const id = card.dataset.id;
-                    const type = card.dataset.type;
-                    RecentSubmissions.editSubmission(id, type);
+                    card.classList.toggle('expanded');
                 }
             });
         }
