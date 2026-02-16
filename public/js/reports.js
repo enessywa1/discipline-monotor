@@ -110,6 +110,7 @@ const Reports = {
                                 <th>Offence</th>
                                 <th>Description</th>
                                 <th>Action Taken</th>
+                                <th class="noprint">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="incidentsTableBody">
@@ -169,8 +170,21 @@ const Reports = {
         const viewWrapper = document.getElementById('reportContent');
         if (viewWrapper) {
             viewWrapper.addEventListener('click', (e) => {
+                // Print Button
                 if (e.target.closest('#printBtn')) {
                     window.print();
+                }
+
+                // Edit Button
+                const editBtn = e.target.closest('[data-action="edit-report"]');
+                if (editBtn) {
+                    const id = editBtn.dataset.id;
+                    const type = editBtn.dataset.type;
+                    if (App.Editor && App.Editor.open) {
+                        App.Editor.open(id, type);
+                    } else {
+                        console.error('App.Editor not defined');
+                    }
                 }
             });
         }
@@ -402,7 +416,11 @@ const Reports = {
                 if (allIncidents.length === 0) {
                     incidentBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: grey;">No incidents recorded this week.</td></tr>';
                 } else {
-                    incidentBody.innerHTML = allIncidents.map(inc => `
+                    incidentBody.innerHTML = allIncidents.map(inc => {
+                        const user = typeof Auth !== 'undefined' ? Auth.getUser() : null;
+                        const isDM = user && (user.role || '').toLowerCase() === 'discipline master';
+
+                        return `
                         <tr style="font-size: 0.85rem;">
                             <td style="white-space: nowrap;">
                                 <strong>${new Date(inc.date).toLocaleDateString()}</strong>
@@ -415,8 +433,17 @@ const Reports = {
                                 ${inc.description && inc.description.startsWith('{') ? 'Form Details Recorded' : (inc.description || '-')}
                             </td>
                             <td><small>${inc.action || 'Pending'}</small></td>
+                            <td class="noprint">
+                                ${isDM ? `
+                                <button class="btn btn-sm" style="background: var(--primary-color); color: white; padding: 2px 6px; font-size: 0.65rem;" 
+                                    data-action="edit-report" 
+                                    data-id="${inc.id}" 
+                                    data-type="${inc.type === 'Statement' ? 'statement' : 'report'}">
+                                    <i class='bx bx-edit'></i> Edit
+                                </button>` : ''}
+                            </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 }
 
                 // 3. Performance Table

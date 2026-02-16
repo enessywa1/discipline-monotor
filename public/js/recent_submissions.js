@@ -70,113 +70,49 @@ const RecentSubmissions = {
                     <p style="text-align: center; padding: 40px; color: grey;">Initializing submission board...</p>
                 </div>
             </div>
-
-            <!-- Edit Submission Modal -->
-            <div id="editSubmissionModal" class="modal-overlay hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
-                <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
-                    <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--primary-dark);">Edit Submission</h3>
-                    <form id="editSubmissionForm">
-                        <input type="hidden" id="editId">
-                        <input type="hidden" id="editType">
-                        
-                        <div class="form-group">
-                            <label>Student Name</label>
-                            <input type="text" id="editStudent" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Class</label>
-                            <select id="editClass" required>
-                                <option value="Y8">Y8</option><option value="Y9">Y9</option><option value="Y10">Y10</option>
-                                <option value="Y11">Y11</option><option value="Y12">Y12</option><option value="Y13">Y13</option>
-                                <option value="BTEC">BTEC</option>
-                            </select>
-                        </div>
-                         <div class="form-group">
-                            <label>Offence / Type</label>
-                            <input type="text" id="editOffence" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="datetime-local" id="editDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Action Taken / Punitive Measure</label>
-                            <input type="text" id="editAction">
-                        </div>
-                        <div class="form-group">
-                            <label>Description</label>
-                            <textarea id="editDescription" rows="3"></textarea>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                            <button type="button" class="btn" style="background: #eee; color: #333;" onclick="RecentSubmissions.closeEditModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         `;
 
-        // Attach Event Listeners
+        // Event Listeners for Filters
         const searchInput = document.getElementById('subSearch');
-        if (searchInput) searchInput.oninput = Utils.debounce(() => RecentSubmissions.applyFilters(), 300);
-
-        const typeFilter = document.getElementById('filterType');
-        const classFilter = document.getElementById('filterClass');
-        const dateFilter = document.getElementById('filterDate');
+        const filterType = document.getElementById('filterType');
+        const filterClass = document.getElementById('filterClass');
+        const filterDate = document.getElementById('filterDate');
         const sortSelect = document.getElementById('subSort');
+        const resetBtn = document.getElementById('resetFilters');
 
-        [typeFilter, classFilter, dateFilter, sortSelect].forEach(el => {
-            if (el) el.onchange = () => RecentSubmissions.applyFilters();
+        const applyFilters = Utils.debounce(() => RecentSubmissions.applyFilters(), 300);
+
+        [searchInput, filterType, filterClass, filterDate, sortSelect].forEach(el => {
+            if (el) el.addEventListener('change', () => RecentSubmissions.applyFilters());
+            if (el && el.tagName === 'INPUT') el.addEventListener('input', applyFilters);
         });
 
-        const resetBtn = document.getElementById('resetFilters');
         if (resetBtn) {
-            resetBtn.onclick = () => {
-                if (searchInput) searchInput.value = '';
-                if (typeFilter) typeFilter.value = 'all';
-                if (classFilter) classFilter.value = 'all';
-                if (dateFilter) dateFilter.value = '';
-                if (sortSelect) sortSelect.value = 'dateDesc';
+            resetBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterType.value = 'all';
+                filterClass.value = 'all';
+                filterDate.value = '';
+                sortSelect.value = 'dateDesc';
                 RecentSubmissions.applyFilters();
-            };
-        }
-
-        const viewWrapper = document.getElementById('recentSubmissionsContainer');
-        if (viewWrapper) {
-            viewWrapper.addEventListener('click', (e) => {
-                const refreshBtn = e.target.closest('[data-action="refresh"]');
-                if (refreshBtn) { RecentSubmissions.loadSubmissions(); return; }
-
-                const editBtn = e.target.closest('[data-action="edit-submission"]');
-                if (editBtn) {
-                    const id = editBtn.dataset.id;
-                    const type = editBtn.dataset.type;
-                    RecentSubmissions.editSubmission(id, type);
-                    e.stopPropagation();
-                    return;
-                }
-
-                const deleteBtn = e.target.closest('[data-action="delete-submission"]');
-                if (deleteBtn) {
-                    const id = deleteBtn.dataset.id;
-                    const type = deleteBtn.dataset.type;
-                    const name = deleteBtn.dataset.name;
-                    RecentSubmissions.deleteSubmission(id, type, name);
-                    e.stopPropagation();
-                    return;
-                }
-
-                const card = e.target.closest('.submission-card');
-                if (card) card.classList.toggle('expanded');
             });
         }
 
-        const editForm = document.getElementById('editSubmissionForm');
-        if (editForm) {
-            editForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                RecentSubmissions.saveEdit();
+        // Global Action Listener for Edit/Delete/Refresh
+        const mainContainer = document.getElementById('recentSubmissionsContainer');
+        if (mainContainer) {
+            mainContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+
+                const action = btn.dataset.action;
+                const id = btn.dataset.id;
+                const type = btn.dataset.type;
+                const name = btn.dataset.name;
+
+                if (action === 'refresh') RecentSubmissions.loadSubmissions();
+                if (action === 'delete-submission') RecentSubmissions.deleteSubmission(id, type, name);
+                if (action === 'edit-submission') RecentSubmissions.editSubmission(id, type);
             });
         }
 
@@ -242,6 +178,7 @@ const RecentSubmissions = {
             RecentSubmissions.allData = items.sort((a, b) => new Date(b.date) - new Date(a.date));
             RecentSubmissions.applyFilters();
         } catch (e) {
+            console.error('Submission sync error:', e);
             container.innerHTML = '<p style="text-align: center; color: red;">Error synchronizing submissions.</p>';
         }
     },
@@ -275,7 +212,7 @@ const RecentSubmissions = {
 
             // Search Query
             if (query) {
-                const content = `${item.student} ${item.offence} ${item.description}`.toLowerCase();
+                const content = `${item.student} ${item.offence} ${item.description || ''}`.toLowerCase();
                 if (!content.includes(query)) return false;
             }
 
@@ -296,15 +233,14 @@ const RecentSubmissions = {
             return;
         }
 
-        // DOM optimization: Build fragment
         container.innerHTML = `
             <div class="submissions-list">
                 ${filtered.map(item => {
-            const user = Auth.getUser();
+            const user = typeof Auth !== 'undefined' ? Auth.getUser() : null;
             const isDM = user && (user.role || '').toLowerCase() === 'discipline master';
 
             return `
-                    <div class="submission-card type-${item.type}" style="cursor: pointer;">
+                    <div class="submission-card type-${item.type}">
                         <div class="submission-header">
                             <div class="submission-meta">
                                 <span class="submission-badge">${item.type === 'statement' ? 'Statement' : 'Discipline Report'}</span>
@@ -340,14 +276,12 @@ const RecentSubmissions = {
         if (!confirm(`Are you sure you want to delete this ${type} for ${name}? This action cannot be undone.`)) return;
 
         try {
-            const endpoint = `/api/discipline/${type}s/${id}`; // Note: type is 'report' or 'statement', endpoint expects plural
+            const endpoint = `/api/discipline/${type}s/${id}`;
             const res = await fetch(endpoint, { method: 'DELETE' });
             const data = await res.json();
 
             if (data.success) {
-                // Optimistic UI update or reload
                 RecentSubmissions.loadSubmissions(true);
-                // alert('Record deleted successfully');
             } else {
                 alert('Error deleting record: ' + data.error);
             }
@@ -357,103 +291,6 @@ const RecentSubmissions = {
     },
 
     editSubmission: (id, type) => {
-        // Find data
-        const item = RecentSubmissions.allData.find(d => d.id == id && d.type === type);
-        if (!item) return;
-
-        // Create Modal HTML
-        const modalHtml = `
-            <div class="modal-overlay" id="editModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Edit ${type === 'statement' ? 'Statement' : 'Report'}</h3>
-                        <button class="modal-close" onclick="document.getElementById('editModal').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editSubmissionForm">
-                            <input type="hidden" name="id" value="${id}">
-                            <input type="hidden" name="type" value="${type}">
-                            
-                            <div class="form-group">
-                                <label>Student Name</label>
-                                <input type="text" name="student_name" value="${item.student}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Date</label>
-                                <input type="date" name="date" value="${new Date(item.date).toISOString().split('T')[0]}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Offence</label>
-                                <input type="text" name="offence" value="${item.offence}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Description/Details</label>
-                                <textarea name="description" rows="4">${item.description || ''}</textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Action/Outcome</label>
-                                <input type="text" name="action" value="${item.action || ''}" placeholder="e.g. Suspended, Warning...">
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn" style="background:#ddd; color:#333;" onclick="document.getElementById('editModal').remove()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Inject Modal
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Handle Submit
-        document.getElementById('editSubmissionForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            const formData = Object.fromEntries(fd.entries());
-            const endpoint = `/api/discipline/${type}s/${id}`;
-
-            const payload = {
-                student_name: formData.student_name,
-                student_class: item.student_class, // Keep class same for now as it makes sense
-                offence: formData.offence, // For report
-                offence_type: formData.offence, // For statement
-                description: formData.description,
-                date_reported: formData.date, // For report
-                incident_date: formData.date, // For statement
-                action_taken: formData.action, // For report
-                punitive_measure: formData.action // For statement
-            };
-
-            try {
-                const btn = e.target.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = 'Saving...';
-
-                const res = await fetch(endpoint, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const resData = await res.json();
-
-                if (resData.success) {
-                    document.getElementById('editModal').remove();
-                    RecentSubmissions.loadSubmissions(true);
-                } else {
-                    alert('Error saving changes: ' + resData.error);
-                    btn.disabled = false;
-                    btn.textContent = 'Save Changes';
-                }
-            } catch (err) {
-                alert('Save failed: ' + err.message);
-            }
-        };
+        App.Editor.open(id, type);
     }
 };

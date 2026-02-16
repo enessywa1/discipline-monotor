@@ -240,6 +240,218 @@ const App = {
         } catch (e) {
             return raw;
         }
+    },
+
+    Editor: {
+        open: async (id, type) => {
+            const user = Auth.getUser();
+            if (!user || (user.role || '').toLowerCase() !== 'discipline master') {
+                alert('Unauthorized: Discipline Master role required to edit.');
+                return;
+            }
+
+            // Show global loader if needed, or just loading in modal
+            const modalBody = `
+                <div class="modal-overlay" id="globalEditorModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Edit ${type === 'statement' ? 'Statement' : 'Discipline Report'}</h3>
+                            <button class="modal-close" onclick="App.Editor.close()">&times;</button>
+                        </div>
+                        <div id="editorModalBody">
+                            <p style="text-align: center; padding: 20px;">Fetching record details...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalBody);
+
+            try {
+                const endpoint = `/api/discipline/${type}s`;
+                const res = await fetch(endpoint);
+                const data = await res.json();
+
+                const list = type === 'statement' ? data.statements : data.reports;
+                const item = list.find(it => it.id == id);
+
+                if (!item) throw new Error('Record not found.');
+
+                App.Editor.renderForm(item, type);
+            } catch (err) {
+                document.getElementById('editorModalBody').innerHTML = `<p style="color:red; text-align:center;">${err.message}</p>`;
+            }
+        },
+
+        renderForm: (item, type) => {
+            const container = document.getElementById('editorModalBody');
+
+            // For reports, description is often structured JSON
+            let isStructured = false;
+            let details = {};
+            let rawDescription = item.description || '';
+
+            if (type === 'report' && rawDescription.trim().startsWith('{')) {
+                try {
+                    details = JSON.parse(rawDescription);
+                    isStructured = true;
+                } catch (e) {
+                    console.warn('Failed to parse description JSON', e);
+                }
+            }
+
+            container.innerHTML = `
+                <form id="globalEditorForm">
+                    <input type="hidden" name="id" value="${item.id}">
+                    <input type="hidden" name="type" value="${type}">
+                    <input type="hidden" name="is_structured" value="${isStructured}">
+                    
+                    <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Student Name</label>
+                            <input type="text" name="student_name" value="${item.student_name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Class</label>
+                            <input type="text" name="student_class" value="${item.student_class || ''}">
+                        </div>
+                    </div>
+
+                    <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" name="date" value="${new Date(item.incident_date || item.date_reported).toISOString().split('T')[0]}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Offence</label>
+                            <input type="text" name="offence" value="${item.offence_type || item.offence}" required>
+                        </div>
+                    </div>
+
+                    ${isStructured ? `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee;">
+                            <h4 style="font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 10px;">Structured Details</h4>
+                            <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.7rem;">Stream</label>
+                                    <input type="text" name="detail_stream" value="${details.stream || ''}" style="padding: 5px; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.7rem;">Gender</label>
+                                    <input type="text" name="detail_gender" value="${details.gender || ''}" style="padding: 5px; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.7rem;">Staff Phone</label>
+                                    <input type="text" name="detail_phone" value="${details.phone || ''}" style="padding: 5px; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.7rem;">Department</label>
+                                    <input type="text" name="detail_dept" value="${details.dept || ''}" style="padding: 5px; font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.7rem;">Forward To</label>
+                                    <select name="detail_forward" style="padding: 5px; font-size: 0.85rem; width: 100%;">
+                                        ${['None', 'Discipline Master', 'Head Patron', 'Head Matron', 'Pastor', 'Counseling', 'Principal'].map(opt => `
+                                            <option value="${opt}" ${details.forward === opt ? 'selected' : ''}>${opt}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="description" value=""> <!-- Placeholder if structured -->
+                    ` : `
+                        <div class="form-group">
+                            <label>Description / Details</label>
+                            <textarea name="description" rows="4" style="width:100%">${rawDescription}</textarea>
+                        </div>
+                    `}
+
+                    <div class="form-group">
+                        <label>Action / Punitive Measure</label>
+                        <input type="text" name="action" value="${item.punitive_measure || item.action_taken || ''}" style="width:100%">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn" style="background:#f1f5f9; color:#475569;" onclick="App.Editor.close()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('globalEditorForm').onsubmit = App.Editor.handleSave;
+        },
+
+        handleSave: async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd.entries());
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Saving...";
+
+            let finalDescription = data.description;
+            if (data.is_structured === 'true') {
+                const details = {
+                    class: data.student_class,
+                    stream: data.detail_stream,
+                    gender: data.detail_gender,
+                    phone: data.detail_phone,
+                    dept: data.detail_dept,
+                    forward: data.detail_forward
+                };
+                finalDescription = JSON.stringify(details);
+            }
+
+            const payload = {
+                student_name: data.student_name,
+                student_class: data.student_class,
+                offence: data.offence, // handles both
+                offence_type: data.offence,
+                description: finalDescription,
+                date_reported: data.date,
+                incident_date: data.date,
+                action_taken: data.action,
+                punitive_measure: data.action
+            };
+
+            try {
+                const res = await fetch(`/api/discipline/${data.type}s/${data.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    App.Editor.close();
+
+                    // Trigger global refresh
+                    if (window.socket && window.socket.emit) {
+                        // Notify others if needed, though handleUpdate will catch own updates usually
+                    }
+
+                    // Force refresh current view
+                    const hash = window.location.hash.substring(1) || 'dashboard';
+                    App.renderView(hash);
+
+                    // Simple Toast if exists or alert
+                    alert('Record updated successfully');
+                } else {
+                    alert('Error: ' + result.error);
+                    btn.disabled = false;
+                    btn.innerHTML = "Save Changes";
+                }
+            } catch (err) {
+                alert('Connection failed');
+                btn.disabled = false;
+                btn.innerHTML = "Save Changes";
+            }
+        },
+
+        close: () => {
+            const modal = document.getElementById('globalEditorModal');
+            if (modal) modal.remove();
+        }
     }
 };
 

@@ -125,6 +125,9 @@ const Statements = {
                 if (action === 'select-student') {
                     Statements.selectStudent(el.dataset.id, el.dataset.name, el.dataset.class);
                 }
+                if (action === 'edit-record') {
+                    App.Editor.open(el.dataset.id, el.dataset.type);
+                }
                 if (action === 'quick-detention') {
                     Statements.triggerDetention(el.dataset.name, el.dataset.class, el.dataset.offense);
                 }
@@ -286,13 +289,21 @@ const Statements = {
                         <div style="margin: 8px 0;">${typeof App !== 'undefined' ? App.formatDescription(inc.description) : inc.description}</div>
                         <div style="font-size: 0.75rem; color: #666; background: #f5f5f5; padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
                             <div><strong>Outcome:</strong> ${inc.punitive_measure || 'Pending'}</div>
-                            <button class="btn btn-sm" style="background: var(--danger); color: white; padding: 2px 6px; font-size: 0.65rem;" 
-                                data-action="quick-detention" 
-                                data-name="${inc.student_name.replace(/"/g, '&quot;')}" 
-                                data-class="${inc.student_class || ''}" 
-                                data-offense="${inc.offence_type.replace(/"/g, '&quot;')}">
-                                Send to Detention
-                            </button>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-sm" style="background: var(--primary-color); color: white; padding: 2px 6px; font-size: 0.65rem;" 
+                                    data-action="edit-record" 
+                                    data-id="${inc.id}" 
+                                    data-type="${inc.type === 'Statement' ? 'statement' : 'report'}">
+                                    <i class='bx bx-edit'></i> Edit
+                                </button>
+                                <button class="btn btn-sm" style="background: var(--danger); color: white; padding: 2px 6px; font-size: 0.65rem;" 
+                                    data-action="quick-detention" 
+                                    data-name="${inc.student_name.replace(/"/g, '&quot;')}" 
+                                    data-class="${inc.student_class || ''}" 
+                                    data-offense="${inc.offence_type.replace(/"/g, '&quot;')}">
+                                    Send to Detention
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
