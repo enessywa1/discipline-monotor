@@ -217,6 +217,11 @@ const Tasks = {
         const data = Object.fromEntries(fd.entries());
         data.assigned_by = Auth.getUser().id;
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Assigning...`;
+
         try {
             const res = await fetch('/api/tasks', {
                 method: 'POST',
@@ -233,19 +238,41 @@ const Tasks = {
             }
         } catch (err) {
             alert('Network error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 
     updateStatus: async (id, newStatus) => {
-        try {
-            await fetch(`/api/tasks/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
-            });
-            Tasks.loadTasks();
-        } catch (e) {
-            alert('Failed to update status');
+        // Optimistic UI Update
+        const taskIndex = (Tasks.allTasks || []).findIndex(t => t.id == id);
+        if (taskIndex !== -1) {
+            const oldStatus = Tasks.allTasks[taskIndex].status;
+            Tasks.allTasks[taskIndex].status = newStatus;
+            
+            // Re-render the current list to show change immediately
+            const activeTab = document.querySelector('.tab-btn.active');
+            const currentStatus = activeTab ? activeTab.dataset.status : 'pending';
+            const map = { 'pending': 'Pending', 'progress': 'In Progress', 'completed': 'Completed' };
+            Tasks.renderList(map[currentStatus] || 'Pending');
+            
+            try {
+                const res = await fetch(`/api/tasks/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const result = await res.json();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+            } catch (e) {
+                // Rollback if failed
+                Tasks.allTasks[taskIndex].status = oldStatus;
+                Tasks.renderList(map[currentStatus] || 'Pending');
+                alert('Failed to update status: ' + e.message);
+            }
         }
     }
 };

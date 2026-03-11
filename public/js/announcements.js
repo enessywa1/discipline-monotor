@@ -110,6 +110,11 @@ const Announcements = {
         const data = Object.fromEntries(fd.entries());
         data.posted_by = Auth.getUser().id;
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Posting...`;
+
         try {
             const res = await fetch('/api/announcements', {
                 method: 'POST',
@@ -124,6 +129,9 @@ const Announcements = {
             }
         } catch (e) {
             alert('Error posting');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 

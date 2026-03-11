@@ -45,16 +45,37 @@ router.post('/reports', (req, res) => {
 
             const reportId = this.lastID;
 
-            // Trigger Notification for ALL Users
-            db.all(`SELECT id FROM users`, [], (userErr, users) => {
-                if (!userErr && users) {
-                    users.forEach(user => {
-                        db.run(
-                            `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'report', '#recent_submissions')`,
-                            [user.id, 'New Report', `New Discipline Report for ${student_name}`]
-                        );
-                    });
-                }
+            // Asynchronous Notification Seeding
+            setImmediate(() => {
+                db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                    if (!userErr && users && users.length > 0) {
+                        const title = 'New Report';
+                        const message = `New Discipline Report for ${student_name}`;
+                        const type = 'report';
+                        const link = '#recent_submissions';
+
+                        if (db.isPostgres) {
+                            // Postgres batch insert
+                            const values = users.map(u => `(${u.id}, '${title}', '${message}', '${type}', '${link}')`).join(',');
+                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${values}`, (err) => {
+                                if (err) console.error("❌ Postgres Notification Batch Error:", err.message);
+                            });
+                        } else {
+                            // SQLite batch insert (using a transaction for speed)
+                            db.serialize(() => {
+                                db.run("BEGIN TRANSACTION");
+                                const stmt = db.prepare(`INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)`);
+                                users.forEach(user => {
+                                    stmt.run([user.id, title, message, type, link]);
+                                });
+                                stmt.finalize();
+                                db.run("COMMIT", (err) => {
+                                    if (err) console.error("❌ SQLite Notification Transaction Error:", err.message);
+                                });
+                            });
+                        }
+                    }
+                });
             });
 
             if (req.io) req.io.emit('dashboard_update', { type: 'report', action: 'create' });
@@ -150,16 +171,35 @@ router.post('/statements', (req, res) => {
 
             const statementId = this.lastID;
 
-            // Trigger Notification for ALL Users
-            db.all(`SELECT id FROM users`, [], (userErr, users) => {
-                if (!userErr && users) {
-                    users.forEach(user => {
-                        db.run(
-                            `INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, 'statement', '#recent_submissions')`,
-                            [user.id, 'New Statement', `New Case Statement for ${student_name}`]
-                        );
-                    });
-                }
+            // Asynchronous Notification Seeding
+            setImmediate(() => {
+                db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                    if (!userErr && users && users.length > 0) {
+                        const title = 'New Statement';
+                        const message = `New Case Statement for ${student_name}`;
+                        const type = 'statement';
+                        const link = '#recent_submissions';
+
+                        if (db.isPostgres) {
+                            const values = users.map(u => `(${u.id}, '${title}', '${message}', '${type}', '${link}')`).join(',');
+                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${values}`, (err) => {
+                                if (err) console.error("❌ Postgres Notification Batch Error:", err.message);
+                            });
+                        } else {
+                            db.serialize(() => {
+                                db.run("BEGIN TRANSACTION");
+                                const stmt = db.prepare(`INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)`);
+                                users.forEach(user => {
+                                    stmt.run([user.id, title, message, type, link]);
+                                });
+                                stmt.finalize();
+                                db.run("COMMIT", (err) => {
+                                    if (err) console.error("❌ SQLite Notification Transaction Error:", err.message);
+                                });
+                            });
+                        }
+                    }
+                });
             });
 
             if (req.io) req.io.emit('dashboard_update', { type: 'statement', action: 'create' });

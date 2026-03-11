@@ -245,6 +245,11 @@ const Users = {
     create: async (e) => {
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Saving...`;
+
         try {
             const res = await fetch('/api/users', {
                 method: 'POST',
@@ -260,6 +265,9 @@ const Users = {
             }
         } catch (e) {
             alert('Failed to create user');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 
@@ -270,6 +278,11 @@ const Users = {
         if (!data.password || data.password.trim() === '') {
             delete data.password;
         }
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Updating...`;
 
         try {
             const res = await fetch(`/api/users/${Users.currentEditId}`, {
@@ -286,6 +299,9 @@ const Users = {
             }
         } catch (e) {
             alert('Failed to update user');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 

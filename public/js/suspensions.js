@@ -175,6 +175,11 @@ const Suspensions = {
         const data = Object.fromEntries(fd.entries());
         data.recorded_by = Auth.getUser().id;
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Processing...`;
+
         try {
             const res = await fetch('/api/suspensions', {
                 method: 'POST',
@@ -192,6 +197,9 @@ const Suspensions = {
             }
         } catch (err) {
             alert('Submission failed');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 

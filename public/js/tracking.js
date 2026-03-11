@@ -164,15 +164,30 @@ const Tracking = {
                 recorded_by: user.id
             };
 
-            const res = await fetch('/api/discipline/watchlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Adding...`;
 
-            if (res.ok) {
-                e.target.reset();
-                Tracking.loadWatchlist();
+            try {
+                const res = await fetch('/api/discipline/watchlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    e.target.reset();
+                    Tracking.loadWatchlist();
+                } else {
+                    const result = await res.json();
+                    alert('Error: ' + (result.error || 'Failed to add'));
+                }
+            } catch (err) {
+                alert('Submission failed');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         });
 
@@ -185,15 +200,30 @@ const Tracking = {
                 recorded_by: user.id
             };
 
-            const res = await fetch('/api/discipline/improved', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Recording...`;
 
-            if (res.ok) {
-                e.target.reset();
-                Tracking.loadImproved();
+            try {
+                const res = await fetch('/api/discipline/improved', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    e.target.reset();
+                    Tracking.loadImproved();
+                } else {
+                    const result = await res.json();
+                    alert('Error: ' + (result.error || 'Failed to record'));
+                }
+            } catch (err) {
+                alert('Submission failed');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         });
     },

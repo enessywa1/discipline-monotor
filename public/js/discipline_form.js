@@ -172,6 +172,11 @@ const DisciplineForm = {
             action_taken: data.action_taken
         };
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Submitting...`;
+
         try {
             const res = await fetch('/api/discipline/reports', {
                 method: 'POST',
@@ -188,6 +193,9 @@ const DisciplineForm = {
             }
         } catch (err) {
             alert('Submission failed');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     }
 };

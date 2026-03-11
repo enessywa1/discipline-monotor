@@ -165,6 +165,7 @@ router.get('/stats', async (req, res) => {
             });
         });
 
+        const fetchTasks = () => new Promise((resolve, reject) => {
             const sql = `SELECT status, COUNT(*) as count FROM tasks 
                          ${!isAdmin(req.session.user) && req.session.user ? 'WHERE (assigned_to = ? OR assigned_by = ?)' : ''} 
                          GROUP BY status`;
@@ -173,34 +174,11 @@ router.get('/stats', async (req, res) => {
             db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
-
-        const fetchPerformance = () => new Promise((resolve, reject) => {
-            // Fix for Postgres: Aggregate must be over a subquery if we want to limit first
-            db.all(`SELECT avg(discipline_pct) as discipline, avg(hygiene_pct) as hygiene 
-                    FROM (SELECT discipline_pct, hygiene_pct FROM standings ORDER BY week_start_date DESC LIMIT 5) as recent`, (err, rows) => {
-                if (err) reject(err); else resolve(rows[0] || { discipline: 85, hygiene: 90 });
-            });
-        });
-
-        const fetchTodayCases = () => new Promise((resolve, reject) => {
-            const sql = db.isPostgres
-                ? `SELECT (
-                    (SELECT COUNT(*) FROM statements WHERE created_at::date = CURRENT_DATE) +
-                    (SELECT COUNT(*) FROM discipline_reports WHERE date_reported::date = CURRENT_DATE)
-                   ) as total`
-                : `SELECT (
-                    (SELECT COUNT(*) FROM statements WHERE date(created_at) = date('now')) +
-                    (SELECT COUNT(*) FROM discipline_reports WHERE date(date_reported) = date('now'))
-                   ) as total`;
-
-            db.get(sql, [], (err, row) => {
-                if (err) reject(err); else resolve(row ? row.total : 0);
-            });
         });
 
         const [offences, tasks, performance, todayCases] = await Promise.all([
             fetchOffences(),
-            fetchTasksCount(),
+            fetchTasks(),
             fetchPerformance(),
             fetchTodayCases()
         ]);

@@ -187,6 +187,16 @@ const Detentions = {
 
     clearOneDay: async (id) => {
         if (!confirm('Clear one day for this student?')) return;
+        
+        // Find the button if it exists in the DOM to disable it
+        const btn = document.querySelector(`.clear-btn[data-id="${id}"]`);
+        let originalContent = '';
+        if (btn) {
+            btn.disabled = true;
+            originalContent = btn.innerHTML;
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i>`;
+        }
+
         try {
             const res = await fetch(`/api/detentions/${id}/clear`, { method: 'PUT' });
             const data = await res.json();
@@ -194,9 +204,17 @@ const Detentions = {
                 Detentions.load();
             } else {
                 alert('Error: ' + data.error);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
             }
         } catch (e) {
             alert('Operation failed');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
         }
     },
 
@@ -205,6 +223,11 @@ const Detentions = {
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
         data.recorded_by = Auth.getUser().id;
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Recording...`;
 
         try {
             const res = await fetch('/api/detentions', {
@@ -223,6 +246,9 @@ const Detentions = {
             }
         } catch (err) {
             alert('Submission failed');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 

@@ -333,6 +333,11 @@ const Statements = {
             description: data.description
         };
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Submitting...`;
+
         try {
             const res = await fetch('/api/discipline/statements', {
                 method: 'POST',
@@ -356,6 +361,9 @@ const Statements = {
             }
         } catch (e) {
             alert('Submission failed');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 

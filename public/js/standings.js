@@ -76,6 +76,11 @@ const Standings = {
         const data = Object.fromEntries(fd.entries());
         data.staff_id = Auth.getUser().id;
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Saving...`;
+
         try {
             const res = await fetch('/api/discipline/standings', {
                 method: 'POST',
@@ -92,6 +97,9 @@ const Standings = {
             }
         } catch (e) {
             alert('Error saving data');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 
