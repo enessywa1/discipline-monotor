@@ -2,17 +2,37 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 
+// Helper for Admin Check
+const isAdmin = (user) => {
+    if (!user || !user.role) return false;
+    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
+    return adminRoles.includes(user.role.toLowerCase());
+};
+
 // GET /api/suspensions
 router.get('/', (req, res) => {
     const { student_name } = req.query;
+    const user = req.session.user;
+    const isUserAdmin = isAdmin(user);
+
     let sql = `SELECT se.*, u.full_name as recorder_name 
                FROM suspensions_expulsions se
                LEFT JOIN users u ON se.recorded_by = u.id`;
     const params = [];
+    const conditions = [];
 
     if (student_name) {
-        sql += ` WHERE LOWER(se.student_name) LIKE LOWER(?)`;
+        conditions.push(`LOWER(se.student_name) LIKE LOWER(?)`);
         params.push(`%${student_name}%`);
+    }
+
+    if (!isUserAdmin && user) {
+        conditions.push(`se.recorded_by = ?`);
+        params.push(user.id);
+    }
+
+    if (conditions.length > 0) {
+        sql += ` WHERE ` + conditions.join(' AND ');
     }
 
     sql += ` ORDER BY se.created_at DESC`;

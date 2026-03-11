@@ -63,17 +63,38 @@ router.post('/reports', (req, res) => {
     );
 });
 
+// Helper for Admin Check
+const isAdmin = (user) => {
+    if (!user || !user.role) return false;
+    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
+    return adminRoles.includes(user.role.toLowerCase());
+};
+
 // GET /api/discipline/reports
 router.get('/reports', (req, res) => {
     const { student_name } = req.query;
+    const user = req.session.user;
+
     let sql = `SELECT dr.id, dr.student_name, dr.student_class, dr.offence, dr.date_reported, dr.action_taken, dr.description, u.full_name as staff_name 
             FROM discipline_reports dr
             LEFT JOIN users u ON dr.staff_id = u.id`;
     const params = [];
 
+    const isUserAdmin = isAdmin(user);
+    const conditions = [];
+
     if (student_name) {
-        sql += ` WHERE LOWER(dr.student_name) LIKE LOWER(?)`;
+        conditions.push(`LOWER(dr.student_name) LIKE LOWER(?)`);
         params.push(`%${student_name}%`);
+    }
+
+    if (!isUserAdmin && user) {
+        conditions.push(`dr.staff_id = ?`);
+        params.push(user.id);
+    }
+
+    if (conditions.length > 0) {
+        sql += ` WHERE ` + conditions.join(' AND ');
     }
 
     sql += ` ORDER BY dr.date_reported DESC LIMIT 500`;
@@ -87,14 +108,30 @@ router.get('/reports', (req, res) => {
 // GET /api/discipline/statements
 router.get('/statements', (req, res) => {
     const { student_name } = req.query;
+    const user = req.session.user;
+
     let sql = `SELECT s.id, s.student_name, s.student_class, s.incident_date, s.offence_type, s.punitive_measure, s.created_at, s.description, u.full_name as recorder_name 
                FROM statements s 
                LEFT JOIN users u ON s.recorded_by = u.id`;
     const params = [];
+
+    const isUserAdmin = isAdmin(user);
+    const conditions = [];
+
     if (student_name) {
-        sql += ` WHERE LOWER(s.student_name) LIKE LOWER(?)`;
+        conditions.push(`LOWER(s.student_name) LIKE LOWER(?)`);
         params.push(`%${student_name}%`);
     }
+
+    if (!isUserAdmin && user) {
+        conditions.push(`s.recorded_by = ?`);
+        params.push(user.id);
+    }
+
+    if (conditions.length > 0) {
+        sql += ` WHERE ` + conditions.join(' AND ');
+    }
+
     sql += ` ORDER BY s.incident_date DESC LIMIT 500`;
     db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -160,10 +197,22 @@ router.get('/standings', (req, res) => {
 
 // GET /api/discipline/watchlist
 router.get('/watchlist', (req, res) => {
-    db.all(`SELECT w.*, u.full_name as recorder_name 
+    const user = req.session.user;
+    const isUserAdmin = isAdmin(user);
+    
+    let sql = `SELECT w.*, u.full_name as recorder_name 
             FROM watchlist w 
-            LEFT JOIN users u ON w.recorded_by = u.id 
-            ORDER BY w.created_at DESC`, [], (err, rows) => {
+            LEFT JOIN users u ON w.recorded_by = u.id`;
+    const params = [];
+
+    if (!isUserAdmin && user) {
+        sql += ` WHERE w.recorded_by = ?`;
+        params.push(user.id);
+    }
+
+    sql += ` ORDER BY w.created_at DESC`;
+
+    db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, watchlist: rows });
     });
@@ -195,10 +244,22 @@ router.delete('/watchlist/:id', (req, res) => {
 
 // GET /api/discipline/improved
 router.get('/improved', (req, res) => {
-    db.all(`SELECT i.*, u.full_name as recorder_name 
+    const user = req.session.user;
+    const isUserAdmin = isAdmin(user);
+
+    let sql = `SELECT i.*, u.full_name as recorder_name 
             FROM improved_students i 
-            LEFT JOIN users u ON i.recorded_by = u.id 
-            ORDER BY i.created_at DESC`, [], (err, rows) => {
+            LEFT JOIN users u ON i.recorded_by = u.id`;
+    const params = [];
+
+    if (!isUserAdmin && user) {
+        sql += ` WHERE i.recorded_by = ?`;
+        params.push(user.id);
+    }
+
+    sql += ` ORDER BY i.created_at DESC`;
+
+    db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, students: rows });
     });

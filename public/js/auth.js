@@ -45,6 +45,16 @@ const Auth = {
             if (show) el.classList.remove('hidden');
             else el.classList.add('hidden');
         });
+
+        // Special handling for "My Records" vs "All Submissions"
+        const myRecordsNav = document.getElementById('navMyRecords')?.parentElement;
+        if (myRecordsNav) {
+            if (isAdmin) {
+                myRecordsNav.classList.add('hidden'); // Admins have "All Submissions"
+            } else {
+                myRecordsNav.classList.remove('hidden');
+            }
+        }
     },
 
     logout: () => {

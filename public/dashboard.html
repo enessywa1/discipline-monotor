@@ -47,6 +47,13 @@
                 </a>
             </li>
 
+            <!-- My Records (Staff Workspace) -->
+            <li data-role="all">
+                <a href="#recent_submissions" class="nav-item" data-view="recent_submissions" id="navMyRecords">
+                    <i class='bx bx-folder-open'></i> My Records
+                </a>
+            </li>
+
             <li>
                 <a href="#announcements" class="nav-item" data-view="announcements">
                     <i class='bx bx-megaphone'></i> Announcements
@@ -91,8 +98,8 @@
                 </a>
             </li>
 
-            <!-- Accessible to everyone -->
-            <li data-role="all">
+            <!-- Admin Only: View all submissions -->
+            <li class="admin-only hidden" data-role="admin">
                 <a href="#recent_submissions" class="nav-item" data-view="recent_submissions">
                     <i class='bx bx-time-five'></i> All Submissions
                 </a>

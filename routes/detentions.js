@@ -2,9 +2,19 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 
+// Helper for Admin Check
+const isAdmin = (user) => {
+    if (!user || !user.role) return false;
+    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
+    return adminRoles.includes(user.role.toLowerCase());
+};
+
 // GET /api/detentions
 router.get('/', (req, res) => {
     const { student_name, sort_by, status } = req.query;
+    const user = req.session.user;
+    const isUserAdmin = isAdmin(user);
+
     let sql = `SELECT d.*, u.full_name as recorder_name 
                FROM detentions d 
                LEFT JOIN users u ON d.recorded_by = u.id`;
@@ -19,6 +29,11 @@ router.get('/', (req, res) => {
     if (status) {
         conditions.push(`d.status = ?`);
         params.push(status);
+    }
+
+    if (!isUserAdmin && user) {
+        conditions.push(`d.recorded_by = ?`);
+        params.push(user.id);
     }
 
     if (conditions.length > 0) {
