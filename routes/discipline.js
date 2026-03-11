@@ -271,8 +271,18 @@ router.post('/watchlist', (req, res) => {
     );
 });
 
+// Helper middleware for DM check
+const isDM = (req, res, next) => {
+    const user = req.session.user;
+    if (user && (user.role || '').toLowerCase() === 'discipline master') {
+        next();
+    } else {
+        res.status(403).json({ success: false, error: "Unauthorized. Discipline Master role required." });
+    }
+};
+
 // DELETE /api/discipline/watchlist/:id
-router.delete('/watchlist/:id', (req, res) => {
+router.delete('/watchlist/:id', isDM, (req, res) => {
     db.run(`DELETE FROM watchlist WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (req.io) req.io.emit('dashboard_update', { type: 'watchlist', action: 'delete' });
@@ -319,7 +329,7 @@ router.post('/improved', (req, res) => {
 });
 
 // DELETE /api/discipline/improved/:id
-router.delete('/improved/:id', (req, res) => {
+router.delete('/improved/:id', isDM, (req, res) => {
     db.run(`DELETE FROM improved_students WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (req.io) req.io.emit('dashboard_update', { type: 'improved', action: 'delete' });
@@ -328,16 +338,6 @@ router.delete('/improved/:id', (req, res) => {
 });
 
 // --- Mutation Endpoints (DM Only) ---
-
-// Helper middleware for DM check
-const isDM = (req, res, next) => {
-    const user = req.session.user;
-    if (user && (user.role || '').toLowerCase() === 'discipline master') {
-        next();
-    } else {
-        res.status(403).json({ success: false, error: "Unauthorized. Discipline Master role required." });
-    }
-};
 
 // Update Report
 router.put('/reports/:id', isDM, (req, res) => {
