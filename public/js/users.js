@@ -19,6 +19,8 @@ const Users = {
                             <div class="form-group">
                                 <label>Role</label>
                                 <select name="role" required>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Maintenance">Maintenance</option>
                                     <option value="Patron">Patron</option>
                                     <option value="Matron">Matron</option>
                                     <option value="Head Patron">Head Patron</option>

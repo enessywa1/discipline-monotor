@@ -66,7 +66,7 @@ router.post('/reports', (req, res) => {
 // Helper for Admin Check
 const isAdmin = (user) => {
     if (!user || !user.role) return false;
-    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
+    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
     return adminRoles.includes(user.role.toLowerCase());
 };
 

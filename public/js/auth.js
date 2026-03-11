@@ -26,8 +26,8 @@ const Auth = {
         // Role Based Visibility Logic (Case-Insensitive)
         const userRole = (user.role || '').trim().toLowerCase();
 
-        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie'];
-        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
+        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor', 'teacher'];
 
         const isAdmin = adminRoles.includes(userRole);
         const isPatronMatron = patronMatronRoles.includes(userRole);
