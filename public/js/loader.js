@@ -11,10 +11,10 @@
     // Simulate progress (smoothly increment)
     const interval = setInterval(() => {
         if (percentage < 90) {
-            percentage += Math.floor(Math.random() * 10) + 5;
+            percentage += Math.floor(Math.random() * 5) + 1;
             updateLoader(percentage);
         }
-    }, 50);
+    }, 150);
 
     function updateLoader(val) {
         if (val > 100) val = 100;
@@ -35,7 +35,7 @@
             // Cleanup: remove loader from DOM after animation
             setTimeout(() => {
                 if (wrapper) wrapper.remove();
-            }, 300);
-        }, 50);
+            }, 1000);
+        }, 500);
     });
 })();
