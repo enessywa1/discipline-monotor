@@ -61,20 +61,66 @@ const Users = {
                     </form>
                 </div>
 
-                <div class="table-container" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                        <thead>
-                            <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
-                                <th style="padding: 12px;">Name</th>
-                                <th style="padding: 12px;">Role</th>
-                                <th style="padding: 12px;">Allocation</th>
-                                <th style="padding: 12px;">Phone</th>
-                                <th style="padding: 12px;">Username</th>
-                                <th style="padding: 12px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody"></tbody>
-                    </table>
+                <div id="staffSectionsContainer" style="display: flex; flex-direction: column; gap: 30px;">
+                    <!-- Admin Section -->
+                    <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Administrators</h4>
+                        <div class="table-container" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
+                                        <th style="padding: 12px;">Name</th>
+                                        <th style="padding: 12px;">Role</th>
+                                        <th style="padding: 12px;">Allocation</th>
+                                        <th style="padding: 12px;">Phone</th>
+                                        <th style="padding: 12px;">Username</th>
+                                        <th style="padding: 12px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Staff Section -->
+                    <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Residential Staff (Patrons/Matrons)</h4>
+                        <div class="table-container" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
+                                        <th style="padding: 12px;">Name</th>
+                                        <th style="padding: 12px;">Role</th>
+                                        <th style="padding: 12px;">Allocation</th>
+                                        <th style="padding: 12px;">Phone</th>
+                                        <th style="padding: 12px;">Username</th>
+                                        <th style="padding: 12px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Teachers Section -->
+                    <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Teachers</h4>
+                        <div class="table-container" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
+                                        <th style="padding: 12px;">Name</th>
+                                        <th style="padding: 12px;">Role</th>
+                                        <th style="padding: 12px;">Allocation</th>
+                                        <th style="padding: 12px;">Phone</th>
+                                        <th style="padding: 12px;">Username</th>
+                                        <th style="padding: 12px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacherTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -104,32 +150,62 @@ const Users = {
     },
 
     load: async () => {
-        const tbody = document.getElementById('userTableBody');
+        const adminTbody = document.getElementById('adminTableBody');
+        const staffTbody = document.getElementById('staffTableBody');
+        const teacherTbody = document.getElementById('teacherTableBody');
+
         try {
             const res = await fetch('/api/users');
             const data = await res.json();
             if (data.success) {
                 Users.allUsers = data.users;
-                tbody.innerHTML = data.users.map(u => `
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; font-weight: 500;">${u.full_name}</td>
-                        <td style="padding: 12px;">
-                            <span class="badge badge-progress" style="background: #e0f2f1; color: #00695c;">
-                                ${u.role}
-                            </span>
-                        </td>
-                        <td style="padding: 12px;">${u.allocation || '-'}</td>
-                        <td style="padding: 12px; color: var(--text-secondary);">${u.phone_number || 'N/A'}</td>
-                        <td style="padding: 12px;">${u.username}</td>
-                        <td style="padding: 12px; display: flex; gap: 10px;">
-                            <button data-action="edit" data-id="${u.id}" style="color: var(--primary-color); background: none; border: none; cursor: pointer; font-weight: 600;">Edit</button>
-                            ${u.username !== 'admin' ? `<button data-action="delete" data-id="${u.id}" style="color: #c62828; background: none; border: none; cursor: pointer; font-weight: 600;">Delete</button>` : ''}
-                        </td>
-                    </tr>
-                `).join('');
+
+                const adminRoles = ['developer', 'director', 'director administration and public relations', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+                const residentialRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
+
+                const admins = [];
+                const staff = [];
+                const teachers = [];
+
+                data.users.forEach(u => {
+                    const role = (u.role || '').toLowerCase();
+                    if (adminRoles.includes(role)) {
+                        admins.push(u);
+                    } else if (role === 'teacher') {
+                        teachers.push(u);
+                    } else {
+                        staff.push(u);
+                    }
+                });
+
+                const renderRows = (users) => {
+                    if (users.length === 0) return '<tr><td colspan="6" style="padding: 20px; text-align: center; color: grey;">No records found</td></tr>';
+                    return users.map(u => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; font-weight: 500;">${u.full_name}</td>
+                            <td style="padding: 12px;">
+                                <span class="badge badge-progress" style="background: #e0f2f1; color: #00695c;">
+                                    ${u.role}
+                                </span>
+                            </td>
+                            <td style="padding: 12px;">${u.allocation || '-'}</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">${u.phone_number || 'N/A'}</td>
+                            <td style="padding: 12px;">${u.username}</td>
+                            <td style="padding: 12px; display: flex; gap: 10px;">
+                                <button data-action="edit" data-id="${u.id}" style="color: var(--primary-color); background: none; border: none; cursor: pointer; font-weight: 600;">Edit</button>
+                                ${u.username !== 'admin' ? `<button data-action="delete" data-id="${u.id}" style="color: #c62828; background: none; border: none; cursor: pointer; font-weight: 600;">Delete</button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                };
+
+                adminTbody.innerHTML = renderRows(admins);
+                staffTbody.innerHTML = renderRows(staff);
+                teacherTbody.innerHTML = renderRows(teachers);
             }
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Error loading users.</td></tr>';
+            console.error('Error loading users:', e);
+            if (adminTbody) adminTbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Error loading users.</td></tr>';
         }
     },
 
