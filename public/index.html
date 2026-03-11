@@ -288,7 +288,7 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
-                    }, 500); // Small delay for UX
+                    }, 50); // Minimal delay for UX
                 } else {
                     const debugMsg = data.debug ? ` | Debug: ${data.debug}` : '';
                     errorMsg.textContent = (data.message || data.error || 'Invalid credentials') + debugMsg;

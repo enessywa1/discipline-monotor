@@ -8,6 +8,7 @@ async function optimize() {
         "CREATE INDEX IF NOT EXISTS idx_statements_student ON statements(student_name)",
         "CREATE INDEX IF NOT EXISTS idx_statements_recorded_by ON statements(recorded_by)",
         "CREATE INDEX IF NOT EXISTS idx_statements_date ON statements(incident_date)",
+        "CREATE INDEX IF NOT EXISTS idx_statements_created_at ON statements(created_at)",
 
         // Indexes for Discipline Reports
         "CREATE INDEX IF NOT EXISTS idx_reports_student ON discipline_reports(student_name)",
@@ -21,7 +22,8 @@ async function optimize() {
         // Indexes for Tasks
         "CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to)",
         "CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by ON tasks(assigned_by)",
-        "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)"
+        "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)",
+        "CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)"
     ];
 
     for (const q of queries) {
