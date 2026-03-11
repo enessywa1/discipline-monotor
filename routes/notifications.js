@@ -5,7 +5,24 @@ const db = require('../database/db');
 
 // GET /api/notifications?user_id=X&role=Y
 router.get('/', (req, res) => {
-    const { user_id, role } = req.query;
+    let { user_id, role } = req.query;
+    const sessionUser = req.session.user;
+
+    // Helper for Admin Check
+    const isAdmin = (user) => {
+        if (!user || !user.role) return false;
+        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+        return adminRoles.includes(user.role.toLowerCase());
+    };
+
+    // Security: Non-admins can only see THEIR OWN notifications
+    if (!isAdmin(sessionUser)) {
+        if (sessionUser) {
+            user_id = sessionUser.id;
+        } else {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+    }
 
     const notifications = [];
 

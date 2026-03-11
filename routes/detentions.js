@@ -54,6 +54,12 @@ router.get('/', (req, res) => {
 // PUT /api/detentions/:id/clear
 router.put('/:id/clear', (req, res) => {
     const { id } = req.params;
+    const user = req.session.user;
+
+    // Block Teachers from clearing detentions
+    if (user && user.role && user.role.toLowerCase() === 'teacher') {
+        return res.status(403).json({ error: 'Teachers are not authorized to clear detentions' });
+    }
 
     // Get current record
     db.get('SELECT id, days, status FROM detentions WHERE id = ?', [id], (err, row) => {

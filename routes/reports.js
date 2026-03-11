@@ -4,31 +4,51 @@ const xlsx = require('xlsx');
 const fs = require('fs');
 
 const db = require('../database/db');
+const path = require('path');
+
+// Helper for Admin Check
+const isAdmin = (user) => {
+    if (!user || !user.role) return false;
+    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+    return adminRoles.includes(user.role.toLowerCase());
+};
 
 // GET /api/reports/detailed - Fetch detailed records for the Weekly Report view
 router.get('/detailed', async (req, res) => {
+    const user = req.session.user;
+    const isUserAdmin = isAdmin(user);
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     const dateStr = oneWeekAgo.toISOString().split('T')[0];
 
     try {
         const fetchStatements = () => new Promise((resolve, reject) => {
-            db.all(`SELECT s.id, s.student_name, s.student_class, s.offence_type, s.punitive_measure, s.incident_date, s.created_at, s.description, u.full_name as recorder_name 
+            const sql = `SELECT s.id, s.student_name, s.student_class, s.offence_type, s.punitive_measure, s.incident_date, s.created_at, s.description, u.full_name as recorder_name 
                     FROM statements s
                     LEFT JOIN users u ON s.recorded_by = u.id
                     WHERE s.created_at >= ? 
-                    ORDER BY s.incident_date DESC LIMIT 500`, [dateStr], (err, rows) => {
+                    ${!isUserAdmin && user ? 'AND s.recorded_by = ?' : ''}
+                    ORDER BY s.incident_date DESC LIMIT 500`;
+            const params = [dateStr];
+            if (!isUserAdmin && user) params.push(user.id);
+
+            db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
         });
 
         const fetchTasks = () => new Promise((resolve, reject) => {
-            db.all(`SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
+            const sql = `SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
                     FROM tasks t
                     LEFT JOIN users u_to ON t.assigned_to = u_to.id
                     LEFT JOIN users u_by ON t.assigned_by = u_by.id
                     WHERE t.created_at >= ?
-                    ORDER BY t.created_at DESC`, [dateStr], (err, rows) => {
+                    ${!isUserAdmin && user ? 'AND (t.assigned_to = ? OR t.assigned_by = ?)' : ''}
+                    ORDER BY t.created_at DESC`;
+            const params = [dateStr];
+            if (!isUserAdmin && user) params.push(user.id, user.id);
+
+            db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
         });
@@ -44,11 +64,16 @@ router.get('/detailed', async (req, res) => {
         });
 
         const fetchDisciplineReports = () => new Promise((resolve, reject) => {
-            db.all(`SELECT dr.*, u.full_name as staff_name 
+            const sql = `SELECT dr.*, u.full_name as staff_name 
                     FROM discipline_reports dr
                     LEFT JOIN users u ON dr.staff_id = u.id
                     WHERE dr.date_reported >= ? 
-                    ORDER BY dr.date_reported DESC`, [dateStr], (err, rows) => {
+                    ${!isUserAdmin && user ? 'AND dr.staff_id = ?' : ''}
+                    ORDER BY dr.date_reported DESC`;
+            const params = [dateStr];
+            if (!isUserAdmin && user) params.push(user.id);
+
+            db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
         });
@@ -82,15 +107,18 @@ router.get('/all-time', async (req, res) => {
             });
         });
 
-        const fetchTasks = () => new Promise((resolve, reject) => {
-            db.all(`SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
+            const sql = `SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
                     FROM tasks t
                     LEFT JOIN users u_to ON t.assigned_to = u_to.id
                     LEFT JOIN users u_by ON t.assigned_by = u_by.id
-                    ORDER BY t.created_at DESC`, [], (err, rows) => {
+                    ${!isAdmin(req.session.user) && req.session.user ? 'WHERE (t.assigned_to = ? OR t.assigned_by = ?)' : ''}
+                    ORDER BY t.created_at DESC`;
+            const params = [];
+            if (!isAdmin(req.session.user) && req.session.user) params.push(req.session.user.id, req.session.user.id);
+
+            db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
-        });
 
         const fetchStandings = () => new Promise((resolve, reject) => {
             db.all(`SELECT st.id, st.week_start_date, st.discipline_pct, st.hygiene_pct, u.full_name as staff_name, u.role
@@ -137,11 +165,14 @@ router.get('/stats', async (req, res) => {
             });
         });
 
-        const fetchTasksCount = () => new Promise((resolve, reject) => {
-            db.all(`SELECT status, COUNT(*) as count FROM tasks GROUP BY status`, (err, rows) => {
+            const sql = `SELECT status, COUNT(*) as count FROM tasks 
+                         ${!isAdmin(req.session.user) && req.session.user ? 'WHERE (assigned_to = ? OR assigned_by = ?)' : ''} 
+                         GROUP BY status`;
+            const params = [];
+            if (!isAdmin(req.session.user) && req.session.user) params.push(req.session.user.id, req.session.user.id);
+            db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
-        });
 
         const fetchPerformance = () => new Promise((resolve, reject) => {
             // Fix for Postgres: Aggregate must be over a subquery if we want to limit first
@@ -218,14 +249,21 @@ router.get('/export', async (req, res) => {
             FROM standings s JOIN users u ON s.staff_id = u.id`);
         xlsx.utils.book_append_sheet(wb, xlsx.utils.json_to_sheet(standings), "Performance Standings");
 
-        // 4. Task Management History
-        const tasks = await fetchAll(`
+        let taskSql = `
             SELECT t.title as Task, t.description as Details, 
             u_by.full_name as AssignedBy, u_to.full_name as AssignedTo, 
             t.status as Status, t.due_date as DueDate, t.created_at as CreatedTimestamp
             FROM tasks t 
             LEFT JOIN users u_by ON t.assigned_by = u_by.id
-            LEFT JOIN users u_to ON t.assigned_to = u_to.id`);
+            LEFT JOIN users u_to ON t.assigned_to = u_to.id`;
+        const taskParams = [];
+        if (!isAdmin(req.session.user) && req.session.user) {
+            taskSql += ` WHERE (t.assigned_to = ? OR t.assigned_by = ?)`;
+            taskParams.push(req.session.user.id, req.session.user.id);
+        }
+        const tasks = await new Promise((resolve, reject) => {
+            db.all(taskSql, taskParams, (err, rows) => { if (err) reject(err); else resolve(rows); });
+        });
         xlsx.utils.book_append_sheet(wb, xlsx.utils.json_to_sheet(tasks), "Task History");
 
         // 5. System Announcements

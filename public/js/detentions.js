@@ -168,7 +168,7 @@ const Detentions = {
                                 <button class="btn btn-sm" onclick="alert('Remarks: ${d.remarks || 'None'}\\nDuration: ${d.days || 1} day(s)')" title="View Info">
                                     <i class='bx bx-info-circle'></i>
                                 </button>
-                                ${d.status === 'Uncleared' ? `
+                                 ${d.status === 'Uncleared' && (Auth.getUser().role || '').toLowerCase() !== 'teacher' ? `
                                     <button class="btn btn-sm clear-btn" data-action="clear-day" data-id="${d.id}" style="background: none; color: #4caf50;" title="Clear 1 Day">
                                         <i class='bx bx-check-circle'></i>
                                     </button>
