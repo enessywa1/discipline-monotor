@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discipline-pwa-v1';
+const CACHE_NAME = 'discipline-pwa-v2';
 
 const STATIC_ASSETS = [
     '/',
@@ -9,7 +9,7 @@ const STATIC_ASSETS = [
     '/css/recent_submissions.css',
     '/css/loader.css',
     '/css/about.css',
-    '/img/logo.png',
+    '/img/app-icon.png',
     '/js/app.js',
     '/js/auth.js',
     '/js/dashboard.js',
