@@ -39,11 +39,24 @@ const PWA = {
             window.originalFetch = window.fetch;
             window.fetch = async (input, init) => {
                 const method = init?.method || 'GET';
+                let response;
+                
                 if (method.toUpperCase() === 'GET') {
-                    return window.originalFetch(input, init);
+                    response = await window.originalFetch(input, init);
+                } else {
+                    response = await PWA.safeFetch(input, init);
                 }
-                // Route all POST/PUT/DELETE through offline safeFetch
-                return PWA.safeFetch(input, init);
+
+                // Global 401 Interceptor: If session expires back-end, force front-end to log out
+                if (response && response.status === 401 && typeof Auth !== 'undefined') {
+                    const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+                    if (!urlStr.includes('/api/login')) {
+                        console.warn("Session expired or unauthorized. Forcing logout...");
+                        Auth.logout();
+                    }
+                }
+
+                return response;
             };
         }
     },
