@@ -178,6 +178,21 @@ router.get('/stats', async (req, res) => {
             });
         });
 
+        const fetchPerformance = () => new Promise((resolve, reject) => {
+            db.all(`SELECT week_start_date, AVG(discipline_pct) as avg_disc, AVG(hygiene_pct) as avg_hyg FROM standings GROUP BY week_start_date ORDER BY week_start_date DESC LIMIT 4`, [], (err, rows) => {
+                if (err) reject(err); else resolve(rows || []);
+            });
+        });
+
+        const fetchTodayCases = () => new Promise((resolve, reject) => {
+            const sql = db.isPostgres ? 
+                `SELECT COUNT(*) as count FROM discipline_reports WHERE date_reported = CURRENT_DATE` :
+                `SELECT COUNT(*) as count FROM discipline_reports WHERE DATE(date_reported) = DATE('now', 'localtime')`;
+            db.get(sql, [], (err, row) => {
+                if (err) reject(err); else resolve((row && row.count) ? row.count : 0);
+            });
+        });
+
         const [offences, tasks, performance, todayCases] = await Promise.all([
             fetchOffences(),
             fetchTasks(),
