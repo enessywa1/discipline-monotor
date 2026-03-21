@@ -1,0 +1,269 @@
+/* dashboard-premium.css - Energetic and Modern UI Upgrade */
+
+/* 1. Dashboard Gradient Banner */
+.gradient-banner {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #00b4db 100%);
+    color: white;
+    border-radius: var(--radius-lg);
+    padding: 35px 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 180, 219, 0.4);
+    margin-bottom: 25px;
+    animation: fadeInDown 0.6s ease-out;
+}
+.gradient-banner h3 {
+    color: white;
+    font-size: 2.2rem;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.gradient-banner p {
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 2;
+    font-size: 1.05rem;
+}
+.gradient-banner::after {
+    content: '';
+    position: absolute;
+    right: -30px;
+    bottom: -60px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    border-radius: 50%;
+    z-index: 1;
+}
+.gradient-banner::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: -40px;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* 2. Quick Actions Row */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+    animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+.action-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-md);
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    display: block;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.action-card:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 105, 92, 0.2);
+    border-color: var(--primary-color);
+}
+.action-card:hover .action-icon {
+    color: white;
+    transform: scale(1.15) translateY(-2px);
+}
+.action-icon {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+/* 3. Stat Cards */
+.stat-card {
+    background: white;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+}
+.stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+}
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.stat-title {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    transition: transform 0.3s;
+}
+.stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stat-icon.primary { background: rgba(0, 105, 92, 0.08); color: var(--primary-color); }
+.stat-icon.danger { background: rgba(211, 47, 47, 0.08); color: var(--danger); }
+.stat-icon.warning { background: rgba(255, 111, 0, 0.08); color: var(--accent-color); }
+.stat-icon.info { background: rgba(21, 101, 192, 0.08); color: #1565c0; }
+
+.stat-value.primary { color: var(--primary-color); }
+.stat-value.danger { color: var(--danger); }
+.stat-value.warning { color: var(--accent-color); }
+.stat-value.info { color: #1565c0; }
+
+/* 4. Glass Panels & Layout */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    margin-bottom: 25px;
+    animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 12px;
+}
+.panel-title {
+    font-size: 1.2rem;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+/* 5. Live Staff Chips */
+.staff-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.staff-chip {
+    display: inline-flex;
+    align-items: center;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: all 0.2s;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.staff-chip:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+}
+.staff-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* Pulsing Dot Animation */
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Keyframe Animations */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Announcement List Styles */
+.announcement-item {
+    padding: 15px;
+    border-radius: var(--radius-md);
+    background: #f8fafc;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary-color);
+    transition: var(--transition);
+}
+.announcement-item:hover {
+    background: #f1f5f9;
+    transform: translateX(4px);
+}
+.announcement-title {
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 5px;
+    font-size: 1.05rem;
+}
+.announcement-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+.announcement-meta {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}

@@ -4,53 +4,78 @@ const Dashboard = {
         const user = Auth.getUser();
 
         container.innerHTML = `
-            <div class="welcome-banner" style="margin-bottom: 20px;">
-                <h3>Hello, ${user.full_name} 👋</h3>
-                <p style="color: var(--text-secondary);">Role: ${user.role} | ${user.allocation || 'General'}</p>
+            <!-- Energetic Greeting Banner -->
+            <div class="gradient-banner">
+                <h3>Welcome back, ${user.full_name}! 👋</h3>
+                <p>Role: ${user.role} | Area: ${user.allocation || 'General'}</p>
             </div>
 
-            <!-- 1. Announcements (First Priority) -->
-            <div class="card" style="margin-bottom: 30px; border-left: 5px solid var(--accent-color);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="img/logo.png" style="width: 25px; height: 25px; border-radius: 50%;">
-                        <h3 style="margin: 0;">Announcements</h3>
+            <!-- Quick Action Row -->
+            <div class="quick-actions">
+                <a href="#discipline_form" class="action-card fade-in" style="animation-delay: 0.1s;">
+                    <i class='bx bx-edit-alt action-icon'></i>
+                    Draft Report
+                </a>
+                <a href="#statements" class="action-card fade-in" style="animation-delay: 0.2s;">
+                    <i class='bx bx-message-square-detail action-icon'></i>
+                    Statements
+                </a>
+                <a href="#tasks" class="action-card fade-in" style="animation-delay: 0.3s;">
+                    <i class='bx bx-task action-icon'></i>
+                    Assign Task
+                </a>
+                <a href="#standings" class="action-card fade-in" style="animation-delay: 0.4s;">
+                    <i class='bx bx-line-chart action-icon'></i>
+                    View Standings
+                </a>
+            </div>
+
+            <!-- Dashboard Grid Area -->
+            <div class="layout-grid layout-grid-2">
+                
+                <!-- Left Column: Stats & Staff -->
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <!-- Floating Stat Cards -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Pending Tasks</span>
+                                <div class="stat-icon warning"><i class='bx bx-time-five'></i></div>
+                            </div>
+                            <div class="stat-value warning" id="statPending">...</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Cases Today</span>
+                                <div class="stat-icon danger"><i class='bx bx-shield-quarter'></i></div>
+                            </div>
+                            <div class="stat-value danger" id="statCases">...</div>
+                        </div>
                     </div>
-                    <a href="#announcements" style="font-size: 0.9rem;">View All</a>
-                </div>
-                <div id="homeAnnouncements" style="margin-top: 15px;">
-                    <p>Loading...</p>
-                </div>
-            </div>
 
-            <!-- 2. Statistics Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div class="card">
-                    <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Pending Tasks</h4>
-                    <div id="statPending" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">...</div>
-                </div>
-                <div class="card">
-                    <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Cases (Today)</h4>
-                    <div id="statCases" style="font-size: 2rem; font-weight: bold; color: #d32f2f;">...</div>
-                </div>
-                <div class="card admin-only hidden" data-role="admin">
-                    <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Staff Active Today</h4>
-                    <div id="statActive" style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">...</div>
-                </div>
-                <div class="card" data-role="all" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 3px solid var(--primary-color);">
-                    <div>
-                        <h4 style="color: var(--text-secondary); font-size: 0.9rem;">Detention Records</h4>
-                        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Manage student detentions</p>
+                    <!-- Active Staff Glass Panel -->
+                    <div class="glass-panel admin-only hidden" data-role="admin">
+                        <div class="panel-header">
+                            <h4 class="panel-title"><i class='bx bx-radar' style="color:var(--primary-light)"></i> Live Staff Network</h4>
+                            <span class="badge badge-success" style="font-size:0.8rem;"><span id="statActive">0</span> Online</span>
+                        </div>
+                        <div id="activeStaffList" class="staff-grid" style="min-height: 50px;">
+                            <p style="color: #888; font-size: 0.9rem;"><i class='bx bx-loader bx-spin'></i> Scanning network...</p>
+                        </div>
                     </div>
-                    <a href="#detentions" class="btn btn-sm" style="background: var(--primary-color); color: white; margin-top: 15px; text-align: center;">Open Page</a>
                 </div>
-            </div>
 
-            <div class="layout-grid admin-only hidden" data-role="admin" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-                <div class="card">
-                    <h4>Active Staff Today</h4>
-                    <div id="activeStaffList" style="font-size: 0.9rem; max-height: 300px; overflow-y: auto;">
-                        <p>Loading...</p>
+                <!-- Right Column: Announcements & Tools -->
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <!-- Announcements Panel -->
+                    <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="panel-header">
+                            <h4 class="panel-title"><i class='bx bx-bell' style="color:var(--accent-color)"></i> Latest Announcements</h4>
+                            <a href="#announcements" class="btn btn-sm" style="background: rgba(0,0,0,0.05); color: var(--text-secondary); border-radius: 20px;">View All</a>
+                        </div>
+                        <div id="homeAnnouncements" style="flex: 1;">
+                            <p style="color: #888; font-size: 0.9rem;"><i class='bx bx-loader bx-spin'></i> Loading broadcasts...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -101,16 +126,18 @@ const Dashboard = {
             const el = document.getElementById('homeAnnouncements');
 
             if (data.success && data.announcements.length) {
-                const recent = data.announcements.slice(0, 2); // Show top 2
+                const recent = data.announcements.slice(0, 3); // Show top 3
                 el.innerHTML = recent.map(a => `
-                    <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-                        <strong>${a.title}</strong>
-                        <p style="font-size: 0.9rem; color: #444; margin-top: 4px;">${a.content}</p>
-                        <small style="color: #999;">${new Date(a.created_at).toLocaleDateString()}</small>
+                    <div class="announcement-item fade-in">
+                        <div class="announcement-title">${a.title}</div>
+                        <div class="announcement-text">${a.content}</div>
+                        <div class="announcement-meta">
+                            <i class='bx bx-calendar-event'></i> ${new Date(a.created_at).toLocaleDateString()}
+                        </div>
                     </div>
                 `).join('');
             } else {
-                el.innerHTML = '<p style="color: #888;">No recent announcements.</p>';
+                el.innerHTML = '<p style="color: #888; padding: 20px; text-align: center;"><i class="bx bx-info-circle"></i> No announcements right now.</p>';
             }
         } catch (e) { }
     },
@@ -145,23 +172,24 @@ const Dashboard = {
                 if (el) el.textContent = data.active.length;
                 if (list) {
                     if (data.active.length) {
-                        list.innerHTML = data.active.map(u => `
-                            <div style="padding: 5px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
-                                <div style="width: 8px; height: 8px; background: #4caf50; border-radius: 50%; margin-right: 8px;"></div>
-                                ${u.full_name} <span style="font-size: 0.8rem; color: #888; margin-left: 5px;">(${u.role})</span>
+                        list.innerHTML = data.active.map((u, i) => `
+                            <div class="staff-chip fade-in" style="animation-delay: ${0.1 * i}s">
+                                <span class="pulse-dot"></span>
+                                ${u.full_name} 
+                                <span class="staff-role">${u.role}</span>
                             </div>
                         `).join('');
                     } else {
-                        list.innerHTML = '<p style="color: #888; padding: 10px 0;">No activity recorded yet today.</p>';
+                        list.innerHTML = '<p style="color: #888; padding: 10px; text-align: center;">No activity recorded yet today.</p>';
                     }
                 }
             } else {
-                if (list) list.innerHTML = `<p style="color: #d32f2f; padding: 10px 0;">Error: ${data.error || 'Failed to load staff activity'}</p>`;
+                if (list) list.innerHTML = `<p style="color: var(--danger); padding: 10px;">Error: ${data.error || 'Failed to load staff activity'}</p>`;
             }
         } catch (e) {
             console.error("Dashboard staff load error:", e);
             const list = document.getElementById('activeStaffList');
-            if (list) list.innerHTML = '<p style="color: #d32f2f; padding: 10px 0;">Unable to connect to activity server.</p>';
+            if (list) list.innerHTML = '<p style="color: var(--danger); padding: 10px;"><i class="bx bx-wifi-off"></i> Unable to connect to activity server.</p>';
         }
     }
 };
