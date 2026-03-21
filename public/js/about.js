@@ -18,16 +18,6 @@ const About = {
                     </section>
 
                     <section class="about-section fade-in-up" style="animation-delay: 0.1s;">
-                        <div class="section-icon"><i class='bx bx-shield-quarter'></i></div>
-                        <h2>Privacy & Security</h2>
-                        <ul class="info-list">
-                            <li><strong>Role-Based Access:</strong> Information is strictly filtered based on your position (Staff vs Admin).</li>
-                            <li><strong>Data Isolation:</strong> Staff can only manage records they personally created.</li>
-                            <li><strong>Secure Sessions:</strong> Protected by encrypted session management and rate limiting.</li>
-                        </ul>
-                    </section>
-
-                    <section class="about-section fade-in-up" style="animation-delay: 0.2s;">
                         <div class="section-icon"><i class='bx bx-book-open'></i></div>
                         <h2>How to Use (Tutorials)</h2>
                         <ul class="tutorial-list">
@@ -46,13 +36,13 @@ const About = {
                         </ul>
                     </section>
 
-                    <section class="about-section fade-in-up" style="animation-delay: 0.3s;">
+                    <section class="about-section fade-in-up" style="animation-delay: 0.2s;">
                         <div class="section-icon"><i class='bx bx-bolt-circle'></i></div>
                         <h2>Performance</h2>
                         <p>The system is optimized for speed with <strong>Asynchronous Submissions</strong> and <strong>Database Indexing</strong>, ensuring forms save instantly even on slow connections.</p>
                     </section>
 
-                    <section class="about-section download-card fade-in-up" style="animation-delay: 0.4s;">
+                    <section class="about-section download-card fade-in-up" style="animation-delay: 0.3s;">
                         <div class="section-icon"><i class='bx bx-download'></i></div>
                         <h2>How to Download (App)</h2>
                         <div class="download-info">
@@ -70,7 +60,7 @@ const About = {
                         </div>
                     </section>
 
-                    <section class="about-section murashi-card fade-in-up" style="animation-delay: 0.5s;">
+                    <section class="about-section murashi-card fade-in-up" style="animation-delay: 0.4s;">
                         <div class="murashi-logo">
                             <i class='bx bxs-paint-roll'></i>
                             <span>Murashi Creatives</span>
