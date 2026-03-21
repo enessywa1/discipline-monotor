@@ -103,6 +103,7 @@ const PWA = {
         try {
             // Try network first
             const response = await window.originalFetch(url, options);
+            if (response && response.status === 401) return response; // Pass 401 to watchdog
             if (!response.ok) throw new Error('API Error');
             return response;
         } catch (error) {
