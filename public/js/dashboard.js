@@ -122,10 +122,15 @@ const Dashboard = {
                 const recent = data.announcements.slice(0, 3); // Show top 3
                 el.innerHTML = recent.map(a => `
                     <div class="announcement-item fade-in">
-                        <div class="announcement-title">${a.title}</div>
-                        <div class="announcement-text">${a.content}</div>
-                        <div class="announcement-meta">
-                            <i class='bx bx-calendar-event'></i> ${new Date(a.created_at).toLocaleDateString()}
+                        <div class="announcement-icon-wrapper">
+                            <i class='bx bx-broadcast'></i>
+                        </div>
+                        <div class="announcement-content-wrapper">
+                            <div class="announcement-title">${a.title}</div>
+                            <div class="announcement-text">${a.content}</div>
+                            <div class="announcement-meta">
+                                <i class='bx bx-calendar-event'></i> ${new Date(a.created_at).toLocaleDateString()}
+                            </div>
                         </div>
                     </div>
                 `).join('');
