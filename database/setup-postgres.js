@@ -144,6 +144,13 @@ async function setupDatabase() {
         await db.run(`CREATE INDEX IF NOT EXISTS idx_discipline_reports_staff ON discipline_reports(staff_id)`);
         await db.run(`CREATE INDEX IF NOT EXISTS idx_statements_incident_date ON statements(incident_date DESC)`);
         await db.run(`CREATE INDEX IF NOT EXISTS idx_statements_recorded_by ON statements(recorded_by)`);
+        // 10. Settings Table
+        await db.run(`CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )`);
+        console.log("✅ Settings table created");
+
         console.log("✅ Indexes created");
 
         // Seed Data Check
@@ -159,7 +166,11 @@ async function setupDatabase() {
 
             // Seed users
             await db.run("INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
-                ["admin", adminHash, "Developer", "System Administrator", "Administration", "0770000000"]);
+                ["dm", adminHash, "Discipline Master", "DM", "Administration", "0770000000"]);
+
+            // Seed Settings
+            await db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ["version", "1.2.1-STABLE"]);
+            console.log("✅ Settings seeded");
 
             await db.run("INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
                 ["director", passHash, "Director", "School Director", "Administration", "0770000001"]);
@@ -186,7 +197,7 @@ async function setupDatabase() {
 
         console.log("\n🎉 Database setup complete!");
         console.log("\n📋 Default credentials:");
-        console.log("   Username: admin");
+        console.log("   Username: dm");
         console.log("   Password: admin123");
         console.log("\n⚠️  Please change the default password after first login!");
 
