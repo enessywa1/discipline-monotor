@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
     <title>School Discipline Admin</title>
     <link rel="icon" type="image/png" href="img/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -160,6 +161,9 @@
                     <i class='bx bx-menu'></i>
                 </button>
                 <h2 id="pageTitle" style="margin: 0;">Dashboard</h2>
+                <div id="offline-badge" style="display: none; align-items: center; gap: 5px; background: #d32f2f; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">
+                    <i class='bx bx-wifi-off'></i> Offline
+                </div>
             </div>
 
             <!-- Notification Area -->
@@ -191,6 +195,7 @@
     <!-- Scripts -->
     <!-- Socket.io Enabled for Real-Time Updates -->
     <script src="/socket.io/socket.io.js"></script>
+    <script defer src="js/pwa.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script defer src="js/auth.js"></script>

@@ -1,0 +1,21 @@
+{
+  "name": "Discipline Department Admin",
+  "short_name": "DisciplineDpt",
+  "description": "School Discipline Department Admin System",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#008080",
+  "icons": [
+    {
+      "src": "img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
