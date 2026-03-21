@@ -82,11 +82,19 @@ const sessionConfig = {
 // Use Postgres for sessions in production
 if (db.isPostgres) {
     const PgSession = require('connect-pg-simple')(session);
-    sessionConfig.store = new PgSession({
+    const pgStore = new PgSession({
         pool: db, // Use the existing pool from supabase.js
         tableName: 'session',
-        createTableIfMissing: true // Automatically create session table
+        createTableIfMissing: false, // 🔥 Removed to save critical DB check time on Vercel cold starts (table exists)
+        errorLog: console.error
     });
+    
+    // Catch session fetch errors so they don't crash the incoming API routes entirely
+    pgStore.on('error', function(error) {
+        console.error('⚠️ Session error:', error.message);
+    });
+
+    sessionConfig.store = pgStore;
 }
 
 app.use(session(sessionConfig));

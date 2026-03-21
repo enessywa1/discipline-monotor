@@ -37,10 +37,9 @@ if (isPostgres) {
         ssl: {
             rejectUnauthorized: false
         },
-        connectionTimeoutMillis: 5000, // Fail after 5 seconds
-        idleTimeoutMillis: 30000,
-        max: 5, // Reduced from 10 to avoid MaxClientsInSessionMode on Free Tier
-        keepAlive: true, // Maintain connection socket
+        connectionTimeoutMillis: 3000, // Fail fast in serverless
+        idleTimeoutMillis: 10000,      // Free up idle connections quickly
+        max: 1,                        // 🔥 CRITICAL FOR VERCEL: Only 1 connection per serverless function to prevent pool starvation
         allowExitOnIdle: true
     });
 
