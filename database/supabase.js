@@ -118,16 +118,6 @@ if (isPostgres) {
     db.all = (sql, params, callback) => execute('all', sql, params, callback);
     db.serialize = (callback) => { if (callback) callback(); };
 
-    // Test connection immediately
-    db.connect()
-        .then(client => {
-            console.log('✅ PostgreSQL connection established');
-            client.release();
-        })
-        .catch(err => {
-            console.error('❌ FATAL: Could not connect to PostgreSQL:', err.message);
-        });
-
 } else {
     // SQLite Fallback
     console.log('🔗 Using SQLite database (local development)...');
