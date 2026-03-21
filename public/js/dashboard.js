@@ -14,7 +14,7 @@ const Dashboard = {
             <div class="quick-actions">
                 <a href="#discipline_form" class="action-card fade-in" style="animation-delay: 0.1s;">
                     <i class='bx bx-edit-alt action-icon'></i>
-                    Draft Report
+                    Record Report
                 </a>
                 <a href="#statements" class="action-card fade-in" style="animation-delay: 0.2s;">
                     <i class='bx bx-message-square-detail action-icon'></i>
