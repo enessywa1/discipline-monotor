@@ -153,76 +153,79 @@ const GeneralReports = {
             </div>
         `;
 
-        // Inject Styles specifically for this report (Synchronized with reports.js)
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .report-sheet {
-                background: white;
-                padding: 40px;
-                border-radius: 8px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                max-width: 900px;
-                margin: 0 auto;
-                font-family: 'Inter', sans-serif;
-            }
-            .report-header { display: flex; align-items: center; gap: 20px; justify-content: center; text-align: center; }
-            .report-title-section h2 { font-size: 1.4rem; color: var(--primary-dark); margin: 0; text-transform: uppercase; }
-            .report-title-section h3 { font-size: 1rem; color: var(--text-secondary); margin: 5px 0 0 0; font-weight: 500; }
-            
-            .section-title {
-                margin: 25px 0 15px 0;
-                padding-bottom: 8px;
-                border-bottom: 2px solid #eee;
-                color: var(--primary-color);
-                font-size: 1.1rem;
-                display: flex; align-items: center; gap: 8px;
-            }
-
-            .stats-grid-wide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-            @media (max-width: 768px) {
-                .stats-grid-wide { grid-template-columns: repeat(2, 1fr); }
-            }
-            .stat-box { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
-            .stat-number { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
-            .stat-label { font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-
-            .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 20px; }
-            .report-table th { background: var(--primary-color); color: white; padding: 10px; text-align: left; font-weight: 500; }
-            .report-table td { padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; vertical-align: top; }
-            .report-table tr:nth-child(even) { background-color: #fcfcfc; }
-
-            .signature-area { margin-top: 80px; text-align: center; }
-            .signature-line { border-bottom: 2px solid #000; width: 300px; margin: 0 auto 10px auto; height: 40px; }
-            .signature-label { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); }
-            
-            .footer-note { text-align: center; margin-top: 40px; font-size: 0.75rem; color: #999; font-style: italic; }
-
-            @media print {
-                .sidebar, .top-bar, .noprint, #sidebarOverlay { 
-                    display: none !important; 
+        // Inject Styles specifically for this report
+        if (!document.getElementById('general-reports-style')) {
+            const style = document.createElement('style');
+            style.id = 'general-reports-style';
+            style.innerHTML = `
+                .report-sheet {
+                    background: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                    max-width: 900px;
+                    margin: 0 auto;
+                    font-family: 'Inter', sans-serif;
                 }
-                body, .home-content, #view-container { 
-                    margin: 0 !important; 
-                    padding: 0 !important; 
-                    left: 0 !important; 
-                    width: 100% !important;
-                    background: white !important;
+                .report-header { display: flex; align-items: center; gap: 20px; justify-content: center; text-align: center; }
+                .report-title-section h2 { font-size: 1.4rem; color: var(--primary-dark); margin: 0; text-transform: uppercase; }
+                .report-title-section h3 { font-size: 1rem; color: var(--text-secondary); margin: 5px 0 0 0; font-weight: 500; }
+                
+                .section-title {
+                    margin: 25px 0 15px 0;
+                    padding-bottom: 8px;
+                    border-bottom: 2px solid #eee;
+                    color: var(--primary-color);
+                    font-size: 1.1rem;
+                    display: flex; align-items: center; gap: 8px;
                 }
-                .home-content { width: 100% !important; }
-                #generalReportContent { 
-                    display: block !important;
-                    visibility: visible !important;
-                    width: 100% !important;
-                    margin: 0 !important;
-                    padding: 10mm !important;
-                    box-shadow: none !important;
-                    border: none !important;
+
+                .stats-grid-wide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+                @media (max-width: 768px) {
+                    .stats-grid-wide { grid-template-columns: repeat(2, 1fr); }
                 }
-                .report-table { width: 100% !important; border: 1px solid #000; }
-                body { font-size: 11pt; }
-            }
-        `;
-        document.head.appendChild(style);
+                .stat-box { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
+                .stat-number { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
+                .stat-label { font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+
+                .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 20px; }
+                .report-table th { background: var(--primary-color); color: white; padding: 10px; text-align: left; font-weight: 500; }
+                .report-table td { padding: 8px 10px; border-bottom: 1px solid #eee; color: #333; vertical-align: top; }
+                .report-table tr:nth-child(even) { background-color: #fcfcfc; }
+
+                .signature-area { margin-top: 80px; text-align: center; }
+                .signature-line { border-bottom: 2px solid #000; width: 300px; margin: 0 auto 10px auto; height: 40px; }
+                .signature-label { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); }
+                
+                .footer-note { text-align: center; margin-top: 40px; font-size: 0.75rem; color: #999; font-style: italic; }
+
+                @media print {
+                    .sidebar, .top-bar, .noprint, #sidebarOverlay { 
+                        display: none !important; 
+                    }
+                    body, .home-content, #view-container { 
+                        margin: 0 !important; 
+                        padding: 0 !important; 
+                        left: 0 !important; 
+                        width: 100% !important;
+                        background: white !important;
+                    }
+                    .home-content { width: 100% !important; }
+                    #generalReportContent { 
+                        display: block !important;
+                        visibility: visible !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 10mm !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
+                    .report-table { width: 100% !important; border: 1px solid #000; }
+                    body { font-size: 11pt; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         document.getElementById('printGeneralBtn').onclick = () => window.print();
         GeneralReports.loadData();
@@ -372,7 +375,7 @@ const GeneralReports = {
                     document.getElementById('generalPerformanceTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">No performance data found.</td></tr>';
                 }
 
-                document.getElementById('generalIncidentsTableBody').innerHTML = allIncidents.map(inc => `
+                const tableHtml = allIncidents.slice(0, 500).map(inc => `
                     <tr style="font-size: 0.85rem;">
                         <td style="white-space: nowrap;">
                             <strong>${new Date(inc.date).toLocaleDateString()}</strong>
@@ -383,6 +386,15 @@ const GeneralReports = {
                         <td><small>${inc.action || 'Pending'}</small></td>
                     </tr>
                 `).join('');
+                
+                const tableBody = document.getElementById('generalIncidentsTableBody');
+                if (allIncidents.length > 500) {
+                    tableBody.innerHTML = tableHtml + `
+                        <tr><td colspan="5" style="text-align: center; color: grey;">Showing most recent 500 out of ${allIncidents.length} records.</td></tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = tableHtml;
+                }
             }
         } catch (e) {
             console.error('General Reports Error:', e);

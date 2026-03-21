@@ -107,6 +107,7 @@ router.get('/all-time', async (req, res) => {
             });
         });
 
+        const fetchTasks = () => new Promise((resolve, reject) => {
             const sql = `SELECT t.*, u_to.full_name as assigned_to_name, u_by.full_name as assigned_by_name
                     FROM tasks t
                     LEFT JOIN users u_to ON t.assigned_to = u_to.id
@@ -119,6 +120,7 @@ router.get('/all-time', async (req, res) => {
             db.all(sql, params, (err, rows) => {
                 if (err) reject(err); else resolve(rows);
             });
+        });
 
         const fetchStandings = () => new Promise((resolve, reject) => {
             db.all(`SELECT st.id, st.week_start_date, st.discipline_pct, st.hygiene_pct, u.full_name as staff_name, u.role
