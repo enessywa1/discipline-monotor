@@ -68,6 +68,23 @@ const App = {
         if (view === 'suspensions' && typeof Suspensions !== 'undefined' && data.type === 'suspension') {
             if (Suspensions.load) Suspensions.load();
         }
+
+        // New realtime additions
+        if (view === 'general_reports' && typeof GeneralReports !== 'undefined') {
+            if (GeneralReports.loadData) GeneralReports.loadData();
+        }
+
+        if (view === 'reports' && typeof Reports !== 'undefined') {
+            if (Reports.loadData) Reports.loadData();
+        }
+
+        if (view === 'standings' && typeof Standings !== 'undefined' && data.type === 'standings') {
+            if (Standings.load) Standings.load();
+        }
+
+        if (view === 'announcements' && typeof Announcements !== 'undefined' && data.type === 'announcement') {
+            if (Announcements.load) Announcements.load();
+        }
     },
 
     setupNavigation: () => {

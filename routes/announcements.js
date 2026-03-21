@@ -33,6 +33,7 @@ router.post('/', (req, res) => {
         [title, content, visibility || 'All', posted_by, expiresAt],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'announcement', action: 'create' });
             res.json({ success: true, id: this.lastID });
         }
     );
@@ -43,6 +44,7 @@ router.delete('/:id', (req, res) => {
     const { id } = req.params;
     db.run('DELETE FROM announcements WHERE id = ?', [id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+        if (req.io) req.io.emit('dashboard_update', { type: 'announcement', action: 'delete' });
         res.json({ success: true });
     });
 });
