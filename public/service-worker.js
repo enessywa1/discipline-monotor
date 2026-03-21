@@ -56,52 +56,34 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-    const url = new URL(e.request.url);
+    // Only intercept GET requests, ignore POST/PUT/DELETE
+    if (e.request.method !== 'GET') return;
 
-    // 1. API GET Requests - Network First, fallback to cache
-    if (url.pathname.startsWith('/api') && e.request.method === 'GET') {
-        e.respondWith(
-            fetch(e.request).then((response) => {
-                // If valid response, clone and cache it
-                return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(e.request, response.clone());
-                    return response;
-                });
-            }).catch(() => {
-                // If network fails, serve from cache
-                return caches.match(e.request);
-            })
-        );
-        return;
-    }
-
-    // 2. API POST/PUT/DELETE - Let the browser handle it (PWA.safeFetch intercepts failures front-end)
-    if (url.pathname.startsWith('/api') && e.request.method !== 'GET') {
-        return; 
-    }
-
-    // 3. Static Assets - Cache First, fallback to network
+    // Network-First Strategy 
+    // Always try to fetch the freshest version from the server.
+    // If successful, save a copy to the cache. If offline, serve the cached copy.
     e.respondWith(
-        caches.match(e.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            return fetch(e.request).then((response) => {
-                // Ignore caching external resources dynamically since we didn't list them
-                // Or we can cache them dynamically too
-                return caches.open(CACHE_NAME).then((cache) => {
-                    // Just cache it dynamically
-                    if (e.request.url.startsWith('http') && response.ok) {
-                        cache.put(e.request, response.clone());
-                    }
-                    return response;
-                });
+        fetch(e.request).then((response) => {
+            // Clone the response because it can only be consumed once
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+                // Only cache valid http/https requests
+                if (e.request.url.startsWith('http') && response.ok) {
+                    cache.put(e.request, clonedResponse);
+                }
             });
+            return response;
         }).catch(() => {
-             // Fallback if network and cache fail (for navigation requests)
-             if (e.request.mode === 'navigate') {
-                 return caches.match('/dashboard.html');
-             }
+            // Network request failed, user is offline. Fallback to cache.
+            return caches.match(e.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse; // Return the offline cached version
+                }
+                // Ultimate fallback for missing HTML pages
+                if (e.request.mode === 'navigate') {
+                    return caches.match('/dashboard.html');
+                }
+            });
         })
     );
 });
