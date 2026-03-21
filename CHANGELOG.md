@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.2-STABLE] - 2026-03-21
+
+### Added
+- **About Page Enhancement**: Added detailed sections for Privacy & Security, Performance, and a dedicated "How to Download" (PWA Installation) guide.
+- **Improved UI Layout**: Optimized the About page grid and animations for a more premium experience.
+
+### Changed
+- **Version Bump**: Incremented system version to `1.2.2-STABLE`.
+
 ## [1.2.1-STABLE] - 2026-03-21
 
 ### Changed

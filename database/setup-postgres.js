@@ -169,7 +169,7 @@ async function setupDatabase() {
                 ["dm", adminHash, "Discipline Master", "DM", "Administration", "0770000000"]);
 
             // Seed Settings
-            await db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ["version", "1.2.1-STABLE"]);
+            await db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ["version", "1.2.2-STABLE"]);
             console.log("✅ Settings seeded");
 
             await db.run("INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
