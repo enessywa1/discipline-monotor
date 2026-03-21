@@ -182,7 +182,7 @@ const Dashboard = {
         } catch (e) {
             console.error("Dashboard staff load error:", e);
             const list = document.getElementById('activeStaffList');
-            if (list) list.innerHTML = '<p style="color: var(--danger); padding: 10px;"><i class="bx bx-wifi-off"></i> Unable to connect to activity server.</p>';
+            if (list) list.innerHTML = `<p style="color: var(--danger); padding: 10px;"><i class="bx bx-wifi-off"></i> Unable to connect to activity server. (${e.message})</p>`;
         }
     }
 };
