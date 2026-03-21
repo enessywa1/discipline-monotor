@@ -1,10 +1,14 @@
 // standings.js
 const Standings = {
     render: (container) => {
+        const user = Auth.getUser();
+        const isAdmin = user && user.role && user.role.toLowerCase().includes('admin');
+
         container.innerHTML = `
-            <div class="layout-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+            <div class="layout-grid" style="display: grid; grid-template-columns: ${isAdmin ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))'}; gap: 20px;">
                 
                 <!-- Input Form (Staff) -->
+                ${isAdmin ? '' : `
                 <div class="card">
                     <h3>Submit Weekly Standings</h3>
                     <p style="color:grey; font-size:0.9rem; margin-bottom:15px;">Enter percentage scores for your department.</p>
@@ -54,6 +58,7 @@ const Standings = {
                         <button type="submit" class="btn btn-primary btn-block">Submit Standings</button>
                     </form>
                 </div>
+                `}
 
                 <!-- Recent Standings Display -->
                 <div class="card">
