@@ -157,7 +157,12 @@ const Detentions = {
             if (data.success && data.detentions.length) {
                 tbody.innerHTML = data.detentions.map(d => `
                     <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px;"><strong>${d.student_name}</strong></td>
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="${d.picture_data || 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                <strong>${d.student_name}</strong>
+                            </div>
+                        </td>
                         <td style="padding: 12px;">${d.student_class}</td>
                         <td style="padding: 12px;">${new Date(d.detention_date).toLocaleDateString()}</td>
                         <td style="padding: 12px; text-align: center;">
@@ -168,7 +173,7 @@ const Detentions = {
                                 <button class="btn btn-sm" onclick="alert('Remarks: ${d.remarks || 'None'}\\nDuration: ${d.days || 1} day(s)')" title="View Info">
                                     <i class='bx bx-info-circle'></i>
                                 </button>
-                                 ${d.status === 'Uncleared' && (Auth.getUser().role || '').toLowerCase() !== 'teacher' ? `
+                                 ${d.status === 'Uncleared' && (Auth.getUser()?.role || '').toLowerCase() !== 'teacher' ? `
                                     <button class="btn btn-sm clear-btn" data-action="clear-day" data-id="${d.id}" style="background: none; color: #4caf50;" title="Clear 1 Day">
                                         <i class='bx bx-check-circle'></i>
                                     </button>
@@ -222,7 +227,9 @@ const Detentions = {
         e.preventDefault();
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
-        data.recorded_by = Auth.getUser().id;
+        const user = Auth.getUser();
+        if (!user) return alert('Session expired. Please log in again.');
+        data.recorded_by = user.id;
 
         const btn = e.target.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;

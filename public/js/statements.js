@@ -9,10 +9,11 @@ const Statements = {
                     <p style="margin-bottom: 1rem; color: grey; font-size: 0.9rem;">Fill this form to log a new discipline case.</p>
                     
                     <form id="stepStatementForm">
-                        <div class="form-group">
+                        <div class="form-group" style="position: relative;">
                             <label>Student Name</label>
                             <input type="text" name="student_name" id="formStudentName" placeholder="Enter full name" required autocomplete="off">
                             <input type="hidden" name="student_id" id="formStudentId">
+                            <div id="statementStudentSuggestions" style="position: absolute; width: 100%; top: 100%; left: 0; background: white; border: 1px solid #ddd; z-index: 100; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;"></div>
                         </div>
                         
                         <div class="form-group">
@@ -161,6 +162,44 @@ const Statements = {
             });
         }
 
+        // Form Auto-complete logic
+        const nameInput = document.getElementById('formStudentName');
+        const sugBox = document.getElementById('statementStudentSuggestions');
+        if (nameInput) {
+            nameInput.addEventListener('input', Utils.debounce(async (e) => {
+                const query = e.target.value.toLowerCase();
+                if (!query) { sugBox.style.display = 'none'; return; }
+                
+                try {
+                    const res = await fetch('/api/students');
+                    const data = await res.json();
+                    if (data.success) {
+                        const matches = data.students.filter(s => s.name.toLowerCase().includes(query));
+                        if(matches.length > 0) {
+                            sugBox.innerHTML = matches.map(s => \`
+                                <div class="suggestion-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="Statements.selectStudent('\${s.id}', '\${s.name.replace(/'/g, "\\\\'")}', '\${s.class}')">
+                                    <img src="\${s.picture_data || 'img/default-avatar.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                                    <div>
+                                        <div style="font-weight:600; font-size:0.9rem;">\${s.name}</div>
+                                        <div style="font-size:0.75rem; color:#888;">Class \${s.class || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            \`).join('');
+                            sugBox.style.display = 'block';
+                        } else {
+                            sugBox.style.display = 'none';
+                        }
+                    }
+                } catch(err) { console.error(err); }
+            }, 300));
+
+            document.addEventListener('click', (e) => {
+                if (!nameInput.contains(e.target) && !sugBox.contains(e.target)) {
+                    sugBox.style.display = 'none';
+                }
+            });
+        }
+
         Statements.loadHistory();
     },
 
@@ -219,6 +258,8 @@ const Statements = {
 
     selectStudent: (id, name, studentClass) => {
         document.getElementById('searchResults').style.display = 'none';
+        const sugBox = document.getElementById('statementStudentSuggestions');
+        if (sugBox) sugBox.style.display = 'none';
 
         const nameInput = document.getElementById('formStudentName');
         const idInput = document.getElementById('formStudentId');
@@ -319,7 +360,9 @@ const Statements = {
         e.preventDefault();
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
-        data.recorded_by = Auth.getUser().id;
+        const user = Auth.getUser();
+        if (!user) return alert('Session expired. Please log in again.');
+        data.recorded_by = user.id;
 
         const payload = {
             student_name: data.student_name,

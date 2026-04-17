@@ -10,9 +10,10 @@ const DisciplineForm = {
                 <form id="disciplineReportForm">
                     <!-- Row 1: Student Details -->
                     <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
-                        <div class="form-group">
+                        <div class="form-group" style="position: relative;">
                             <label>Student Name</label>
-                            <input type="text" name="student_name" required placeholder="Full Name">
+                            <input type="text" name="student_name" id="disciplineStudentName" required placeholder="Full Name" autocomplete="off">
+                            <div id="disciplineStudentSuggestions" style="position: absolute; width: 100%; top: 100%; left: 0; background: white; border: 1px solid #ddd; z-index: 100; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;"></div>
                         </div>
                         <div class="form-group">
                             <label>Gender</label>
@@ -138,7 +139,58 @@ const DisciplineForm = {
                     customContainer.classList.add('hidden');
                 }
             });
+
+            // Handle Autocomplete
+            const nameInput = document.getElementById('disciplineStudentName');
+            const sugBox = document.getElementById('disciplineStudentSuggestions');
+            const classSelect = form.querySelector('select[name="class_grade"]');
+            const genderSelect = form.querySelector('select[name="gender"]');
+            const streamInput = form.querySelector('input[name="stream"]');
+
+            nameInput.addEventListener('input', Utils.debounce(async (e) => {
+                const query = e.target.value.toLowerCase();
+                if (!query) { sugBox.style.display = 'none'; return; }
+                
+                try {
+                    const res = await fetch('/api/students');
+                    const data = await res.json();
+                    if (data.success) {
+                        const matches = data.students.filter(s => s.name.toLowerCase().includes(query));
+                        if(matches.length > 0) {
+                            sugBox.innerHTML = matches.map(s => \`
+                                <div class="suggestion-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="DisciplineForm.selectStudent('\${s.name.replace(/'/g, "\\\\'")}', '\${s.class}', '\${s.stream}', '\${s.gender}')">
+                                    <img src="\${s.picture_data || 'img/default-avatar.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                                    <div>
+                                        <div style="font-weight:600; font-size:0.9rem;">\${s.name}</div>
+                                        <div style="font-size:0.75rem; color:#888;">Class \${s.class || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            \`).join('');
+                            sugBox.style.display = 'block';
+                        } else {
+                            sugBox.style.display = 'none';
+                        }
+                    }
+                } catch(err) { console.error(err); }
+            }, 300));
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!nameInput.contains(e.target) && !sugBox.contains(e.target)) {
+                    sugBox.style.display = 'none';
+                }
+            });
         }
+    },
+
+    selectStudent: (name, sClass, stream, gender) => {
+        document.getElementById('disciplineStudentName').value = name;
+        document.getElementById('disciplineStudentSuggestions').style.display = 'none';
+        
+        const form = document.getElementById('disciplineReportForm');
+        if (sClass) form.querySelector('select[name="class_grade"]').value = sClass;
+        if (gender) form.querySelector('select[name="gender"]').value = gender;
+        if (stream && stream !== 'null') form.querySelector('input[name="stream"]').value = stream;
     },
 
     handleSubmit: async (e) => {
@@ -147,7 +199,9 @@ const DisciplineForm = {
         const data = Object.fromEntries(fd.entries());
 
         // Enrich with current user ID
-        data.staff_id = Auth.getUser().id;
+        const user = Auth.getUser();
+        if (!user) return alert('Session expired. Please log in again.');
+        data.staff_id = user.id;
 
         // Since our backend table for 'discipline_reports' is simple (student_name, offence, description...),
         // we will combine the extra fields into the 'description' field for storage in MVP.

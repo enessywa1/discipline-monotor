@@ -55,7 +55,9 @@ app.use(helmet({
 app.set('etag', 'strong'); // Enable strong etags for better caching
 app.use(compression()); // Compress all responses
 app.use(cors());
-app.use(bodyParser.json());
+// Increased body size limit to support base64 images
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), {
     maxAge: '1d', // Cache static assets for 1 day
     etag: true
@@ -118,6 +120,7 @@ const announcementsRoutes = require('./routes/announcements');
 const notificationsRoutes = require('./routes/notifications');
 const detentionsRoutes = require('./routes/detentions');
 const suspensionsRoutes = require('./routes/suspensions');
+const studentsRoutes = require('./routes/students');
 
 // Mount Routes
 app.use('/api/tasks', tasksRoutes);
@@ -128,6 +131,7 @@ app.use('/api/announcements', announcementsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
+app.use('/api/students', studentsRoutes);
 
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {
@@ -273,7 +277,7 @@ app.get('*', (req, res) => {
 });
 
 
-if (process.env.NODE_ENV !== 'production') {
+if (require.main === module || process.env.NODE_ENV !== 'production') {
     server.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });

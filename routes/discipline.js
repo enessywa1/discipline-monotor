@@ -96,9 +96,10 @@ router.get('/reports', (req, res) => {
     const { student_name } = req.query;
     const user = req.session.user;
 
-    let sql = `SELECT dr.id, dr.student_name, dr.student_class, dr.offence, dr.date_reported, dr.action_taken, dr.description, u.full_name as staff_name 
+    let sql = `SELECT dr.id, dr.student_name, dr.student_class, dr.offence, dr.date_reported, dr.action_taken, dr.description, u.full_name as staff_name, st.picture_data 
             FROM discipline_reports dr
-            LEFT JOIN users u ON dr.staff_id = u.id`;
+            LEFT JOIN users u ON dr.staff_id = u.id
+            LEFT JOIN students st ON LOWER(dr.student_name) = LOWER(st.name)`;
     const params = [];
 
     const isUserAdmin = isAdmin(user);
@@ -131,9 +132,10 @@ router.get('/statements', (req, res) => {
     const { student_name } = req.query;
     const user = req.session.user;
 
-    let sql = `SELECT s.id, s.student_name, s.student_class, s.incident_date, s.offence_type, s.punitive_measure, s.created_at, s.description, u.full_name as recorder_name 
+    let sql = `SELECT s.id, s.student_name, s.student_class, s.incident_date, s.offence_type, s.punitive_measure, s.created_at, s.description, u.full_name as recorder_name, st.picture_data 
                FROM statements s 
-               LEFT JOIN users u ON s.recorded_by = u.id`;
+               LEFT JOIN users u ON s.recorded_by = u.id
+               LEFT JOIN students st ON LOWER(s.student_name) = LOWER(st.name)`;
     const params = [];
 
     const isUserAdmin = isAdmin(user);
@@ -240,9 +242,10 @@ router.get('/watchlist', (req, res) => {
     const user = req.session.user;
     const isUserAdmin = isAdmin(user);
     
-    let sql = `SELECT w.*, u.full_name as recorder_name 
+    let sql = `SELECT w.*, u.full_name as recorder_name, st.picture_data 
             FROM watchlist w 
-            LEFT JOIN users u ON w.recorded_by = u.id`;
+            LEFT JOIN users u ON w.recorded_by = u.id
+            LEFT JOIN students st ON LOWER(w.student_name) = LOWER(st.name)`;
     const params = [];
 
     if (!isUserAdmin && user) {
@@ -297,9 +300,10 @@ router.get('/improved', (req, res) => {
     const user = req.session.user;
     const isUserAdmin = isAdmin(user);
 
-    let sql = `SELECT i.*, u.full_name as recorder_name 
+    let sql = `SELECT i.*, u.full_name as recorder_name, st.picture_data 
             FROM improved_students i 
-            LEFT JOIN users u ON i.recorded_by = u.id`;
+            LEFT JOIN users u ON i.recorded_by = u.id
+            LEFT JOIN students st ON LOWER(i.student_name) = LOWER(st.name)`;
     const params = [];
 
     if (!isUserAdmin && user) {

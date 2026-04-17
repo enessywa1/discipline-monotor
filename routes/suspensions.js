@@ -15,9 +15,10 @@ router.get('/', (req, res) => {
     const user = req.session.user;
     const isUserAdmin = isAdmin(user);
 
-    let sql = `SELECT se.*, u.full_name as recorder_name 
+    let sql = `SELECT se.*, u.full_name as recorder_name, st.picture_data 
                FROM suspensions_expulsions se
-               LEFT JOIN users u ON se.recorded_by = u.id`;
+               LEFT JOIN users u ON se.recorded_by = u.id
+               LEFT JOIN students st ON LOWER(se.student_name) = LOWER(st.name)`;
     const params = [];
     const conditions = [];
 

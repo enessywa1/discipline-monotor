@@ -244,7 +244,12 @@ const Tracking = {
 
             body.innerHTML = data.watchlist.map(item => `
                 <tr>
-                    <td><strong>${item.student_name}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${item.picture_data || 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <strong>${item.student_name}</strong>
+                        </div>
+                    </td>
                     <td>${item.student_class}</td>
                     <td>${item.reason}</td>
                     <td class="dm-only ${isDM ? '' : 'hidden'}">
@@ -270,7 +275,12 @@ const Tracking = {
 
             body.innerHTML = data.students.map(item => `
                 <tr>
-                    <td><strong>${item.student_name}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${item.picture_data || 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <strong>${item.student_name}</strong>
+                        </div>
+                    </td>
                     <td>${item.student_class}</td>
                     <td>${item.improvement_notes}</td>
                     <td class="dm-only ${isDM ? '' : 'hidden'}">

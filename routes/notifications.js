@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
         if (sessionUser) {
             user_id = sessionUser.id;
         } else {
-            return res.status(401).json({ error: "Unauthorized" });
+            return res.json({ success: false, error: "Session expired", auth_error: true });
         }
     }
 

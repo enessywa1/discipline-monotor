@@ -174,7 +174,8 @@ const RecentSubmissions = {
                 offence: s.offence_type,
                 description: s.description,
                 action: s.punitive_measure,
-                recorder: s.recorder_name || 'Unknown'
+                recorder: s.recorder_name || 'Unknown',
+                picture_data: s.picture_data
             })));
 
             const reports = reportsData.reports || [];
@@ -187,7 +188,8 @@ const RecentSubmissions = {
                 offence: r.offence,
                 description: r.description,
                 action: r.action_taken,
-                recorder: r.staff_name || 'Unknown'
+                recorder: r.staff_name || 'Unknown',
+                picture_data: r.picture_data
             })));
 
             RecentSubmissions.allData = items.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -262,7 +264,10 @@ const RecentSubmissions = {
                                 <span class="submission-date"><i class='bx bx-calendar'></i> ${new Date(item.date).toLocaleDateString()}</span>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                                <span class="submission-list-student" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-dark);">${item.student} <span style="font-weight: 400; color: #666; font-size: 0.8em;">- ${item.student_class || 'N/A'}</span></span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="submission-list-student" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-dark);">${item.student} <span style="font-weight: 400; color: #666; font-size: 0.8em;">- ${item.student_class || 'N/A'}</span></span>
+                                    <img src="${item.picture_data || 'img/default-avatar.png'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+                                </div>
                                 <div class="submission-recorder">by: <strong>${item.recorder}</strong></div>
                             </div>
                         </div>

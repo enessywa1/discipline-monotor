@@ -50,9 +50,12 @@ const PWA = {
                 // Global 401 Interceptor: If session expires back-end, force front-end to log out
                 if (response && response.status === 401 && typeof Auth !== 'undefined') {
                     const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-                    if (!urlStr.includes('/api/login')) {
-                        console.warn("Session expired or unauthorized. Forcing logout...");
+                    // Only force logout for explicit user actions, not background poller
+                    if (!urlStr.includes('/api/login') && !urlStr.includes('/api/notifications')) {
+                        console.warn("🔒 Session expired for URL:", urlStr, "Forcing logout...");
                         Auth.logout();
+                    } else if (urlStr.includes('/api/notifications')) {
+                        console.log("📍 Background notification poll unauthorized (session likely reset).");
                     }
                 }
 

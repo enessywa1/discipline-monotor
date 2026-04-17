@@ -179,6 +179,10 @@ const App = {
                 title.textContent = 'Discipline Form';
                 DisciplineForm.render(container);
                 break;
+            case 'students':
+                title.textContent = 'Student Registry';
+                Students.render(container);
+                break;
             case 'standings':
                 title.textContent = 'Performance Standings';
                 Standings.render(container);

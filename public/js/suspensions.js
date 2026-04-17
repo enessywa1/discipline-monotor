@@ -144,7 +144,12 @@ const Suspensions = {
             if (data.success && data.records.length) {
                 tbody.innerHTML = data.records.map(r => `
                     <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px;"><strong>${r.student_name}</strong></td>
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="${r.picture_data || 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                <strong>${r.student_name}</strong>
+                            </div>
+                        </td>
                         <td style="padding: 12px;">${r.student_class}</td>
                         <td style="padding: 12px;">
                             <span class="badge ${r.type === 'Expulsion' ? 'badge-danger' : 'badge-warning'}">${r.type}</span>
@@ -173,7 +178,9 @@ const Suspensions = {
         e.preventDefault();
         const fd = new FormData(e.target);
         const data = Object.fromEntries(fd.entries());
-        data.recorded_by = Auth.getUser().id;
+        const user = Auth.getUser();
+        if (!user) return alert('Session expired. Please log in again.');
+        data.recorded_by = user.id;
 
         const btn = e.target.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;
