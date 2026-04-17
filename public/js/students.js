@@ -78,7 +78,10 @@ const Students = {
 
         // Update title/breadcrumb
         document.getElementById('studentsTitleArea').innerHTML = `
-            <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
+                <span style="background: var(--primary-color); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${Students.data.length} Total</span>
+            </div>
             <div class="breadcrumb">Directory / All Classes</div>
         `;
     },
@@ -145,7 +148,10 @@ const Students = {
 
         // Update title/breadcrumb
         document.getElementById('studentsTitleArea').innerHTML = `
-            <h2 style="margin: 0; color: var(--primary-dark);">Class Registry</h2>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h2 style="margin: 0; color: var(--primary-dark);">Class Registry</h2>
+                <span style="background: var(--primary-color); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${filtered.length} Students</span>
+            </div>
             <div class="breadcrumb">Directory / <strong>${className}</strong></div>
         `;
     },
