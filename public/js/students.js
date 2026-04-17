@@ -1,33 +1,28 @@
 const Students = {
     data: [],
+    classes: ['YR8', 'YR9', 'YR10', 'YR11', 'YR12', 'YR13', 'BTEC Y1', 'BTEC Y2'],
+    selectedClass: null,
     
     render: (container) => {
         container.innerHTML = `
             <div class="students-container">
                 <div class="students-header">
-                    <div>
-                        <h2 style="margin: 0; color: var(--primary-dark);">Student Directory</h2>
-                        <p style="color: var(--text-secondary); margin: 5px 0 0; font-size: 0.9rem;">Manage student records and registration.</p>
+                    <div id="studentsTitleArea">
+                        <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
+                        <p style="color: var(--text-secondary); margin: 5px 0 0; font-size: 0.9rem;">Manage and organize student records by class.</p>
                     </div>
-                    <button class="btn-primary" onclick="Students.showForm()">
-                        <i class='bx bx-user-plus'></i> Register Student
-                    </button>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="Students.showForm()">
+                            <i class='bx bx-user-plus'></i> Register Student
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="table-container">
-                    <table class="student-table">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Class & Stream</th>
-                                <th>Contact</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentTableBody">
-                            <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-                        </tbody>
-                    </table>
+
+                <div id="studentsContent">
+                    <div style="text-align:center; padding: 40px;">
+                        <i class='bx bx-loader-alt bx-spin' style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p>Loading directory...</p>
+                    </div>
                 </div>
             </div>
         `;
@@ -40,55 +35,124 @@ const Students = {
             const data = await res.json();
             if (data.success) {
                 Students.data = data.students || [];
-                Students.renderTable();
+                // Stay in same view if refreshing
+                if (Students.selectedClass) {
+                    Students.renderTable(Students.selectedClass);
+                } else {
+                    Students.renderFolders();
+                }
             }
         } catch (e) {
             console.error(e);
-            document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Failed to load data.</td></tr>`;
+            document.getElementById('studentsContent').innerHTML = `<p style="text-align:center; color:red; padding:20px;">Failed to load data.</p>`;
         }
     },
 
-    renderTable: () => {
-        const tbody = document.getElementById('studentTableBody');
-        if (!tbody) return;
-        
-        if (Students.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No students registered yet.</td></tr>`;
-            return;
-        }
+    renderFolders: () => {
+        Students.selectedClass = null;
+        const content = document.getElementById('studentsContent');
+        if (!content) return;
 
-        tbody.innerHTML = Students.data.map(student => `
-            <tr>
-                <td>
-                    <div class="student-profile">
-                        <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}">
-                        <div>
-                            <div style="font-weight: 600;">${student.name}</div>
-                            <div style="font-size: 0.8rem; color: #888;">${student.gender || 'N/A'}</div>
+        // Group counts
+        const counts = {};
+        Students.data.forEach(s => {
+            counts[s.class] = (counts[s.class] || 0) + 1;
+        });
+
+        content.innerHTML = `
+            <div class="folder-grid">
+                ${Students.classes.map(cls => `
+                    <div class="folder-card ${counts[cls] ? 'active' : 'empty'}" onclick="Students.renderTable('${cls}')">
+                        <div class="folder-icon-wrapper">
+                            <i class='bx ${counts[cls] ? 'bxs-folder' : 'bx-folder'}'></i>
+                            ${counts[cls] ? `<span class="folder-badge">${counts[cls]}</span>` : ''}
+                        </div>
+                        <div class="folder-info">
+                            <span class="folder-name">${cls.startsWith('BTEC') ? cls : 'YEAR ' + cls.replace('YR', '')}</span>
+                            <span class="folder-meta">${counts[cls] || 0} Students</span>
                         </div>
                     </div>
-                </td>
-                <td>
-                    <div style="font-weight: 500;">${student.class}</div>
-                    <div style="font-size: 0.8rem; color: #888;">${student.stream || '-'}</div>
-                </td>
-                <td>
-                    <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
-                    <div style="font-size: 0.85rem;"><i class='bx bx-envelope' style="color:#888;"></i> ${student.email || '-'}</div>
-                </td>
-                <td>
-                    <button class="btn btn-sm" style="background:#e0f2f1; color:var(--primary-dark); padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.generateID(${student.id})">
-                        <i class='bx bx-id-card'></i> ID Card
-                    </button>
-                    <button class="btn btn-sm" style="background:#ffebee; color:#d32f2f; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;" onclick="Students.deleteStudent(${student.id})">
-                        <i class='bx bx-trash'></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+                `).join('')}
+            </div>
+        `;
+
+        // Update title/breadcrumb
+        document.getElementById('studentsTitleArea').innerHTML = `
+            <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
+            <div class="breadcrumb">Directory / All Classes</div>
+        `;
     },
 
-    showForm: () => {
+    renderTable: (className) => {
+        Students.selectedClass = className;
+        const content = document.getElementById('studentsContent');
+        if (!content) return;
+
+        const filtered = Students.data.filter(s => s.class === className);
+
+        content.innerHTML = `
+            <div class="view-header" style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                <button class="btn" style="background: #f1f5f9; color: #475569;" onclick="Students.renderFolders()">
+                    <i class='bx bx-left-arrow-alt'></i> Back to Classes
+                </button>
+            </div>
+            
+            <div class="table-container fade-in">
+                <table class="student-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Stream</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.length === 0 ? `
+                            <tr><td colspan="4" style="text-align:center; padding:40px; color:#888;">No students registered in ${className} yet.</td></tr>
+                        ` : filtered.map(student => `
+                            <tr>
+                                <td>
+                                    <div class="student-profile">
+                                        <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}">
+                                        <div>
+                                            <div style="font-weight: 600;">${student.name}</div>
+                                            <div style="font-size: 0.8rem; color: #888;">${student.gender || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500;">${student.stream || '-'}</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
+                                    <div style="font-size: 0.85rem;"><i class='bx bx-envelope' style="color:#888;"></i> ${student.email || '-'}</div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm" style="background:#e0f2f1; color:var(--primary-dark); padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.generateID(${student.id})">
+                                        <i class='bx bx-id-card'></i> ID Card
+                                    </button>
+                                    <button class="btn btn-sm" style="background:#ffebee; color:#d32f2f; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;" onclick="Students.deleteStudent(${student.id})">
+                                        <i class='bx bx-trash'></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Update title/breadcrumb
+        document.getElementById('studentsTitleArea').innerHTML = `
+            <h2 style="margin: 0; color: var(--primary-dark);">Class Registry</h2>
+            <div class="breadcrumb">Directory / <strong>${className}</strong></div>
+        `;
+    },
+
+    showForm: (prefillClass = null) => {
+        const defaultClass = prefillClass || Students.selectedClass || '';
+
         const modalBody = `
             <div class="modal-overlay" id="globalEditorModal">
                 <div class="modal-content">
@@ -125,7 +189,10 @@ const Students = {
                             <div class="layout-grid">
                                 <div class="form-group">
                                     <label>Class</label>
-                                    <input type="text" name="student_class" required placeholder="e.g. S1, S2, Grade 5">
+                                    <select name="student_class" required>
+                                        <option value="">Select Class</option>
+                                        ${Students.classes.map(cls => `<option value="${cls}" ${cls === defaultClass ? 'selected' : ''}>${cls}</option>`).join('')}
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label>Stream / Section</label>

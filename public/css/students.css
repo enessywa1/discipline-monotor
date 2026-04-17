@@ -230,3 +230,105 @@
         display: none !important;
     }
 }
+
+/* Folder System Styles */
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.folder-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.folder-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+    border-color: var(--primary-color);
+}
+
+.folder-icon-wrapper {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.folder-icon-wrapper i {
+    font-size: 4rem;
+    color: #ffd54f; /* Default Manila folder color */
+    transition: color 0.3s ease;
+}
+
+.folder-card:hover .folder-icon-wrapper i {
+    color: var(--primary-color);
+}
+
+.folder-card.active .folder-icon-wrapper i {
+    color: #ffca28;
+}
+
+.folder-badge {
+    position: absolute;
+    top: 5px;
+    right: -10px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 2px solid white;
+}
+
+.folder-name {
+    display: block;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+}
+
+.folder-meta {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.folder-card.empty {
+    opacity: 0.7;
+}
+
+/* Breadcrumb & Navigation */
+.breadcrumb {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 5px;
+}
+.breadcrumb strong {
+    color: var(--primary-color);
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
