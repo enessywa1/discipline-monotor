@@ -157,15 +157,15 @@ const DisciplineForm = {
                     if (data.success) {
                         const matches = data.students.filter(s => s.name.toLowerCase().includes(query));
                         if(matches.length > 0) {
-                            sugBox.innerHTML = matches.map(s => \`
-                                <div class="suggestion-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="DisciplineForm.selectStudent('\${s.name.replace(/'/g, "\\\\'")}', '\${s.class}', '\${s.stream}', '\${s.gender}')">
-                                    <img src="\${s.picture_data || 'img/default-avatar.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                            sugBox.innerHTML = matches.map(s => `
+                                <div class="suggestion-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="DisciplineForm.selectStudent('${s.name.replace(/'/g, "\\'")}', '${s.class}', '${s.stream}', '${s.gender}')">
+                                    <img src="${s.picture_data || 'img/default-avatar.png'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
                                     <div>
-                                        <div style="font-weight:600; font-size:0.9rem;">\${s.name}</div>
-                                        <div style="font-size:0.75rem; color:#888;">Class \${s.class || 'N/A'}</div>
+                                        <div style="font-weight:600; font-size:0.9rem;">${s.name}</div>
+                                        <div style="font-size:0.75rem; color:#888;">Class ${s.class || 'N/A'}</div>
                                     </div>
                                 </div>
-                            \`).join('');
+                            `).join('');
                             sugBox.style.display = 'block';
                         } else {
                             sugBox.style.display = 'none';
