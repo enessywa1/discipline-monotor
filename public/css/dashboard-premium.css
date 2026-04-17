@@ -286,6 +286,7 @@
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 10px;
+    white-space: pre-wrap;
 }
 .announcement-meta {
     font-size: 0.8rem;
@@ -399,6 +400,7 @@
     color: var(--text-primary);
     line-height: 1.6;
     margin-bottom: 20px;
+    white-space: pre-wrap;
 }
 
 .card-footer-full {
