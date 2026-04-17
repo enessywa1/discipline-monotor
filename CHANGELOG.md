@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0-VIBRANT] - 2026-04-17
+
+### Added
+- **Universal Student Photos**: Integrated student profile thumbnails across all core modules including Reports, Statements, Watchlist, Detentions, and Suspensions.
+- **Enhanced Student Registry**: Expanded student profiles with contact details and picture management.
+- **Improved Performance Standings**: Added support for more detailed tracking in the standings module.
+
+### Fixed
+- **Auth Logout Loop**: Resolved a critical issue where server restarts would trigger background 401 errors and force a full app logout.
+- **Script Stability**: Hardened frontend rendering with null-safety checks for user sessions and student records.
+- **Case-Insensitive Student Matching**: Improved SQL joins to ensure students are correctly identified regardless of name casing.
+
+### Changed
+- **Premium UI Refinement**: Switched to circular profile avatars (32px) for a more modern, cohesive aesthetic.
+- **Notification Logic**: Background notification polls now handle session resets gracefully without interrupting the user.
+
 ## [1.2.2-STABLE] - 2026-03-21
 
 ### Added
