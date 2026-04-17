@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0-DIRECTORY] - 2026-04-17
+
+### Added
+- **Student Registry Folder System**: Restructured the registry into a class-based folder directory for easier navigation.
+- **Academic Year Groups**: Pre-configured folders for YR8-YR13 and BTEC Y1-Y2.
+- **Smart Counting**: Real-time student count badges on folders.
+- **Contextual Registration**: When registering a student from within a folder, the class is automatically pre-selected.
+
+### Fixed
+- **Socket.io Stability**: Switched to a CDN for the socket.io client to prevent MIME type failures on Vercel.
+- **Manifest Errors**: Fixed root-relative paths for app icons and PWA manifest.
+- **Syntax Regressions**: Resolved backtick escaping issues in student suggestion logic.
+
 ## [1.3.0-VIBRANT] - 2026-04-17
 
 ### Added

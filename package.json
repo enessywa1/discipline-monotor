@@ -1,6 +1,6 @@
 {
     "name": "discipline-department-web",
-    "version": "1.2.2",
+    "version": "1.4.0-DIRECTORY",
     "description": "School Discipline Department Admin System",
     "main": "server.js",
     "scripts": {
