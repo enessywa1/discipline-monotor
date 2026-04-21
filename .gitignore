@@ -17,3 +17,7 @@ users and passwords
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+scratch/
+
+# Photos
+public/img/PHOTO 2025-2026/
