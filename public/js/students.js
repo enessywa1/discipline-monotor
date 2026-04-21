@@ -86,7 +86,7 @@ const Students = {
                             <tr>
                                 <td>
                                     <div class="student-profile">
-                                        <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
+                                        <img src="${student.picture_data ? encodeURI(student.picture_data) : 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
                                         <div>
                                             <div style="font-weight: 600;">${student.name}</div>
                                             <div style="font-size: 0.8rem; color: #888;">${student.gender || 'N/A'}</div>
