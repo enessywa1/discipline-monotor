@@ -1,17 +1,22 @@
 const Students = {
     data: [],
+    searchTerm: '',
     classes: ['YR8', 'YR9', 'YR10', 'YR11', 'YR12', 'YR13', 'BTEC Y1', 'BTEC Y2'],
-    selectedClass: null,
     
     render: (container) => {
+        Students.searchTerm = '';
         container.innerHTML = `
             <div class="students-container">
                 <div class="students-header">
                     <div id="studentsTitleArea">
                         <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
-                        <p style="color: var(--text-secondary); margin: 5px 0 0; font-size: 0.9rem;">Manage and organize student records by class.</p>
+                        <p style="color: var(--text-secondary); margin: 5px 0 0; font-size: 0.9rem;">Manage and organize student records.</p>
                     </div>
-                    <div class="header-actions">
+                    <div class="header-actions" style="display: flex; gap: 15px; align-items: center;">
+                        <div class="search-box">
+                            <i class='bx bx-search'></i>
+                            <input type="text" id="studentSearch" placeholder="Search students..." oninput="Students.handleSearch(this.value)">
+                        </div>
                         <button class="btn-primary" onclick="Students.showForm()">
                             <i class='bx bx-user-plus'></i> Register Student
                         </button>
@@ -21,7 +26,7 @@ const Students = {
                 <div id="studentsContent">
                     <div style="text-align:center; padding: 40px;">
                         <i class='bx bx-loader-alt bx-spin' style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <p>Loading directory...</p>
+                        <p>Loading registry...</p>
                     </div>
                 </div>
             </div>
@@ -35,12 +40,7 @@ const Students = {
             const data = await res.json();
             if (data.success) {
                 Students.data = data.students || [];
-                // Stay in same view if refreshing
-                if (Students.selectedClass) {
-                    Students.renderTable(Students.selectedClass);
-                } else {
-                    Students.renderFolders();
-                }
+                Students.renderTable();
             }
         } catch (e) {
             console.error(e);
@@ -48,76 +48,45 @@ const Students = {
         }
     },
 
-    renderFolders: () => {
-        Students.selectedClass = null;
+    handleSearch: (val) => {
+        Students.searchTerm = val.toLowerCase();
+        Students.renderTable();
+    },
+
+    renderTable: () => {
         const content = document.getElementById('studentsContent');
         if (!content) return;
 
-        // Group counts
-        const counts = {};
-        Students.data.forEach(s => {
-            counts[s.class] = (counts[s.class] || 0) + 1;
+        const filtered = Students.data.filter(s => {
+            const name = (s.name || '').toLowerCase();
+            const cls = (s.class || '').toLowerCase();
+            const stream = (s.stream || '').toLowerCase();
+            const term = Students.searchTerm.toLowerCase();
+            
+            return name.includes(term) || cls.includes(term) || stream.includes(term);
         });
 
         content.innerHTML = `
-            <div class="folder-grid">
-                ${Students.classes.map(cls => `
-                    <div class="folder-card ${counts[cls] ? 'active' : 'empty'}" onclick="Students.renderTable('${cls}')">
-                        <div class="folder-icon-wrapper">
-                            <i class='bx ${counts[cls] ? 'bxs-folder' : 'bx-folder'}'></i>
-                            ${counts[cls] ? `<span class="folder-badge">${counts[cls]}</span>` : ''}
-                        </div>
-                        <div class="folder-info">
-                            <span class="folder-name">${cls.startsWith('BTEC') ? cls : 'YEAR ' + cls.replace('YR', '')}</span>
-                            <span class="folder-meta">${counts[cls] || 0} Students</span>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-        // Update title/breadcrumb
-        document.getElementById('studentsTitleArea').innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
-                <span style="background: var(--primary-color); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${Students.data.length} Total</span>
-            </div>
-            <div class="breadcrumb">Directory / All Classes</div>
-        `;
-    },
-
-    renderTable: (className) => {
-        Students.selectedClass = className;
-        const content = document.getElementById('studentsContent');
-        if (!content) return;
-
-        const filtered = Students.data.filter(s => s.class === className);
-
-        content.innerHTML = `
-            <div class="view-header" style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
-                <button class="btn" style="background: #f1f5f9; color: #475569;" onclick="Students.renderFolders()">
-                    <i class='bx bx-left-arrow-alt'></i> Back to Classes
-                </button>
-            </div>
-            
             <div class="table-container fade-in">
                 <table class="student-table">
                     <thead>
                         <tr>
                             <th>Student</th>
-                            <th>Stream</th>
+                            <th>Class / Stream</th>
                             <th>Contact</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${filtered.length === 0 ? `
-                            <tr><td colspan="4" style="text-align:center; padding:40px; color:#888;">No students registered in ${className} yet.</td></tr>
+                            <tr><td colspan="4" style="text-align:center; padding:40px; color:#888;">
+                                ${Students.searchTerm ? `No students matching "${Students.searchTerm}"` : 'No students registered yet.'}
+                            </td></tr>
                         ` : filtered.map(student => `
                             <tr>
                                 <td>
                                     <div class="student-profile">
-                                        <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}">
+                                        <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
                                         <div>
                                             <div style="font-weight: 600;">${student.name}</div>
                                             <div style="font-size: 0.8rem; color: #888;">${student.gender || 'N/A'}</div>
@@ -125,7 +94,8 @@ const Students = {
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 500;">${student.stream || '-'}</div>
+                                    <div style="font-weight: 500;">${student.class || 'Unassigned'}</div>
+                                    <div style="font-size: 0.8rem; color: #888;">${student.stream || '-'}</div>
                                 </td>
                                 <td>
                                     <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
@@ -133,7 +103,7 @@ const Students = {
                                 </td>
                                 <td>
                                     <button class="btn btn-sm" style="background:#e0f2f1; color:var(--primary-dark); padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.generateID(${student.id})">
-                                        <i class='bx bx-id-card'></i> ID Card
+                                        <i class='bx bx-id-card'></i> ID
                                     </button>
                                     <button class="btn btn-sm" style="background:#ffebee; color:#d32f2f; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;" onclick="Students.deleteStudent(${student.id})">
                                         <i class='bx bx-trash'></i>
@@ -146,15 +116,19 @@ const Students = {
             </div>
         `;
 
-        // Update title/breadcrumb
-        document.getElementById('studentsTitleArea').innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <h2 style="margin: 0; color: var(--primary-dark);">Class Registry</h2>
-                <span style="background: var(--primary-color); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${filtered.length} Students</span>
-            </div>
-            <div class="breadcrumb">Directory / <strong>${className}</strong></div>
-        `;
+        // Update title stats
+        const titleArea = document.getElementById('studentsTitleArea');
+        if (titleArea) {
+            titleArea.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
+                    <span style="background: var(--primary-color); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${filtered.length} Students</span>
+                </div>
+                <div class="breadcrumb">Directory / All Records</div>
+            `;
+        }
     },
+
 
     showForm: (prefillClass = null) => {
         const defaultClass = prefillClass || Students.selectedClass || '';
