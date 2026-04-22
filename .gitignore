@@ -19,5 +19,5 @@ yarn-debug.log*
 yarn-error.log*
 scratch/
 
-# Photos
+# Large Assets
 public/img/PHOTO 2025-2026/
