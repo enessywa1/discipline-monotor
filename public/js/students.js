@@ -90,7 +90,7 @@ const Students = {
                             <tr>
                                 <td>
                                     <div class="student-profile">
-                                        <img src="${student.picture_data ? encodeURI(student.picture_data) : 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
+                                        <img src="${student.picture_data ? (student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)) : 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
                                         <div>
                                             <div style="font-weight: 600;">${student.name}</div>
                                             <div style="font-size: 0.8rem; color: #888;">${student.gender || 'N/A'}</div>
@@ -156,7 +156,7 @@ const Students = {
                             <div class="photo-upload-wrapper">
                                 <label style="font-size: 0.8rem; text-transform:uppercase; color:#888;">Student Photo</label>
                                 <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
-                                    ${isEdit && student.picture_data ? `<img src="${encodeURI(student.picture_data)}" alt="Photo">` : `<i class='bx bx-camera'></i>`}
+                                    ${isEdit && student.picture_data ? `<img src="${student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)}" onerror="this.src='img/default-avatar.png'" alt="Photo">` : `<i class='bx bx-camera'></i>`}
                                 </div>
                                 <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="Students.handlePhotoUpload(event)">
                                 <input type="hidden" id="pictureData" name="picture_data" value="${isEdit ? (student.picture_data || '') : ''}">
@@ -401,7 +401,7 @@ const Students = {
                                 </div>
 
                                 <div class="id-photo-container">
-                                    <img src="${student.picture_data ? encodeURI(student.picture_data) : 'img/default-avatar.png'}" alt="${student.name}" class="id-photo">
+                                    <img src="${student.picture_data ? (student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" alt="${student.name}" class="id-photo">
                                 </div>
 
                                 <div class="id-details">

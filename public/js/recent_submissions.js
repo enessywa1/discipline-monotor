@@ -266,7 +266,7 @@ const RecentSubmissions = {
                             <div style="display: flex; flex-direction: column; align-items: flex-end;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span class="submission-list-student" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-dark);">${item.student} <span style="font-weight: 400; color: #666; font-size: 0.8em;">- ${item.student_class || 'N/A'}</span></span>
-                                    <img src="${item.picture_data ? encodeURI(item.picture_data) : 'img/default-avatar.png'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+                                    <img src="${item.picture_data ? (item.picture_data.startsWith('http') ? item.picture_data : encodeURI(item.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
                                 </div>
                                 <div class="submission-recorder">by: <strong>${item.recorder}</strong></div>
                             </div>

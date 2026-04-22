@@ -246,7 +246,7 @@ const Tracking = {
                 <tr>
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${item.picture_data ? encodeURI(item.picture_data) : 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <img src="${item.picture_data ? (item.picture_data.startsWith('http') ? item.picture_data : encodeURI(item.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                             <strong>${item.student_name}</strong>
                         </div>
                     </td>
@@ -277,7 +277,7 @@ const Tracking = {
                 <tr>
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${item.picture_data ? encodeURI(item.picture_data) : 'img/default-avatar.png'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <img src="${item.picture_data ? (item.picture_data.startsWith('http') ? item.picture_data : encodeURI(item.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                             <strong>${item.student_name}</strong>
                         </div>
                     </td>
