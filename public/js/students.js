@@ -292,7 +292,7 @@ const Students = {
 
         for (let i = 0; i < total; i++) {
             const file = files[i];
-            const name = file.name.replace(/\\.[^/.]+$/, "").trim();
+            const name = file.name.replace(/\.[^/.]+$/, "").trim();
             
             try {
                 const base64Data = await Students.compressImage(file);
@@ -389,7 +389,7 @@ const Students = {
                                 </div>
 
                                 <div class="id-photo-container">
-                                    <img src="${student.picture_data || 'img/default-avatar.png'}" alt="${student.name}" class="id-photo">
+                                    <img src="${student.picture_data ? encodeURI(student.picture_data) : 'img/default-avatar.png'}" alt="${student.name}" class="id-photo">
                                 </div>
 
                                 <div class="id-details">
