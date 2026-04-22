@@ -8,7 +8,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .btn-primary {
@@ -26,9 +31,10 @@
 
 .table-container {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
     overflow-x: auto;
 }
 
@@ -44,8 +50,13 @@
 }
 
 .student-table th {
+    background: #f8fafc;
     font-weight: 600;
     color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #edf2f7;
 }
 
 .student-profile {
@@ -301,3 +312,59 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-icon {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
+
+.btn-icon.edit { background: #e3f2fd; color: #1976d2; }
+.btn-icon.id { background: #e0f2f1; color: var(--primary-dark); }
+.btn-icon.delete { background: #ffebee; color: #d32f2f; }
+
+.btn-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    z-index: 100;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.btn-icon:hover::after {
+    opacity: 1;
+}
+
+.student-table th:last-child, .student-table td:last-child {
+    text-align: right;
+}

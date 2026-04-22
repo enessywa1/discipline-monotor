@@ -105,15 +105,18 @@ const Students = {
                                     <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
                                     <div style="font-size: 0.85rem;"><i class='bx bx-envelope' style="color:#888;"></i> ${student.email || '-'}</div>
                                 </td>
-                                    <button class="btn btn-sm" style="background:#e3f2fd; color:#1976d2; padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.showForm(${JSON.stringify(student).replace(/"/g, '&quot;')})">
-                                        <i class='bx bx-edit'></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm" style="background:#e0f2f1; color:var(--primary-dark); padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.generateID(${student.id})">
-                                        <i class='bx bx-id-card'></i> ID
-                                    </button>
-                                    <button class="btn btn-sm" style="background:#ffebee; color:#d32f2f; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;" onclick="Students.deleteStudent(${student.id})">
-                                        <i class='bx bx-trash'></i>
-                                    </button>
+                                <td>
+                                    <div class="action-buttons" style="justify-content: flex-end;">
+                                        <button class="btn-icon edit" data-tooltip="Edit Profile" onclick="Students.showForm(${JSON.stringify(student).replace(/"/g, '&quot;')})">
+                                            <i class='bx bx-edit'></i>
+                                        </button>
+                                        <button class="btn-icon id" data-tooltip="Generate ID" onclick="Students.generateID(${student.id})">
+                                            <i class='bx bx-id-card'></i>
+                                        </button>
+                                        <button class="btn-icon delete" data-tooltip="Delete Record" onclick="Students.deleteStudent(${student.id})">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
