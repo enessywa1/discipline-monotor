@@ -76,7 +76,7 @@ const About = {
                 </div>
 
                 <div class="about-footer">
-                    <p>&copy; 2026 Murashi Creatives. Version 1.4.0-DIRECTORY</p>
+                    <p>&copy; 2026 Murashi Creatives. Version 1.5.0-STABLE</p>
                 </div>
             </div>
         `;

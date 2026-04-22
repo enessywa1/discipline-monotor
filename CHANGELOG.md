@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0-STABLE] - 2026-04-22
+
+### Added
+- **Student Profile Editing**: Direct editing of student records (Name, Class, Contact, etc.) from the registry.
+- **Icon-Based Actions**: Streamlined "Actions" column with tooltips for a cleaner, more professional look.
+- **Enhanced Visual Feedback**: Real-time tooltips for Edit, ID, and Delete buttons.
+
+### Fixed
+- **Photo Registry Recovery**: Migrated all student photos from broken nested paths to a high-performance flattened directory.
+- **URI Encoding**: Resolved issues with filenames containing spaces in all student-related modules.
+- **Batch Upload Logic**: Fixed regex bug that prevented extension removal during photo matching.
+
+### Performance
+- **Git History Pruning**: Aggressive optimization reduced the repository size from 2.1GB to 16MB.
+
 ## [1.4.0-DIRECTORY] - 2026-04-17
 
 ### Added
