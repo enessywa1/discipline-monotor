@@ -105,7 +105,9 @@ const Students = {
                                     <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
                                     <div style="font-size: 0.85rem;"><i class='bx bx-envelope' style="color:#888;"></i> ${student.email || '-'}</div>
                                 </td>
-                                <td>
+                                    <button class="btn btn-sm" style="background:#e3f2fd; color:#1976d2; padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.showForm(${JSON.stringify(student).replace(/"/g, '&quot;')})">
+                                        <i class='bx bx-edit'></i> Edit
+                                    </button>
                                     <button class="btn btn-sm" style="background:#e0f2f1; color:var(--primary-dark); padding:6px 12px; border-radius:6px; cursor:pointer; border:none; margin-right:5px;" onclick="Students.generateID(${student.id})">
                                         <i class='bx bx-id-card'></i> ID
                                     </button>
@@ -134,38 +136,40 @@ const Students = {
     },
 
 
-    showForm: (prefillClass = null) => {
-        const defaultClass = prefillClass || Students.selectedClass || '';
+    showForm: (student = null) => {
+        const isEdit = student && student.id;
+        const defaultClass = isEdit ? student.class : (Students.selectedClass || '');
 
         const modalBody = `
             <div class="modal-overlay" id="globalEditorModal">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>Register New Student</h3>
+                        <h3>${isEdit ? 'Edit Student Profile' : 'Register New Student'}</h3>
                         <button class="modal-close" onclick="App.Editor.close()">&times;</button>
                     </div>
                     <div id="editorModalBody">
                         <form id="studentRegistrationForm">
+                            <input type="hidden" name="id" value="${isEdit ? student.id : ''}">
                             <div class="photo-upload-wrapper">
                                 <label style="font-size: 0.8rem; text-transform:uppercase; color:#888;">Student Photo</label>
                                 <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
-                                    <i class='bx bx-camera'></i>
+                                    ${isEdit && student.picture_data ? `<img src="${encodeURI(student.picture_data)}" alt="Photo">` : `<i class='bx bx-camera'></i>`}
                                 </div>
                                 <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="Students.handlePhotoUpload(event)">
-                                <input type="hidden" id="pictureData" name="picture_data">
+                                <input type="hidden" id="pictureData" name="picture_data" value="${isEdit ? (student.picture_data || '') : ''}">
                             </div>
 
                             <div class="layout-grid">
                                 <div class="form-group">
                                     <label>Full Name</label>
-                                    <input type="text" name="name" required placeholder="Enter student name">
+                                    <input type="text" name="name" required placeholder="Enter student name" value="${isEdit ? student.name : ''}">
                                 </div>
                                 <div class="form-group">
                                     <label>Gender</label>
                                     <select name="gender" required>
                                         <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
+                                        <option value="Male" ${isEdit && student.gender === 'Male' ? 'selected' : ''}>Male</option>
+                                        <option value="Female" ${isEdit && student.gender === 'Female' ? 'selected' : ''}>Female</option>
                                     </select>
                                 </div>
                             </div>
@@ -180,24 +184,24 @@ const Students = {
                                 </div>
                                 <div class="form-group">
                                     <label>Stream / Section</label>
-                                    <input type="text" name="stream" placeholder="e.g. A, Blue">
+                                    <input type="text" name="stream" placeholder="e.g. A, Blue" value="${isEdit ? (student.stream || '') : ''}">
                                 </div>
                             </div>
 
                             <div class="layout-grid">
                                 <div class="form-group">
                                     <label>Parent Phone</label>
-                                    <input type="tel" name="parent_phone" placeholder="Contact Number">
+                                    <input type="tel" name="parent_phone" placeholder="Contact Number" value="${isEdit ? (student.parent_phone || '') : ''}">
                                 </div>
                                 <div class="form-group">
                                     <label>Email Address</label>
-                                    <input type="email" name="email" placeholder="student@example.com">
+                                    <input type="email" name="email" placeholder="student@example.com" value="${isEdit ? (student.email || '') : ''}">
                                 </div>
                             </div>
 
                             <div class="modal-footer">
                                 <button type="button" class="btn" style="background:#f1f5f9; color:#475569;" onclick="App.Editor.close()">Cancel</button>
-                                <button type="submit" class="btn btn-primary" id="saveStudentBtn">Register Student</button>
+                                <button type="submit" class="btn btn-primary" id="saveStudentBtn">${isEdit ? 'Save Changes' : 'Register Student'}</button>
                             </div>
                         </form>
                     </div>
@@ -325,14 +329,19 @@ const Students = {
         e.preventDefault();
         const fd = new FormData(e.target);
         const payload = Object.fromEntries(fd.entries());
-        const btn = document.getElementById('saveStudentBtn');
+        const studentId = payload.id;
+        const isEdit = !!studentId;
         
+        const btn = document.getElementById('saveStudentBtn');
         btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Saving...";
         btn.disabled = true;
 
         try {
-            const res = await fetch('/api/students', {
-                method: 'POST',
+            const endpoint = isEdit ? `/api/students/${studentId}` : '/api/students';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const res = await fetch(endpoint, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
@@ -343,12 +352,12 @@ const Students = {
                 Students.loadData();
             } else {
                 alert('Error: ' + result.error);
-                btn.innerHTML = "Register Student";
+                btn.innerHTML = isEdit ? "Save Changes" : "Register Student";
                 btn.disabled = false;
             }
         } catch (err) {
             alert('Connection failed');
-            btn.innerHTML = "Register Student";
+            btn.innerHTML = isEdit ? "Save Changes" : "Register Student";
             btn.disabled = false;
         }
     },
