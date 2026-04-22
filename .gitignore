@@ -18,6 +18,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 scratch/
-
-# Large Assets
-public/img/PHOTO 2025-2026/
