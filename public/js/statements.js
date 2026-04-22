@@ -222,7 +222,7 @@ const Statements = {
     },
 
     search: async () => {
-        const query = document.getElementById('studentSearch').value;
+        const query = (document.getElementById('studentSearch').value || '').trim();
         const resDiv = document.getElementById('searchResults');
 
         if (!query) return;
@@ -365,7 +365,7 @@ const Statements = {
         data.recorded_by = user.id;
 
         const payload = {
-            student_name: data.student_name,
+            student_name: (data.student_name || '').trim(),
             student_class: data.student_class,
             incident_date: data.incident_date,
             offence_type: (data.offence_type === 'Custom' || data.offence_type === 'Other')

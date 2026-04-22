@@ -26,6 +26,7 @@ router.get('/students', (req, res) => {
 
     if (search) {
         params.push(`%${search}%`, `%${search}%`);
+        params.push(`%${search}%`, `%${search}%`);
     }
 
     db.all(sql, params, (err, rows) => {
@@ -39,7 +40,7 @@ router.post('/reports', (req, res) => {
     const { student_name, student_class, offence, description, staff_id, date_reported, action_taken } = req.body;
     db.run(
         `INSERT INTO discipline_reports (student_name, student_class, offence, description, staff_id, date_reported, action_taken) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [student_name, student_class, offence, description, staff_id, date_reported || new Date(), action_taken],
+        [(student_name || '').trim(), student_class, offence, description, staff_id, date_reported || new Date(), action_taken],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
 
@@ -99,7 +100,7 @@ router.get('/reports', (req, res) => {
     let sql = `SELECT dr.id, dr.student_name, dr.student_class, dr.offence, dr.date_reported, dr.action_taken, dr.description, u.full_name as staff_name, st.picture_data 
             FROM discipline_reports dr
             LEFT JOIN users u ON dr.staff_id = u.id
-            LEFT JOIN students st ON LOWER(dr.student_name) = LOWER(st.name)`;
+            LEFT JOIN students st ON LOWER(TRIM(dr.student_name)) = LOWER(TRIM(st.name))`;
     const params = [];
 
     const isUserAdmin = isAdmin(user);
@@ -135,7 +136,7 @@ router.get('/statements', (req, res) => {
     let sql = `SELECT s.id, s.student_name, s.student_class, s.incident_date, s.offence_type, s.punitive_measure, s.created_at, s.description, u.full_name as recorder_name, st.picture_data 
                FROM statements s 
                LEFT JOIN users u ON s.recorded_by = u.id
-               LEFT JOIN students st ON LOWER(s.student_name) = LOWER(st.name)`;
+               LEFT JOIN students st ON LOWER(TRIM(s.student_name)) = LOWER(TRIM(st.name))`;
     const params = [];
 
     const isUserAdmin = isAdmin(user);
@@ -167,7 +168,7 @@ router.post('/statements', (req, res) => {
     const { student_name, student_class, incident_date, offence_type, punitive_measure, recorded_by, description } = req.body;
     db.run(
         `INSERT INTO statements (student_name, student_class, incident_date, offence_type, punitive_measure, recorded_by, description) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [student_name, student_class, incident_date, offence_type, punitive_measure, recorded_by, description],
+        [(student_name || '').trim(), student_class, incident_date, offence_type, punitive_measure, recorded_by, description],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
 
