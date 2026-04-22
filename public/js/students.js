@@ -286,8 +286,8 @@ const Students = {
         document.body.appendChild(overlay);
 
         const updateProgress = (current) => {
-            document.getElementById('batchProgress').style.width = \`\${(current / total) * 100}%\`;
-            document.getElementById('batchStatus').innerText = \`\${current} / \${total}\`;
+            document.getElementById('batchProgress').style.width = `${(current / total) * 100}%`;
+            document.getElementById('batchStatus').innerText = `${current} / ${total}`;
         };
 
         for (let i = 0; i < total; i++) {
@@ -318,7 +318,7 @@ const Students = {
         e.target.value = '';
         Students.loadData();
         
-        alert(\`Batch Upload Complete!\\n\\n✅ Successfully uploaded: \${successCount}\\n❌ Failed: \${failCount}\`);
+        alert(`Batch Upload Complete!\n\n✅ Successfully uploaded: ${successCount}\n❌ Failed: ${failCount}`);
     },
 
     handleSave: async (e) => {
@@ -356,7 +356,7 @@ const Students = {
     deleteStudent: async (id) => {
         if (!confirm('Are you sure you want to delete this student record?')) return;
         try {
-            const res = await fetch(`/ api / students / ${ id } `, { method: 'DELETE' });
+            const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
             const result = await res.json();
             if (result.success) {
                 Students.loadData();
@@ -373,7 +373,7 @@ const Students = {
         if (!student) return;
 
         const modalBody = `
-                < div class="modal-overlay" id = "globalEditorModal" >
+            <div class="modal-overlay" id="globalEditorModal">
                     <div class="modal-content" style="width: auto; max-width: 90vw;">
                         <div class="modal-header">
                             <h3>Student Identification Card</h3>
@@ -423,9 +423,8 @@ const Students = {
                             </div>
                         </div>
                     </div>
-            </div >
+            </div>
     `;
         document.body.insertAdjacentHTML('beforeend', modalBody);
     }
 };
- c
