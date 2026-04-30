@@ -9,7 +9,7 @@ const DisciplineForm = {
                 
                 <form id="disciplineReportForm">
                     <!-- Row 1: Student Details -->
-                    <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div class="layout-grid layout-grid-2" style="gap: 20px; margin-bottom: 15px;">
                         <div class="form-group" style="position: relative;">
                             <label>Student Name</label>
                             <input type="text" name="student_name" id="disciplineStudentName" required placeholder="Full Name" autocomplete="off">
@@ -26,7 +26,7 @@ const DisciplineForm = {
                     </div>
 
                     <!-- Row 2: Class Info -->
-                    <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div class="layout-grid layout-grid-2" style="gap: 20px; margin-bottom: 15px;">
                         <div class="form-group">
                             <label>Class</label>
                             <select name="class_grade" required style="width: 100%; padding: 10px;">
@@ -84,7 +84,7 @@ const DisciplineForm = {
                         <input type="text" id="customOffenceInput" placeholder="Enter custom offence details">
                     </div>
 
-                    <div class="layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div class="layout-grid layout-grid-2" style="gap: 20px; margin-bottom: 15px;">
                         <div class="form-group">
                             <label>Date</label>
                             <input type="date" name="date_reported" required>

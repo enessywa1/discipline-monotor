@@ -65,8 +65,8 @@ const Users = {
                     <!-- Admin Section -->
                     <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
                         <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Administrators</h4>
-                        <div class="table-container" style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <div class="table-container mobile-card-table" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
                                         <th style="padding: 12px;">Name</th>
@@ -85,8 +85,8 @@ const Users = {
                     <!-- Staff Section -->
                     <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
                         <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Residential Staff (Patrons/Matrons)</h4>
-                        <div class="table-container" style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <div class="table-container mobile-card-table" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
                                         <th style="padding: 12px;">Name</th>
@@ -105,8 +105,8 @@ const Users = {
                     <!-- Teachers Section -->
                     <div class="card" style="box-shadow: var(--shadow-sm); border: 1px solid #eee;">
                         <h4 style="margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px;">Teachers</h4>
-                        <div class="table-container" style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <div class="table-container mobile-card-table" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="background: #f5f5f5; text-align: left; border-bottom: 2px solid #eee;">
                                         <th style="padding: 12px;">Name</th>
@@ -182,16 +182,16 @@ const Users = {
                     if (users.length === 0) return '<tr><td colspan="6" style="padding: 20px; text-align: center; color: grey;">No records found</td></tr>';
                     return users.map(u => `
                         <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 12px; font-weight: 500;">${u.full_name}</td>
-                            <td style="padding: 12px;">
+                            <td data-label="Name" style="padding: 12px; font-weight: 500;">${u.full_name}</td>
+                            <td data-label="Role" style="padding: 12px;">
                                 <span class="badge badge-progress" style="background: #e0f2f1; color: #00695c;">
                                     ${u.role}
                                 </span>
                             </td>
-                            <td style="padding: 12px;">${u.allocation || '-'}</td>
-                            <td style="padding: 12px; color: var(--text-secondary);">${u.phone_number || 'N/A'}</td>
-                            <td style="padding: 12px;">${u.username}</td>
-                            <td style="padding: 12px; display: flex; gap: 10px;">
+                            <td data-label="Allocation" style="padding: 12px;">${u.allocation || '-'}</td>
+                            <td data-label="Phone" style="padding: 12px; color: var(--text-secondary);">${u.phone_number || 'N/A'}</td>
+                            <td data-label="Username" style="padding: 12px;">${u.username}</td>
+                            <td data-label="Action" style="padding: 12px; display: flex; gap: 10px;">
                                 <button data-action="edit" data-id="${u.id}" style="color: var(--primary-color); background: none; border: none; cursor: pointer; font-weight: 600;">Edit</button>
                                 ${u.username !== 'admin' ? `<button data-action="delete" data-id="${u.id}" style="color: #c62828; background: none; border: none; cursor: pointer; font-weight: 600;">Delete</button>` : ''}
                             </td>

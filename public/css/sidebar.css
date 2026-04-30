@@ -186,21 +186,31 @@
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .sidebar {
-        left: -250px;
-        /* Fully hidden */
-        width: 250px;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+        left: -280px;
+        width: 280px;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0 24px 24px 0;
     }
 
     .sidebar.open {
         left: 0;
-        width: 250px;
+    }
+
+    .sidebar .profile-details {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .sidebar .logo_name {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .home-content {
         left: 0;
-        width: 100%;
-        padding: 20px;
+        width: 100% !important;
+        padding: 15px !important;
     }
 
     .sidebar.close~.home-content {

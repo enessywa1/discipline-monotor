@@ -442,3 +442,37 @@
     border-color: #fecaca;
     color: #dc2626;
 }
+
+/* --- Mobile Specific Dashboard Overrides --- */
+@media (max-width: 768px) {
+    .gradient-banner {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .gradient-banner h3 {
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .action-card {
+        padding: 12px 8px;
+        font-size: 0.85rem;
+    }
+
+    .action-icon {
+        font-size: 1.8rem;
+    }
+}

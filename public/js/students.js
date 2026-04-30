@@ -71,8 +71,8 @@ const Students = {
         });
 
         content.innerHTML = `
-            <div class="table-container fade-in">
-                <table class="student-table">
+            <div class="table-container mobile-card-table fade-in">
+                <table class="student-table" style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr>
                             <th>Student</th>
@@ -88,7 +88,7 @@ const Students = {
                             </td></tr>
                         ` : filtered.map(student => `
                             <tr>
-                                <td>
+                                <td data-label="Student">
                                     <div class="student-profile">
                                         <img src="${student.picture_data ? (student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)) : 'img/default-avatar.png'}" alt="${student.name}" onerror="this.src='img/default-avatar.png'">
                                         <div>
@@ -97,15 +97,15 @@ const Students = {
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Class / Stream">
                                     <div style="font-weight: 500;">${student.class || 'Unassigned'}</div>
                                     <div style="font-size: 0.8rem; color: #888;">${student.stream || '-'}</div>
                                 </td>
-                                <td>
+                                <td data-label="Contact">
                                     <div style="font-size: 0.85rem;"><i class='bx bx-phone' style="color:#888;"></i> ${student.parent_phone || '-'}</div>
                                     <div style="font-size: 0.85rem;"><i class='bx bx-envelope' style="color:#888;"></i> ${student.email || '-'}</div>
                                 </td>
-                                <td>
+                                <td data-label="Actions">
                                     <div class="action-buttons" style="justify-content: flex-end;">
                                         <button class="btn-icon edit" data-tooltip="Edit Profile" onclick="Students.showForm(${JSON.stringify(student).replace(/"/g, '&quot;')})">
                                             <i class='bx bx-edit'></i>
