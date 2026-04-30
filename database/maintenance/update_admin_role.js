@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 async function updateAdminRole() {
     console.log('🔄 Updating Admin user role to "Developer"...');

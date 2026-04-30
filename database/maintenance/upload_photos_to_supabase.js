@@ -1,4 +1,4 @@
-const { db, supabaseAdmin } = require('./supabase');
+const { db, supabaseAdmin } = require('../supabase');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();

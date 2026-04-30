@@ -1,5 +1,5 @@
 // update_postgres_schema.js
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 if (!isPostgres) {
     console.log("Not using Postgres. Skipping.");

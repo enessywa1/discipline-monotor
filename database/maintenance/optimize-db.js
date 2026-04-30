@@ -1,4 +1,4 @@
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 async function optimize() {
     console.log(`🚀 Starting database optimization (${isPostgres ? 'Postgres' : 'SQLite'})...`);

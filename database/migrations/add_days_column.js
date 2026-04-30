@@ -1,4 +1,4 @@
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 async function migrate() {
     console.log('🚀 Starting migration: Adding days column to detentions table...');

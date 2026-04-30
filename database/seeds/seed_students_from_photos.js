@@ -1,4 +1,4 @@
-const db = require('./db');
+const db = require('../db');
 const path = require('path');
 const fs = require('fs');
 

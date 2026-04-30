@@ -8,12 +8,8 @@ const Notifications = {
             bell.addEventListener('click', (e) => {
                 e.stopPropagation();
 
-                // Request Browser Permission on first interaction if not yet decided
-                if ("Notification" in window && Notification.permission === "default") {
-                    Notification.requestPermission().then(permission => {
-                        console.log('Notification permission:', permission);
-                    });
-                }
+                // Request Browser Permission on first interaction
+                Notifications.requestPermission();
 
                 const dropdown = document.getElementById('notifDropdown');
                 dropdown.classList.toggle('show');
@@ -91,8 +87,30 @@ const Notifications = {
         if (!("Notification" in window)) return;
 
         if (Notification.permission === "granted") {
-            new Notification("School Discipline System", {
-                body: note.message
+            try {
+                const n = new Notification("School Discipline System", {
+                    body: note.message,
+                    icon: '/img/logo.png',
+                    tag: 'discipline-notif-' + note.id
+                });
+                n.onclick = () => {
+                    window.focus();
+                    if (note.link) window.location.hash = note.link.replace('#', '');
+                };
+            } catch (e) {
+                console.warn("Notification error (might be mobile/background constraint):", e);
+            }
+        }
+    },
+
+    requestPermission: () => {
+        if (!("Notification" in window)) return;
+        
+        if (Notification.permission === "default") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log('✅ Notification permission granted.');
+                }
             });
         }
     },

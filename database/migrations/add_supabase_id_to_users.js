@@ -1,4 +1,4 @@
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 async function addSupabaseIdColumn() {
     console.log('🔗 Checking Supabase database schema...');

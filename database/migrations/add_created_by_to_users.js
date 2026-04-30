@@ -1,4 +1,4 @@
-const db = require('./db');
+const db = require('../db');
 
 async function migrate() {
     console.log('🚀 Starting migration: Adding created_by to users table...');

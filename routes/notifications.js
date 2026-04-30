@@ -43,8 +43,15 @@ router.get('/', (req, res) => {
             }
 
             // 2. Recent Announcements (Last 7 days)
-            let annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
+            // Handle cross-database date filtering for announcements
+            let annSql;
+            if (db.isPostgres) {
+                annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
                           WHERE posted_by != ? AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'`;
+            } else {
+                annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
+                          WHERE posted_by != ? AND created_at >= datetime('now', '-7 days')`;
+            }
 
             db.all(annSql, [user_id], (err, anns) => {
                 if (!err && anns) {

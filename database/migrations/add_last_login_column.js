@@ -1,5 +1,5 @@
 // add_last_login_column.js
-const { db, isPostgres } = require('./supabase');
+const { db, isPostgres } = require('../supabase');
 
 async function runMigration() {
     try {
