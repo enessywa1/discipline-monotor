@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../database/db');
+const PushService = require('../services/push');
 
 // GET /api/discipline/students
 router.get('/students', (req, res) => {
@@ -75,6 +76,13 @@ router.post('/reports', (req, res) => {
                                 });
                             });
                         }
+
+                        // Trigger Push Notification
+                        PushService.sendToAll({
+                            title: 'New Discipline Report',
+                            body: message,
+                            url: '/dashboard.html#recent_submissions'
+                        });
                     }
                 });
             });
@@ -201,6 +209,13 @@ router.post('/statements', (req, res) => {
                                 });
                             });
                         }
+
+                        // Trigger Push Notification
+                        PushService.sendToAll({
+                            title: 'New Case Statement',
+                            body: message,
+                            url: '/dashboard.html#recent_submissions'
+                        });
                     }
                 });
             });

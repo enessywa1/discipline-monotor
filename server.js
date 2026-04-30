@@ -108,6 +108,7 @@ const notificationsRoutes = require('./routes/notifications');
 const detentionsRoutes = require('./routes/detentions');
 const suspensionsRoutes = require('./routes/suspensions');
 const studentsRoutes = require('./routes/students');
+const pushRoutes = require('./routes/push');
 
 // Mount Routes
 app.use('/api/tasks', tasksRoutes);
@@ -119,6 +120,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/detentions', detentionsRoutes);
 app.use('/api/suspensions', suspensionsRoutes);
 app.use('/api/students', studentsRoutes);
+app.use('/api/push', pushRoutes);
 
 // Diagnostic Route
 app.get('/api/debug', async (req, res) => {

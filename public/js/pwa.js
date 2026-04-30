@@ -13,6 +13,12 @@ const PWA = {
             try {
                 const reg = await navigator.serviceWorker.register('/service-worker.js');
                 console.log('✅ ServiceWorker registered with scope:', reg.scope);
+
+                // Request Push Subscription if user is logged in
+                const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
+                if (user) {
+                    PWA.subscribeToPush(reg, user.id);
+                }
             } catch (err) {
                 console.error('❌ ServiceWorker registration failed:', err);
             }
@@ -196,6 +202,48 @@ const PWA = {
                 }
             }
         };
+    },
+
+    subscribeToPush: async (registration, userId) => {
+        try {
+            // Use the public VAPID key
+            const publicKey = 'BKiPtt-32brAqbBgTQjV50EzWKk03_oovpHwSZozkXEMSB3ql1rXaM2mWyNQFwL7MteiWXbX17q9XaUXSAGRrZY';
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: PWA.urlBase64ToUint8Array(publicKey)
+            });
+
+            console.log('📡 Push Subscription successful:', subscription);
+
+            // Send subscription to server
+            await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscription: subscription,
+                    user_id: userId
+                })
+            });
+
+        } catch (err) {
+            if (Notification.permission === 'denied') {
+                console.warn('❌ Push permission denied by user.');
+            } else {
+                console.error('❌ Push subscription error:', err);
+            }
+        }
+    },
+
+    urlBase64ToUint8Array: (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     }
 };
 

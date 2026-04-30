@@ -88,3 +88,55 @@ self.addEventListener('fetch', (e) => {
         })
     );
 });
+// --- Push Notifications ---
+
+self.addEventListener('push', (event) => {
+    if (!event.data) return;
+
+    try {
+        const data = event.data.json();
+        const options = {
+            body: data.body,
+            icon: '/img/logo.png',
+            badge: '/img/app-icon.png',
+            data: {
+                url: data.url || '/dashboard.html'
+            },
+            vibrate: [100, 50, 100],
+            actions: [
+                { action: 'open', title: 'View Now' },
+                { action: 'close', title: 'Dismiss' }
+            ]
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(data.title || 'School Discipline System', options)
+        );
+    } catch (err) {
+        console.error('Push event error:', err);
+    }
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    if (event.action === 'close') return;
+
+    const urlToOpen = event.notification.data.url || '/dashboard.html';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            // If tab already open, focus it
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                if (client.url.includes(urlToOpen) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Else open new window
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
+});
