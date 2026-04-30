@@ -27,44 +27,31 @@ app.use((req, res, next) => {
     next();
 });
 
-// Socket.io Connection (Graceful fallback)
+// Socket.io Connection
 if (io) {
     io.on('connection', (socket) => {
         console.log('New client connected');
-
-        // Send boot time to client for live reload detection
-        socket.emit('server_init', { bootTime: SERVER_BOOT_TIME });
-
         socket.on('disconnect', () => {
             console.log('Client disconnected');
         });
     });
 }
 
-// Share io instance with routes safely
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
-
 // ... Middleware ... 
 
-app.use(helmet({
-    contentSecurityPolicy: false, // Temporarily disable CSP to restore all button functionality
-}));
-app.set('etag', 'strong'); // Enable strong etags for better caching
-app.use(compression()); // Compress all responses
-app.use(cors());
-// Increased body size limit to support base64 images
-app.use(bodyParser.json({ limit: '10mb' }));
+// --- Middleware Pipeline ---
+app.use(helmet({ contentSecurityPolicy: false })); // Security Headers
+app.use(compression());                            // Gzip Compression
+app.use(cors());                                   // Cross-Origin Support
+app.use(bodyParser.json({ limit: '10mb' }));       // JSON Parser
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), {
-    maxAge: '1d', // Cache static assets for 1 day
+    maxAge: '1d',
     etag: true
 }));
 
-// Trust proxy for Render/Railway (required for rate limiting)
-app.set('trust proxy', 1);
+app.set('etag', 'strong');
+app.set('trust proxy', 1); // Trust proxy for rate limiting (Render/Vercel)
 
 
 // Session Configuration
@@ -160,26 +147,21 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     username = (username || '').trim().toLowerCase();
     password = (password || '').trim();
 
-    console.log(`🔑 [${new Date().toISOString()}] Login attempt for: ${username}`);
-    console.time(`LoginTotal-${username}`);
+    console.log(`🔑 Login attempt for: ${username}`);
 
-    // Set a safety timeout for the entire request
     const loginTimeout = setTimeout(() => {
         if (!res.headersSent) {
             console.error(`🕒 Login timed out for: ${username}`);
             res.status(504).json({ error: "Login request timed out. Please try again." });
         }
-    }, 15000); // Increased to 15s to allow for cold starts
+    }, 15000);
 
     res.on('finish', () => {
         clearTimeout(loginTimeout);
-        console.timeEnd(`LoginTotal-${username}`);
     });
 
     try {
-        console.time(`DbLookup-${username}`);
         const localUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
-        console.timeEnd(`DbLookup-${username}`);
 
         if (!localUser) {
             console.log(`❌ Login failed: User '${username}' not found.`);
@@ -189,7 +171,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         // 1. Try Supabase Auth first
         if (supabaseAuth) {
             try {
-                console.time(`SupabaseAuth-${username}`);
                 const sanitizedUsername = username.replace(/\s+/g, '_');
                 const email = localUser.email || `${sanitizedUsername}@system.local`;
 
@@ -197,7 +178,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                     email: email,
                     password: password,
                 });
-                console.timeEnd(`SupabaseAuth-${username}`);
 
                 if (data && data.user) {
                     console.log(`✅ Supabase login successful for: ${username}`);
@@ -219,14 +199,11 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                 }
             } catch (supaErr) {
                 console.error("❌ Supabase Auth Exception:", supaErr.message);
-                console.timeEnd(`SupabaseAuth-${username}`);
             }
         }
 
         // 2. Fallback to local database authentication
-        console.time(`LocalBcrypt-${username}`);
         const match = await bcrypt.compare(password, localUser.password_hash);
-        console.timeEnd(`LocalBcrypt-${username}`);
 
         if (match) {
             console.log(`✅ Login successful (Local) for: ${username}`);
