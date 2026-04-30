@@ -47,9 +47,10 @@ router.post('/reports', (req, res) => {
 
             const reportId = this.lastID;
 
-            // Asynchronous Notification Seeding
+            // Asynchronous Notification Seeding (ADMINS ONLY for reports)
             setImmediate(() => {
-                db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                const placeholders = ADMIN_ROLES.map(() => '?').join(',');
+                db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, ADMIN_ROLES, (userErr, users) => {
                     if (!userErr && users && users.length > 0) {
                         const title = 'New Report';
                         const message = `New Discipline Report for ${student_name}`;
@@ -77,12 +78,12 @@ router.post('/reports', (req, res) => {
                             });
                         }
 
-                        // Trigger Push Notification
+                        // Trigger Push Notification (ADMINS ONLY)
                         PushService.sendToAll({
                             title: 'New Discipline Report',
                             body: message,
                             url: '/dashboard.html#recent_submissions'
-                        });
+                        }, ADMIN_ROLES);
                     }
                 });
             });
@@ -94,10 +95,11 @@ router.post('/reports', (req, res) => {
 });
 
 // Helper for Admin Check
+const ADMIN_ROLES = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+
 const isAdmin = (user) => {
     if (!user || !user.role) return false;
-    const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
-    return adminRoles.includes(user.role.toLowerCase());
+    return ADMIN_ROLES.includes(user.role.toLowerCase());
 };
 
 // GET /api/discipline/reports
@@ -182,9 +184,10 @@ router.post('/statements', (req, res) => {
 
             const statementId = this.lastID;
 
-            // Asynchronous Notification Seeding
+            // Asynchronous Notification Seeding (ADMINS ONLY for statements)
             setImmediate(() => {
-                db.all(`SELECT id FROM users`, [], (userErr, users) => {
+                const placeholders = ADMIN_ROLES.map(() => '?').join(',');
+                db.all(`SELECT id FROM users WHERE LOWER(role) IN (${placeholders})`, ADMIN_ROLES, (userErr, users) => {
                     if (!userErr && users && users.length > 0) {
                         const title = 'New Statement';
                         const message = `New Case Statement for ${student_name}`;
@@ -210,12 +213,12 @@ router.post('/statements', (req, res) => {
                             });
                         }
 
-                        // Trigger Push Notification
+                        // Trigger Push Notification (ADMINS ONLY)
                         PushService.sendToAll({
                             title: 'New Case Statement',
                             body: message,
                             url: '/dashboard.html#recent_submissions'
-                        });
+                        }, ADMIN_ROLES);
                     }
                 });
             });

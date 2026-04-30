@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../database/db');
+const PushService = require('../services/push');
 
 // GET /api/announcements
 router.get('/', (req, res) => {
@@ -33,6 +34,14 @@ router.post('/', (req, res) => {
         [title, content, visibility || 'All', posted_by, expiresAt],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+            
+            // Trigger Push Notification for everyone
+            PushService.sendToAll({
+                title: 'New Announcement: ' + title,
+                body: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+                url: '/dashboard.html#announcements'
+            });
+
             if (req.io) req.io.emit('dashboard_update', { type: 'announcement', action: 'create' });
             res.json({ success: true, id: this.lastID });
         }

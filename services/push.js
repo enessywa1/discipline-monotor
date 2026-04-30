@@ -15,14 +15,31 @@ if (publicKey && privateKey) {
 
 const PushService = {
     /**
-     * Send a push notification to all staff or specific roles
+     * Send a push notification to users, optionally filtered by role
      */
-    sendToAll: async (payload) => {
+    sendToAll: async (payload, roleFilter = null) => {
         try {
-            // 1. Fetch all active subscriptions
-            const sql = `SELECT * FROM push_subscriptions`;
+            // 1. Fetch active subscriptions, optionally filtered by user role
+            let sql = `
+                SELECT ps.*, u.role 
+                FROM push_subscriptions ps
+                JOIN users u ON ps.user_id = u.id
+            `;
+            const params = [];
+
+            if (roleFilter) {
+                if (Array.isArray(roleFilter)) {
+                    const placeholders = roleFilter.map(() => '?').join(',');
+                    sql += ` WHERE LOWER(u.role) IN (${placeholders})`;
+                    roleFilter.forEach(r => params.push(r.toLowerCase()));
+                } else {
+                    sql += ` WHERE LOWER(u.role) = ?`;
+                    params.push(roleFilter.toLowerCase());
+                }
+            }
+
             const subscriptions = await new Promise((resolve, reject) => {
-                db.all(sql, [], (err, rows) => {
+                db.all(sql, params, (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
                 });
