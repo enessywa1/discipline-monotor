@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT NOT NULL,
     allocation TEXT,
     phone_number TEXT,
+    created_by INTEGER REFERENCES users(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

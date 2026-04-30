@@ -18,14 +18,15 @@ const { supabaseAdmin } = require('../database/supabase');
 // POST /api/users - Create new user (Admin only)
 router.post('/', async (req, res) => {
     const { username, password, role, full_name, allocation, phone_number, email } = req.body;
+    const createdBy = req.session.user ? req.session.user.id : null;
 
     try {
         const saltRounds = 10;
         const password_hash = await bcrypt.hash(password, saltRounds);
 
         // 1. Create in Local DB
-        db.run(`INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)`,
-            [username, password_hash, role, full_name, allocation, phone_number],
+        db.run(`INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [username, password_hash, role, full_name, allocation, phone_number, createdBy],
             async function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE')) return res.status(400).json({ error: "Username already exists" });
