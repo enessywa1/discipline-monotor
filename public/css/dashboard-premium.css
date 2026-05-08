@@ -476,3 +476,141 @@
         font-size: 1.8rem;
     }
 }
+
+/* 7. Commenting Mechanism */
+.comments-section {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fdfdfd;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    display: none; /* Shown when expanded */
+}
+
+.submission-card.expanded .comments-section {
+    display: block;
+    animation: commentFadeIn 0.3s ease-out;
+}
+
+.comment-item {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 12px;
+}
+
+.comment-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #e2e8f0;
+    border-radius: 3px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.comment-user {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+}
+
+.comment-role {
+    font-size: 0.7rem;
+    color: #718096;
+    background: #edf2f7;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.comment-date {
+    font-size: 0.7rem;
+    color: #a0aec0;
+}
+
+.comment-text {
+    font-size: 0.9rem;
+    color: #2d3748;
+    line-height: 1.5;
+}
+
+.comment-reply-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 0;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+
+.comment-reply-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.replies-container {
+    margin-left: 15px;
+    margin-top: 8px;
+    border-left: 1px dashed #cbd5e0;
+    padding-left: 12px;
+}
+
+.comment-form {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.comment-input-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.comment-input {
+    flex-grow: 1;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.comment-submit-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.comment-submit-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.02);
+}
+
+@keyframes commentFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}

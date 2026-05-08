@@ -98,11 +98,11 @@ const RecentSubmissions = {
             });
         }
 
-        // Global Action Listener for Edit/Delete/Refresh
+        // Global Action Listener for Edit/Delete/Refresh/Comment/Reply
         const mainContainer = document.getElementById('recentSubmissionsContainer');
         if (mainContainer) {
             mainContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('button');
+                const btn = e.target.closest('button, [data-action]');
                 if (!btn) return;
 
                 const action = btn.dataset.action;
@@ -119,14 +119,29 @@ const RecentSubmissions = {
                     e.stopPropagation();
                     RecentSubmissions.editSubmission(id, type);
                 }
+                if (action === 'reply-comment') {
+                    e.stopPropagation();
+                    RecentSubmissions.replyComment(btn.dataset.id, btn.dataset.userName, btn.closest('.submission-card'));
+                }
+            });
+
+            // Handle Comment Form Submission
+            mainContainer.addEventListener('submit', (e) => {
+                if (e.target.classList.contains('comment-form')) {
+                    e.preventDefault();
+                    RecentSubmissions.postComment(e);
+                }
             });
 
             // Card Click Listener for expansion
             mainContainer.addEventListener('click', (e) => {
                 const card = e.target.closest('.submission-card');
-                const btn = e.target.closest('button, .btn-icon');
+                const btn = e.target.closest('button, .btn-icon, .comment-form, input');
                 if (card && !btn) {
                     card.classList.toggle('expanded');
+                    if (card.classList.contains('expanded')) {
+                        RecentSubmissions.loadComments(card.dataset.id, card.dataset.type, card);
+                    }
                 }
             });
         }
@@ -276,6 +291,21 @@ const RecentSubmissions = {
                             <div class="submission-description">${item.description ? `<div class="submission-description-text">${App.formatDescription(item.description)}</div>` : ''}</div>
                             <div class="submission-action"><label>Outcome:</label> <span>${item.action || 'Pending'}</span></div>
                         </div>
+                        
+                        <!-- Comments Section -->
+                        <div class="comments-section" id="comments-${item.type}-${item.id}">
+                            <div class="comments-list">
+                                <p style="font-size: 0.8rem; color: #aaa; text-align: center;">Loading discussion...</p>
+                            </div>
+                            <form class="comment-form" data-id="${item.id}" data-type="${item.type}">
+                                <div class="comment-input-wrapper">
+                                    <input type="text" class="comment-input" placeholder="Write a comment or reply..." required>
+                                    <input type="hidden" class="parent-id" value="">
+                                    <button type="submit" class="comment-submit-btn">Post</button>
+                                </div>
+                            </form>
+                        </div>
+
                         ${isDM ? `
                         <div class="submission-actions" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
                             <button class="btn-icon" data-action="edit-submission" data-id="${item.id}" data-type="${item.type}" title="Edit">
@@ -290,6 +320,121 @@ const RecentSubmissions = {
                 `}).join('')}
             </div>
         `;
+    },
+
+    loadComments: async (id, type, cardElement) => {
+        const commentsList = cardElement.querySelector('.comments-list');
+        if (!commentsList) return;
+
+        try {
+            const res = await fetch(`/api/discipline/comments/${type}/${id}`);
+            const data = await res.json();
+
+            if (data.success) {
+                RecentSubmissions.renderComments(data.comments, commentsList, id, type);
+            }
+        } catch (e) {
+            console.error('Error loading comments:', e);
+            commentsList.innerHTML = '<p style="font-size: 0.8rem; color: red;">Failed to load comments.</p>';
+        }
+    },
+
+    renderComments: (comments, container, caseId, caseType) => {
+        if (!comments || comments.length === 0) {
+            container.innerHTML = '<p style="font-size: 0.8rem; color: #aaa; text-align: center; padding: 10px;">No comments yet. Be the first to start the discussion.</p>';
+            return;
+        }
+
+        // Map comments by ID for easy nesting
+        const commentMap = {};
+        comments.forEach(c => {
+            c.replies = [];
+            commentMap[c.id] = c;
+        });
+
+        const rootComments = [];
+        comments.forEach(c => {
+            if (c.parent_id && commentMap[c.parent_id]) {
+                commentMap[c.parent_id].replies.push(c);
+            } else {
+                rootComments.push(c);
+            }
+        });
+
+        const buildHtml = (commentList) => {
+            return commentList.map(c => `
+                <div class="comment-item" id="comment-${c.id}">
+                    <div class="comment-header">
+                        <div>
+                            <span class="comment-user">${c.user_name}</span>
+                            <span class="comment-role">${c.user_role}</span>
+                        </div>
+                        <span class="comment-date">${new Date(c.created_at).toLocaleString()}</span>
+                    </div>
+                    <div class="comment-text">${c.comment_text}</div>
+                    <button class="comment-reply-btn" data-action="reply-comment" data-id="${c.id}" data-user-name="${c.user_name}">Reply</button>
+                    ${c.replies.length > 0 ? `<div class="replies-container">${buildHtml(c.replies)}</div>` : ''}
+                </div>
+            `).join('');
+        };
+
+        container.innerHTML = buildHtml(rootComments);
+    },
+
+    replyComment: (commentId, userName, cardElement) => {
+        const input = cardElement.querySelector('.comment-input');
+        const parentIdInput = cardElement.querySelector('.parent-id');
+        if (input && parentIdInput) {
+            input.value = `@${userName} `;
+            parentIdInput.value = commentId;
+            input.focus();
+        }
+    },
+
+    postComment: async (e) => {
+        const form = e.target;
+        const input = form.querySelector('.comment-input');
+        const parentIdInput = form.querySelector('.parent-id');
+        const btn = form.querySelector('.comment-submit-btn');
+        
+        const caseId = form.dataset.id;
+        const caseType = form.dataset.type;
+        const text = input.value.trim();
+        const parentId = parentIdInput.value;
+
+        if (!text) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i classbx bx-loader-alt bx-spin></i>';
+
+        try {
+            const res = await fetch('/api/discipline/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    case_id: caseId,
+                    case_type: caseType,
+                    comment_text: text,
+                    parent_id: parentId || null
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                input.value = '';
+                parentIdInput.value = '';
+                // Reload comments for this card
+                const card = form.closest('.submission-card');
+                RecentSubmissions.loadComments(caseId, caseType, card);
+            } else {
+                alert('Error posting comment: ' + data.error);
+            }
+        } catch (err) {
+            alert('Failed to post comment.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Post';
+        }
     },
 
     deleteSubmission: async (id, type, name) => {

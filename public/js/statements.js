@@ -43,6 +43,7 @@ const Statements = {
                             <select name="offence_type" required style="width: 100%; padding: 10px;">
                                 <option value="">Select Offence...</option>
                                 <option value="Bullying">Bullying</option>
+                                <option value="Improper Association">Improper Association</option>
                                 <option value="Theft">Theft</option>
                                 <option value="Vandalism">Vandalism (School/Private Property)</option>
                                 <option value="Fighting">Fighting</option>

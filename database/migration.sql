@@ -142,6 +142,17 @@ CREATE TABLE IF NOT EXISTS detentions (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 13. Case Comments Table
+CREATE TABLE IF NOT EXISTS case_comments (
+    id SERIAL PRIMARY KEY,
+    case_id INTEGER NOT NULL,
+    case_type TEXT NOT NULL, -- 'report' or 'statement'
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    comment_text TEXT NOT NULL,
+    parent_id INTEGER REFERENCES case_comments(id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
 CREATE INDEX IF NOT EXISTS idx_students_class ON students(class);
@@ -154,6 +165,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_detentions_status ON detentions(status);
 CREATE INDEX IF NOT EXISTS idx_suspensions_type ON suspensions_expulsions(type);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id) WHERE is_read = FALSE;
+CREATE INDEX IF NOT EXISTS idx_case_comments_case ON case_comments(case_id, case_type);
 
 -- Seed Initial Admin User (password: admin123)
 -- Hash: $2b$10$C7.u/lP6Tq4A/57f/s6.6uVz7Y7Xy7Xy7Xy7Xy7Xy7Xy7Xy7Xy7Xy

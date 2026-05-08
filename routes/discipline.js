@@ -408,4 +408,45 @@ router.delete('/statements/:id', isDM, (req, res) => {
     });
 });
 
+// --- Commenting System ---
+
+// GET comments for a case
+router.get('/comments/:type/:id', (req, res) => {
+    const { type, id } = req.params;
+    db.all(
+        `SELECT c.*, u.full_name as user_name, u.role as user_role 
+         FROM case_comments c 
+         JOIN users u ON c.user_id = u.id 
+         WHERE c.case_id = ? AND c.case_type = ? 
+         ORDER BY c.created_at ASC`,
+        [id, type],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, comments: rows });
+        }
+    );
+});
+
+// POST a new comment or reply
+router.post('/comments', (req, res) => {
+    const { case_id, case_type, comment_text, parent_id } = req.body;
+    const user = req.session.user;
+
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+    db.run(
+        `INSERT INTO case_comments (case_id, case_type, user_id, comment_text, parent_id) VALUES (?, ?, ?, ?, ?)`,
+        [case_id, case_type, user.id, comment_text, parent_id || null],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            const commentId = this.lastID;
+            
+            if (req.io) req.io.emit('dashboard_update', { type: 'comment', action: 'create', case_id, case_type });
+            
+            res.json({ success: true, commentId });
+        }
+    );
+});
+
 module.exports = router;
