@@ -159,7 +159,14 @@ const Announcements = {
     },
 
     delete: async (id) => {
-        if (!confirm('Are you sure you want to delete this announcement?')) return;
+        const confirmed = await App.confirm({
+            title: 'Delete Announcement',
+            message: 'Are you sure you want to delete this announcement?',
+            confirmText: 'Delete',
+            kind: 'danger'
+        });
+
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`/api/announcements/${id}`, {

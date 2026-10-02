@@ -44,4 +44,11 @@ router.post('/subscribe', (req, res) => {
     }
 });
 
+// GET /api/push/key - Get the public VAPID key
+router.get('/key', (req, res) => {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    if (!publicKey) return res.status(500).json({ error: "VAPID keys not configured on server" });
+    res.json({ publicKey });
+});
+
 module.exports = router;

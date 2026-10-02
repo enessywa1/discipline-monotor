@@ -1,5 +1,4 @@
 // pwa.js - Handles Service Worker Registration, Offline State, and Background Sync Queue
-
 const PWA = {
     db: null,
     isOnline: window.navigator.onLine,
@@ -30,11 +29,8 @@ const PWA = {
         
         // Initial setup
         PWA.updateOnlineStatus();
-
-        // Setup Fetch Interceptor
         PWA.overrideFetch();
 
-        // Check if there are queued requests to sync
         if (PWA.isOnline) {
             PWA.syncQueue();
         }
@@ -53,18 +49,12 @@ const PWA = {
                     response = await PWA.safeFetch(input, init);
                 }
 
-                // Global 401 Interceptor: If session expires back-end, force front-end to log out
                 if (response && response.status === 401 && typeof Auth !== 'undefined') {
                     const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-                    // Only force logout for explicit user actions, not background poller
                     if (!urlStr.includes('/api/login') && !urlStr.includes('/api/notifications')) {
-                        console.warn("🔒 Session expired for URL:", urlStr, "Forcing logout...");
                         Auth.logout();
-                    } else if (urlStr.includes('/api/notifications')) {
-                        console.log("📍 Background notification poll unauthorized (session likely reset).");
                     }
                 }
-
                 return response;
             };
         }
@@ -73,7 +63,7 @@ const PWA = {
     initDB: () => {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open('DisciplinePWA', 1);
-            request.onerror = (e) => reject('IndexedDB error');
+            request.onerror = () => reject('IndexedDB error');
             request.onsuccess = (e) => {
                 PWA.db = e.target.result;
                 resolve();
@@ -90,43 +80,28 @@ const PWA = {
     updateOnlineStatus: () => {
         PWA.isOnline = window.navigator.onLine;
         const badge = document.getElementById('offline-badge');
-        
         if (badge) {
             if (PWA.isOnline) {
                 badge.style.display = 'none';
-                badge.innerHTML = '<i class="bx bx-wifi"></i> Online';
-                badge.style.background = '#4caf50';
-                
-                // Show a brief toast or keep hidden
-                PWA.syncQueue(); // Attempt to sync when back online
+                PWA.syncQueue();
             } else {
                 badge.style.display = 'flex';
-                badge.innerHTML = '<i class="bx bx-wifi-off"></i> Offline (Saving Locally)';
-                badge.style.background = '#d32f2f';
+                badge.innerHTML = '<i class="bx bx-wifi-off"></i> Offline Mode';
             }
         }
     },
     
-    // Core function to replace standard fetch() for POST/PUT/DELETE
     safeFetch: async (url, options = {}) => {
         try {
-            // Try network first
             const response = await window.originalFetch(url, options);
-            if (response && response.status === 401) return response; // Pass 401 to watchdog
-            if (!response.ok) throw new Error('API Error');
+            if (!response.ok && response.status !== 401) throw new Error('API Error');
             return response;
         } catch (error) {
-            // If offline, or network fails, queue the request
-            if (!PWA.isOnline || error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                console.warn('Network offline or failed. Queuing request for:', url);
-                
-                // Save to IndexedDB
+            if (!PWA.isOnline || error.message.includes('Failed to fetch')) {
                 await PWA.queueRequest(url, options);
-                
-                // Return a fake Response object to trick the frontend UI into thinking it saved
                 return { 
                     ok: true, 
-                    json: async () => ({ success: true, queued: true, warning: 'Saved locally for offline mode.' }) 
+                    json: async () => ({ success: true, queued: true, message: 'Stored offline.' }) 
                 };
             }
             throw error;
@@ -135,33 +110,23 @@ const PWA = {
     
     queueRequest: (url, options) => {
         return new Promise((resolve, reject) => {
-            if (!PWA.db) return reject('DB not initialized');
             const transaction = PWA.db.transaction(['sync-queue'], 'readwrite');
             const store = transaction.objectStore('sync-queue');
-            
-            // Extract useful JSON payload if possible
-            let payload = options.body;
-            if (typeof payload === 'string' && payload.startsWith('{')) {
-                try { payload = JSON.parse(payload); } catch(e) {}
-            }
-
             const reqStr = {
                 url,
-                method: options.method || 'GET',
+                method: options.method || 'POST',
                 headers: options.headers || {},
-                body: payload,
+                body: options.body,
                 timestamp: new Date().toISOString()
             };
-            
             const request = store.add(reqStr);
             request.onsuccess = () => resolve();
-            request.onerror = (e) => reject();
+            request.onerror = () => reject();
         });
     },
     
     syncQueue: async () => {
         if (!PWA.db || !PWA.isOnline) return;
-        
         const transaction = PWA.db.transaction(['sync-queue'], 'readonly');
         const store = transaction.objectStore('sync-queue');
         const getAll = store.getAll();
@@ -169,54 +134,43 @@ const PWA = {
         getAll.onsuccess = async (e) => {
             const queue = e.target.result;
             if (queue.length === 0) return;
-            
-            console.log(`🔄 Attempting to sync ${queue.length} offline requests...`);
-            
-            let syncedCount = 0;
             for (const item of queue) {
                 try {
-                    const ops = {
+                    const res = await fetch(item.url, {
                         method: item.method,
                         headers: item.headers,
-                    };
-                    if (item.body) ops.body = JSON.stringify(item.body);
-                    
-                    const res = await fetch(item.url, ops);
+                        body: item.body
+                    });
                     if (res.ok) {
-                        // Success - remove from queue
                         const delTx = PWA.db.transaction(['sync-queue'], 'readwrite');
                         delTx.objectStore('sync-queue').delete(item.id);
-                        syncedCount++;
                     }
-                } catch (err) {
-                    console.error('Failed to sync item:', item, err);
-                    break;
-                }
-            }
-            
-            if (syncedCount > 0) {
-                // Refresh the views if we successfully synced items
-                if (typeof App !== 'undefined' && App.renderView) {
-                    const hash = window.location.hash.substring(1) || 'dashboard';
-                    App.renderView(hash);
-                }
+                } catch (err) { break; }
             }
         };
     },
 
     subscribeToPush: async (registration, userId) => {
         try {
-            // Use the public VAPID key
-            const publicKey = 'BKiPtt-32brAqbBgTQjV50EzWKk03_oovpHwSZozkXEMSB3ql1rXaM2mWyNQFwL7MteiWXbX17q9XaUXSAGRrZY';
+            // 1. Fetch the public key from the server (instead of hardcoding)
+            const keyRes = await fetch('/api/push/key');
+            const { publicKey } = await keyRes.json();
+            
+            if (!publicKey) throw new Error("Public key not found");
 
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: PWA.urlBase64ToUint8Array(publicKey)
-            });
+            // 2. Check existing subscription
+            let subscription = await registration.pushManager.getSubscription();
+            
+            // 3. If no subscription, or it's different, re-subscribe
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: PWA.urlBase64ToUint8Array(publicKey)
+                });
+                console.log('✨ New Push Subscription created');
+            }
 
-            console.log('📡 Push Subscription successful:', subscription);
-
-            // Send subscription to server
+            // 4. Always sync with server to ensure user_id is up to date for this device
             await fetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -227,11 +181,7 @@ const PWA = {
             });
 
         } catch (err) {
-            if (Notification.permission === 'denied') {
-                console.warn('❌ Push permission denied by user.');
-            } else {
-                console.error('❌ Push subscription error:', err);
-            }
+            console.warn('⚠️ Push subscription issue:', err.message);
         }
     },
 

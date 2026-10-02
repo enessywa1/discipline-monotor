@@ -58,9 +58,13 @@ router.post('/reports', (req, res) => {
                         const link = '#recent_submissions';
 
                         if (db.isPostgres) {
-                            // Postgres batch insert
-                            const values = users.map(u => `(${u.id}, '${title}', '${message}', '${type}', '${link}')`).join(',');
-                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${values}`, (err) => {
+                            const flatParams = [];
+                            const placeholders = users.map((u, idx) => {
+                                flatParams.push(u.id, title, message, type, link);
+                                const base = idx * 5;
+                                return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+                            }).join(',');
+                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${placeholders}`, flatParams, (err) => {
                                 if (err) console.error("❌ Postgres Notification Batch Error:", err.message);
                             });
                         } else {
@@ -195,8 +199,13 @@ router.post('/statements', (req, res) => {
                         const link = '#recent_submissions';
 
                         if (db.isPostgres) {
-                            const values = users.map(u => `(${u.id}, '${title}', '${message}', '${type}', '${link}')`).join(',');
-                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${values}`, (err) => {
+                            const flatParams = [];
+                            const placeholders = users.map((u, idx) => {
+                                flatParams.push(u.id, title, message, type, link);
+                                const base = idx * 5;
+                                return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+                            }).join(',');
+                            db.query(`INSERT INTO notifications (user_id, title, message, type, link) VALUES ${placeholders}`, flatParams, (err) => {
                                 if (err) console.error("❌ Postgres Notification Batch Error:", err.message);
                             });
                         } else {

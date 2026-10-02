@@ -11,6 +11,55 @@ const Utils = {
 };
 
 const App = {
+    confirm: ({ title = 'Confirm', message = 'Are you sure?', confirmText = 'Confirm', cancelText = 'Cancel', kind = 'default' } = {}) => {
+        return new Promise((resolve) => {
+            const accent = kind === 'danger' ? '#dc2626' : kind === 'success' ? '#16a34a' : '#7c3aed';
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="modal-content" style="max-width: 440px; width: min(92vw, 440px); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25); background: white;">
+                    <div class="modal-header" style="padding: 22px 22px 16px; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                        <h3 style="margin:0; color: var(--primary-dark); font-size: 1.2rem;">${title}</h3>
+                        <button type="button" class="modal-close" style="font-size: 1.4rem;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 22px; background: #f8fafc;">
+                        <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom: 18px;">
+                            <div style="width:52px; height:52px; border-radius:14px; background: ${kind === 'danger' ? 'rgba(239,68,68,0.12)' : kind === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(124,58,237,0.12)'}; color:${accent}; display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;">
+                                <i class='bx ${kind === 'danger' ? 'bx-trash' : kind === 'success' ? 'bx-check-circle' : 'bx-help-circle'}'></i>
+                            </div>
+                            <div>
+                                <p style="margin:0; font-size: 1.02rem; color: #0f172a; line-height:1.6;">${message}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                            <button type="button" class="btn" data-action="cancel" style="background:#f1f5f9; color:#475569;">${cancelText}</button>
+                            <button type="button" class="btn btn-primary" data-action="confirm" style="background:${accent}; border-color:${accent};">${confirmText}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            const close = () => {
+                overlay.remove();
+                resolve(false);
+            };
+
+            const confirmAction = () => {
+                overlay.remove();
+                resolve(true);
+            };
+
+            overlay.querySelector('[data-action="cancel"]').addEventListener('click', close);
+            overlay.querySelector('[data-action="confirm"]').addEventListener('click', confirmAction);
+            overlay.querySelector('.modal-close').addEventListener('click', close);
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) close();
+            });
+        });
+    },
     init: () => {
         App.setupNavigation();
         App.setupSidebar();

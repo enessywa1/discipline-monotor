@@ -191,7 +191,14 @@ const Detentions = {
     },
 
     clearOneDay: async (id) => {
-        if (!confirm('Clear one day for this student?')) return;
+        const confirmed = await App.confirm({
+            title: 'Clear One Day',
+            message: 'Clear one day for this student?',
+            confirmText: 'Clear',
+            kind: 'success'
+        });
+
+        if (!confirmed) return;
         
         // Find the button if it exists in the DOM to disable it
         const btn = document.querySelector(`.clear-btn[data-id="${id}"]`);

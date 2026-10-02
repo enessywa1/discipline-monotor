@@ -30,23 +30,25 @@ router.post('/', (req, res) => {
 
 // POST /api/students/upload-photo-by-name - Batch upload handler
 router.post('/upload-photo-by-name', (req, res) => {
-    const { name, picture_data } = req.body;
+    const { name, picture_data, class: batchClass } = req.body;
     if (!name || !picture_data) {
         return res.status(400).json({ success: false, error: 'Name and picture_data are required.' });
     }
 
-    db.get(`SELECT id FROM students WHERE name = ?`, [name], (err, row) => {
+    db.get(`SELECT id, class FROM students WHERE name = ?`, [name], (err, row) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
 
         if (row) {
-            db.run(`UPDATE students SET picture_data = ? WHERE id = ?`, [picture_data, row.id], function (err2) {
+            const assignedClass = batchClass && batchClass.trim() ? batchClass.trim() : row.class || 'Unassigned';
+            db.run(`UPDATE students SET picture_data = ?, class = ? WHERE id = ?`, [picture_data, assignedClass, row.id], function (err2) {
                 if (err2) return res.status(500).json({ success: false, error: err2.message });
-                res.json({ success: true, action: 'updated', id: row.id });
+                res.json({ success: true, action: 'updated', id: row.id, class: assignedClass });
             });
         } else {
-            db.run(`INSERT INTO students (name, class, gender, picture_data) VALUES (?, 'Unassigned', 'N/A', ?)`, [name, picture_data], function (err2) {
+            const assignedClass = batchClass && batchClass.trim() ? batchClass.trim() : 'Unassigned';
+            db.run(`INSERT INTO students (name, class, gender, picture_data) VALUES (?, ?, 'N/A', ?)`, [name, assignedClass, picture_data], function (err2) {
                 if (err2) return res.status(500).json({ success: false, error: err2.message });
-                res.json({ success: true, action: 'inserted', id: this.lastID || 'postgres_inserted' });
+                res.json({ success: true, action: 'inserted', id: this.lastID || 'postgres_inserted', class: assignedClass });
             });
         }
     });

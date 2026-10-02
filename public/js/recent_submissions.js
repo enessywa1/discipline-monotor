@@ -438,7 +438,14 @@ const RecentSubmissions = {
     },
 
     deleteSubmission: async (id, type, name) => {
-        if (!confirm(`Are you sure you want to delete this ${type} for ${name}? This action cannot be undone.`)) return;
+        const confirmed = await App.confirm({
+            title: 'Delete Record',
+            message: `Are you sure you want to delete this ${type} for ${name}? This action cannot be undone.`,
+            confirmText: 'Delete',
+            kind: 'danger'
+        });
+
+        if (!confirmed) return;
 
         try {
             const endpoint = `/api/discipline/${type}s/${id}`;

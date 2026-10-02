@@ -18,6 +18,91 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+function ensureNotificationSchema() {
+    const tableSql = `
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL DEFAULT 'Notification',
+            message TEXT NOT NULL,
+            type TEXT DEFAULT 'info',
+            link TEXT,
+            is_read INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `;
+
+    const pushSql = `
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            endpoint TEXT NOT NULL UNIQUE,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `;
+
+    const ensureColumn = async (tableName, columnName, columnDef, alterSql) => {
+        try {
+            if (db.isPostgres) {
+                const result = await db.get(
+                    `SELECT column_name
+                     FROM information_schema.columns
+                     WHERE table_name = ? AND column_name = ?`,
+                    [tableName, columnName]
+                );
+
+                if (!result) {
+                    await db.run(alterSql);
+                    console.log(`✅ Added ${tableName}.${columnName}`);
+                }
+                return;
+            }
+
+            const columns = await db.all(`PRAGMA table_info(${tableName})`);
+            const exists = Array.isArray(columns) && columns.some((col) => col.name === columnName);
+
+            if (!exists) {
+                await db.run(alterSql);
+                console.log(`✅ Added ${tableName}.${columnName}`);
+            }
+        } catch (error) {
+            console.warn(`⚠️ Could not verify ${tableName}.${columnName}:`, error.message);
+        }
+    };
+
+    db.run(tableSql, (err) => {
+        if (err) {
+            console.error('❌ Error creating notifications table:', err.message);
+        } else {
+            console.log('✅ notifications table ready');
+        }
+    });
+
+    db.run(pushSql, (err) => {
+        if (err) {
+            console.error('❌ Error creating push_subscriptions table:', err.message);
+        } else {
+            console.log('✅ push_subscriptions table ready');
+        }
+    });
+
+    if (db.isPostgres) {
+        db.run('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT DEFAULT \'Notification\'', (err) => {
+            if (err) console.error('❌ Error ensuring notifications.title:', err.message);
+        });
+        db.run('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS link TEXT', (err) => {
+            if (err) console.error('❌ Error ensuring notifications.link:', err.message);
+        });
+    } else {
+        ensureColumn('notifications', 'title', 'TEXT DEFAULT \'Notification\'', "ALTER TABLE notifications ADD COLUMN title TEXT DEFAULT 'Notification'");
+        ensureColumn('notifications', 'link', 'TEXT', 'ALTER TABLE notifications ADD COLUMN link TEXT');
+    }
+}
+
 const PORT = process.env.PORT || 3000;
 const SERVER_BOOT_TIME = Date.now();
 

@@ -48,6 +48,22 @@ router.post('/', (req, res) => {
     );
 });
 
+// UPDATE /api/announcements/:id
+router.put('/:id', (req, res) => {
+    const { title, content, visibility } = req.body;
+    const { id } = req.params;
+
+    db.run(
+        `UPDATE announcements SET title = ?, content = ?, visibility = ? WHERE id = ?`,
+        [title, content, visibility, id],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (req.io) req.io.emit('dashboard_update', { type: 'announcement', action: 'update' });
+            res.json({ success: true, changes: this.changes });
+        }
+    );
+});
+
 // DELETE /api/announcements/:id
 router.delete('/:id', (req, res) => {
     const { id } = req.params;

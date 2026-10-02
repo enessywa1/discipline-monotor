@@ -296,7 +296,14 @@ const Tracking = {
     },
 
     deleteEntry: async (type, id) => {
-        if (!confirm('Are you sure you want to remove this record?')) return;
+        const confirmed = await App.confirm({
+            title: 'Remove Record',
+            message: 'Are you sure you want to remove this record?',
+            confirmText: 'Remove',
+            kind: 'danger'
+        });
+
+        if (!confirmed) return;
 
         const endpoint = type === 'watchlist' ? `/api/discipline/watchlist/${id}` : `/api/discipline/improved/${id}`;
         const res = await fetch(endpoint, { method: 'DELETE' });

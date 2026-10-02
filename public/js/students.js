@@ -12,13 +12,23 @@ const Students = {
                         <h2 style="margin: 0; color: var(--primary-dark);">Student Registry</h2>
                         <p style="color: var(--text-secondary); margin: 5px 0 0; font-size: 0.9rem;">Manage and organize student records.</p>
                     </div>
-                    <div class="header-actions" style="display: flex; gap: 15px; align-items: center;">
+                    <div class="header-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                         <div class="search-box">
                             <i class='bx bx-search'></i>
                             <input type="text" id="studentSearch" placeholder="Search students..." oninput="Students.handleSearch(this.value)">
                         </div>
+                        <select id="batchUploadClassSelect" style="padding:10px 12px; border:1px solid #dbe4f0; border-radius:10px; background:#fff; color:#475569; min-width:150px;">
+                            <option value="">Optional class for upload</option>
+                            ${Students.classes.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+                        </select>
                         <button class="btn" style="background:#e0f2f1; color:var(--primary-dark);" onclick="document.getElementById('batchPhotoInput').click()">
                             <i class='bx bx-images'></i> Batch Upload
+                        </button>
+                        <button class="btn" style="background:#fef3c7; color:#92400e;" onclick="Students.showBatchClassAction('promote')">
+                            <i class='bx bx-up-arrow-circle'></i> Promote Batch
+                        </button>
+                        <button class="btn" style="background:#ede9fe; color:#5b21b6;" onclick="Students.showBatchClassAction('reverse')">
+                            <i class='bx bx-down-arrow-circle'></i> Reverse Batch
                         </button>
                         <input type="file" id="batchPhotoInput" multiple accept="image/*" style="display:none;" onchange="Students.handleBatchUpload(event)">
                         <button class="btn-primary" onclick="Students.showForm()">
@@ -265,11 +275,130 @@ const Students = {
         });
     },
 
+    getNextClass: (className) => {
+        const classMap = {
+            'YR8': 'YR9',
+            'YR9': 'YR10',
+            'YR10': 'YR11',
+            'YR11': 'YR12',
+            'YR12': 'YR13',
+            'BTEC Y1': 'BTEC Y2',
+            'BTEC Y2': 'BTEC Y2'
+        };
+        return classMap[className] || className;
+    },
+
+    getPreviousClass: (className) => {
+        const classMap = {
+            'YR9': 'YR8',
+            'YR10': 'YR9',
+            'YR11': 'YR10',
+            'YR12': 'YR11',
+            'YR13': 'YR12',
+            'BTEC Y2': 'BTEC Y1',
+            'BTEC Y1': 'BTEC Y1'
+        };
+        return classMap[className] || className;
+    },
+
+    showBatchClassAction: (direction) => {
+        const isPromote = direction === 'promote';
+        const actionText = isPromote ? 'Promote Batch' : 'Reverse Batch';
+        const titleText = isPromote ? 'Promote all students by one year?' : 'Reverse all students by one year?';
+        const descriptionText = isPromote
+            ? 'This will move each student to the next year/class in the registry.'
+            : 'This will move each student back to the previous year/class in the registry.';
+
+        const modalBody = `
+            <div class="modal-overlay" id="batchClassActionModal" style="display:flex;">
+                <div class="modal-content" style="max-width: 440px; width: min(92vw, 440px); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);">
+                    <div class="modal-header" style="padding: 22px 22px 16px; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                        <h3 style="margin:0; color: var(--primary-dark); font-size: 1.2rem;">${actionText}</h3>
+                        <button type="button" class="modal-close" id="closeBatchClassActionModal" style="font-size: 1.4rem;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 22px; background: #f8fafc;">
+                        <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom: 18px;">
+                            <div style="width:52px; height:52px; border-radius:14px; background: ${isPromote ? 'rgba(34,197,94,0.12)' : 'rgba(168,85,247,0.12)'}; color:${isPromote ? '#15803d' : '#7c3aed'}; display:flex; align-items:center; justify-content:center; font-size:1.7rem; flex-shrink:0;">
+                                <i class='bx ${isPromote ? 'bx-up-arrow-circle' : 'bx-down-arrow-circle'}'></i>
+                            </div>
+                            <div>
+                                <p style="margin:0; font-size: 1.02rem; color: #0f172a; line-height:1.6;">${titleText}</p>
+                                <p style="margin: 8px 0 0; font-size: 0.9rem; color: #475569;">${descriptionText}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                            <button type="button" class="btn" id="cancelBatchClassAction" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmBatchClassAction" style="background:${isPromote ? '#16a34a' : '#7c3aed'}; border-color:${isPromote ? '#16a34a' : '#7c3aed'};">${actionText}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalBody);
+        const overlay = document.getElementById('batchClassActionModal');
+        const closeModal = () => overlay.remove();
+
+        document.getElementById('closeBatchClassActionModal').addEventListener('click', closeModal);
+        document.getElementById('cancelBatchClassAction').addEventListener('click', closeModal);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+
+        document.getElementById('confirmBatchClassAction').addEventListener('click', async () => {
+            const btn = document.getElementById('confirmBatchClassAction');
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Updating...";
+
+            try {
+                const changes = [];
+                for (const student of Students.data) {
+                    const nextClass = isPromote ? Students.getNextClass(student.class) : Students.getPreviousClass(student.class);
+                    if (student.class !== nextClass) {
+                        changes.push(fetch(`/api/students/${student.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...student,
+                                student_class: nextClass,
+                                class: nextClass,
+                                name: student.name,
+                                gender: student.gender || '',
+                                stream: student.stream || '',
+                                parent_phone: student.parent_phone || '',
+                                email: student.email || '',
+                                picture_data: student.picture_data || ''
+                            })
+                        }));
+                    }
+                }
+
+                await Promise.all(changes);
+                closeModal();
+                Students.loadData();
+                alert(isPromote ? 'Batch promotion completed successfully.' : 'Batch reversal completed successfully.');
+            } catch (err) {
+                console.error(err);
+                alert('Unable to update student classes in batch.');
+            }
+        });
+    },
+
     handleBatchUpload: async (e) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        if (!confirm(`Are you sure you want to batch upload ${files.length} photos?\nThis will update existing students or create new ones based on the filename.`)) {
+        const classSelect = document.getElementById('batchUploadClassSelect');
+        const optionalClass = classSelect ? classSelect.value : '';
+
+        const confirmed = await App.confirm({
+            title: 'Batch Upload Photos',
+            message: `Are you sure you want to upload ${files.length} photos? This will update existing students or create new ones based on the filename.${optionalClass ? `\nSelected class: ${optionalClass}` : ''}`,
+            confirmText: 'Upload',
+            kind: 'success'
+        });
+
+        if (!confirmed) {
             e.target.value = '';
             return;
         }
@@ -307,7 +436,7 @@ const Students = {
                 const res = await fetch('/api/students/upload-photo-by-name', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, picture_data: base64Data })
+                    body: JSON.stringify({ name, picture_data: base64Data, class: optionalClass || undefined })
                 });
 
                 const result = await res.json();
@@ -365,19 +494,75 @@ const Students = {
         }
     },
 
-    deleteStudent: async (id) => {
-        if (!confirm('Are you sure you want to delete this student record?')) return;
-        try {
-            const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.success) {
-                Students.loadData();
-            } else {
-                alert('Error deleting student: ' + result.error);
+    deleteStudent: (id) => {
+        const student = Students.data.find(s => s.id === id);
+        const studentName = student ? student.name : 'this student';
+
+        const modalBody = `
+            <div class="modal-overlay" id="deleteStudentModal" style="display:flex;">
+                <div class="modal-content" style="max-width: 440px; width: min(92vw, 440px); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);">
+                    <div class="modal-header" style="padding: 22px 22px 16px; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                        <h3 style="margin:0; color: var(--primary-dark); font-size: 1.2rem;">Delete Student</h3>
+                        <button type="button" class="modal-close" id="closeDeleteStudentModal" style="font-size: 1.4rem;">&times;</button>
+                    </div>
+
+                    <div class="modal-body" style="padding: 22px; background: #f8fafc;">
+                        <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom: 18px;">
+                            <div style="width:52px; height:52px; border-radius:14px; background: rgba(239,68,68,0.12); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;">
+                                <i class='bx bx-trash'></i>
+                            </div>
+                            <div>
+                                <p style="margin:0; font-size: 1.02rem; color: #0f172a; line-height:1.6;">
+                                    Are you sure you want to delete this student record?
+                                </p>
+                                <p style="margin: 8px 0 0; font-size: 0.9rem; color: #475569;">
+                                    This action will permanently remove <strong>${studentName}</strong> from the registry.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                            <button type="button" class="btn" id="cancelDeleteStudent" style="background:#f1f5f9; color:#475569;">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmDeleteStudent" style="background:#dc2626; border-color:#dc2626;">Delete Record</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalBody);
+
+        const overlay = document.getElementById('deleteStudentModal');
+        const closeModal = () => overlay.remove();
+
+        document.getElementById('closeDeleteStudentModal').addEventListener('click', closeModal);
+        document.getElementById('cancelDeleteStudent').addEventListener('click', closeModal);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+
+        document.getElementById('confirmDeleteStudent').addEventListener('click', async () => {
+            const confirmBtn = document.getElementById('confirmDeleteStudent');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Deleting...";
+
+            try {
+                const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    closeModal();
+                    Students.loadData();
+                } else {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Delete Record';
+                    alert('Error deleting student: ' + result.error);
+                }
+            } catch (e) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Delete Record';
+                alert('Connection error');
             }
-        } catch (e) {
-            alert('Connection error');
-        }
+        });
     },
 
     generateID: (id) => {

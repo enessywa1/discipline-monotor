@@ -322,7 +322,15 @@ const Users = {
     },
 
     delete: async (id) => {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+        const confirmed = await App.confirm({
+            title: 'Delete User',
+            message: 'Are you sure you want to delete this user?',
+            confirmText: 'Delete',
+            kind: 'danger'
+        });
+
+        if (!confirmed) return;
+
         try {
             await fetch(`/api/users/${id}`, { method: 'DELETE' });
             Users.load();
