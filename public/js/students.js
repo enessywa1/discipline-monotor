@@ -578,39 +578,50 @@ const Students = {
                         </div>
                         <div id="editorModalBody" style="display: flex; flex-direction: column; align-items: center; padding-bottom: 20px;">
 
-                            <div id="idCardContainer">
-                                <div class="id-header">
-                                    <img src="img/logo.png" alt="Logo" class="id-logo">
-                                        <h3 class="id-title">Student Elite Pass</h3>
+                            <div id="idCardContainer" class="id-card-landscape">
+                                <div class="id-brand-panel">
+                                    <div class="id-logo-wrap">
+                                        <img src="img/logo.png" alt="Logo" class="id-logo">
+                                    </div>
+                                    <div class="id-brand-copy">
+                                        <h3 class="id-title">Student Pass</h3>
                                         <div class="id-subtitle">Excellence in Discipline & Education</div>
+                                    </div>
+                                    <div class="id-status-badge">Official</div>
                                 </div>
 
-                                <div class="id-photo-container">
-                                    <img src="${student.picture_data ? (student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" alt="${student.name}" class="id-photo">
-                                </div>
+                                <div class="id-main-panel">
+                                    <div class="id-photo-container">
+                                        <img src="${student.picture_data ? (student.picture_data.startsWith('http') ? student.picture_data : encodeURI(student.picture_data)) : 'img/default-avatar.png'}" onerror="this.src='img/default-avatar.png'" alt="${student.name}" class="id-photo">
+                                    </div>
 
-                                <div class="id-details">
-                                    <div class="id-name">${student.name}</div>
-                                    <div class="id-class">${student.class} ${student.stream ? '- ' + student.stream : ''}</div>
+                                    <div class="id-details">
+                                        <div class="id-name">${student.name}</div>
+                                        <div class="id-class">${student.class} ${student.stream ? '- ' + student.stream : ''}</div>
 
-                                    <div class="id-info-grid">
-                                        <div class="id-info-row">
-                                            <div class="id-info-label">ID N°</div>
-                                            <div class="id-info-value">ST-${10000 + student.id}</div>
-                                        </div>
-                                        <div class="id-info-row">
-                                            <div class="id-info-label">Gender</div>
-                                            <div class="id-info-value">${student.gender || 'N/A'}</div>
-                                        </div>
-                                        <div class="id-info-row">
-                                            <div class="id-info-label">Contact</div>
-                                            <div class="id-info-value">${student.parent_phone || 'N/A'}</div>
+                                        <div class="id-info-grid">
+                                            <div class="id-info-row">
+                                                <div class="id-info-label">ID Number</div>
+                                                <div class="id-info-value">ST-${10000 + student.id}</div>
+                                            </div>
+                                            <div class="id-info-row">
+                                                <div class="id-info-label">Gender</div>
+                                                <div class="id-info-value">${student.gender || 'N/A'}</div>
+                                            </div>
+                                            <div class="id-info-row">
+                                                <div class="id-info-label">Student Type</div>
+                                                <div class="id-info-value">${student.student_type || 'Regular'} </div>
+                                            </div>
+                                            <div class="id-info-row">
+                                                <div class="id-info-label">Contact</div>
+                                                <div class="id-info-value">${student.parent_phone || 'N/A'}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="id-footer">
-                                    Official Valid Scholar
+                                    Valid Scholar
                                 </div>
                             </div>
 
