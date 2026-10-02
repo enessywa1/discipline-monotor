@@ -582,7 +582,7 @@ const Students = {
                                 <div class="id-card-shell">
                                     <div class="id-card-header">
                                         <h3 class="id-card-title">Student ID Card</h3>
-                                        <div class="id-school">Borcelle<br>University</div>
+                                        <div class="id-school">NU Vision<br>High School</div>
                                     </div>
 
                                     <div class="id-card-body">
@@ -599,8 +599,8 @@ const Students = {
                                             <div class="id-info-label">ID Number</div>
                                             <div class="id-info-value">${10000 + student.id}</div>
 
-                                            <div class="id-info-label">Major</div>
-                                            <div class="id-info-value major">${student.class || 'General Studies'}</div>
+                                            <div class="id-info-label">Class</div>
+                                            <div class="id-info-value major">${student.class || 'Not assigned'}</div>
                                         </div>
 
                                         <div class="id-accent-panel">
