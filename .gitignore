@@ -11,6 +11,7 @@ database/sessions.db
 # Private files
 users and passwords
 *.xlsx
+!public/templates/detention_import_template.xlsx
 .DS_Store
 
 # Logs

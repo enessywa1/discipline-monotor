@@ -58,6 +58,29 @@ const Detentions = {
 
                 <!-- Column 2: Detention List -->
                 <div class="card col-span-2">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+                        <div>
+                            <strong>Import detention records</strong>
+                            <p style="margin: 4px 0 0; color: #64748b; font-size: 0.9rem;">
+                                Upload an Excel workbook (.xlsx, .xls) or Excel XML (.xml), up to 500 records.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a class="btn" href="templates/detention_import_template.xlsx" download
+                                style="background: #e0f2f1; color: var(--primary-dark); text-decoration: none;">
+                                <i class='bx bx-download'></i> Excel Template
+                            </a>
+                            <a class="btn" href="templates/detention_import_template.xml" download
+                                style="background: #f1f5f9; color: #334155; text-decoration: none;">
+                                <i class='bx bx-code-alt'></i> XML Template
+                            </a>
+                            <button class="btn btn-primary" type="button" data-action="choose-import">
+                                <i class='bx bx-upload'></i> Upload Spreadsheet
+                            </button>
+                            <input type="file" id="detentionImportFile" accept=".xlsx,.xls,.xml"
+                                style="display: none;">
+                        </div>
+                    </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                         <div style="display: flex; gap: 20px;">
                             <h3 id="tabCurrent" class="active-tab" style="margin: 0; cursor: pointer; color: var(--primary-color);">Current Detentions</h3>
@@ -113,6 +136,16 @@ const Detentions = {
 
         const searchInput = document.getElementById('detentionSearch');
         if (searchInput) searchInput.oninput = Utils.debounce(() => Detentions.load(), 500);
+
+        const importFile = document.getElementById('detentionImportFile');
+        const chooseImport = container.querySelector('[data-action="choose-import"]');
+        if (chooseImport && importFile) {
+            chooseImport.onclick = () => importFile.click();
+            importFile.onchange = () => {
+                if (importFile.files[0]) Detentions.importSpreadsheet(importFile.files[0]);
+                importFile.value = '';
+            };
+        }
 
         const tabCurrent = document.getElementById('tabCurrent');
         const tabCleared = document.getElementById('tabCleared');
@@ -187,6 +220,97 @@ const Detentions = {
             }
         } catch (e) {
             tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--danger);">Error loading data.</td></tr>`;
+        }
+    },
+
+    importSpreadsheet: async (file) => {
+        if (file.size > 5 * 1024 * 1024) {
+            return alert('Spreadsheet must be 5 MB or smaller.');
+        }
+
+        try {
+            const isXml = file.name.toLowerCase().endsWith('.xml');
+            const contents = isXml ? await file.text() : await file.arrayBuffer();
+            const workbook = XLSX.read(contents, { type: isXml ? 'string' : 'array', cellDates: true });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            if (!firstSheet) return alert('The spreadsheet does not contain a worksheet.');
+
+            const values = XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: true, defval: '' });
+            if (values.length < 2) return alert('The worksheet has a header row but no detention records.');
+
+            const normalizeHeader = (value) => String(value).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const headers = values[0].map(normalizeHeader);
+            const columns = {
+                student_name: ['studentname', 'name'],
+                student_class: ['class', 'studentclass'],
+                offense: ['offense', 'offensecase', 'case'],
+                detention_date: ['detentiondate', 'date'],
+                days: ['days', 'numberofdays'],
+                remarks: ['remarks', 'notes']
+            };
+            const indexes = {};
+            for (const [field, acceptedHeaders] of Object.entries(columns)) {
+                indexes[field] = headers.findIndex((header) => acceptedHeaders.includes(header));
+            }
+            const missingHeaders = Object.entries(columns)
+                .filter(([field]) => indexes[field] < 0 && field !== 'remarks')
+                .map(([field]) => field.replace(/_/g, ' '));
+            if (missingHeaders.length) {
+                return alert(`Missing required columns: ${missingHeaders.join(', ')}. Download the template for the correct column names.`);
+            }
+
+            const dateToIso = (value) => {
+                if (value instanceof Date && !Number.isNaN(value.getTime())) {
+                    return value.toISOString().slice(0, 10);
+                }
+                if (typeof value === 'number') {
+                    const date = XLSX.SSF.parse_date_code(value);
+                    if (date) {
+                        return `${String(date.y).padStart(4, '0')}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+                    }
+                }
+                const text = String(value).trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+                return '';
+            };
+
+            const rows = values.slice(1)
+                .filter((cells) => cells.some((value) => String(value).trim() !== ''))
+                .map((cells) => ({
+                    student_name: String(cells[indexes.student_name] ?? '').trim(),
+                    student_class: String(cells[indexes.student_class] ?? '').trim(),
+                    offense: String(cells[indexes.offense] ?? '').trim(),
+                    detention_date: dateToIso(cells[indexes.detention_date]),
+                    days: Number(cells[indexes.days]),
+                    remarks: indexes.remarks >= 0 ? String(cells[indexes.remarks] ?? '').trim() : ''
+                }));
+
+            if (rows.length === 0) return alert('The worksheet contains no detention records.');
+            if (rows.length > 500) return alert('Import no more than 500 detention records at a time.');
+
+            const invalidRow = rows.findIndex((row) =>
+                !row.student_name || !row.student_class || !row.offense ||
+                !row.detention_date || !Number.isInteger(row.days) || row.days < 1 || row.days > 365
+            );
+            if (invalidRow >= 0) {
+                return alert(`Spreadsheet row ${invalidRow + 2} has missing or invalid values. Check the required columns and use a date in YYYY-MM-DD format.`);
+            }
+
+            const response = await fetch('/api/detentions/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rows })
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                return alert(result.error || 'Unable to import detention records.');
+            }
+
+            alert(`Successfully imported ${result.imported} detention record(s).`);
+            Detentions.load();
+        } catch (error) {
+            console.error('Detention spreadsheet import failed:', error);
+            alert('Could not read the spreadsheet. Use the provided template and try again.');
         }
     },
 
