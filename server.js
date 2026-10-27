@@ -180,6 +180,12 @@ const loginLimiter = rateLimit({
     message: { error: "Too many login attempts, please try again after 15 minutes" }
 });
 
+const registrationLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: { error: "Too many registration attempts, please try again later" }
+});
+
 // Database Connection
 // Already imported at top
 
@@ -226,6 +232,76 @@ app.get('/api/debug', async (req, res) => {
 });
 
 // Auth Route
+app.post('/api/register', registrationLimiter, async (req, res) => {
+    const fullName = typeof req.body.full_name === 'string' ? req.body.full_name.trim() : '';
+    const allocation = typeof req.body.allocation === 'string' ? req.body.allocation.trim() : '';
+    const phoneNumber = typeof req.body.phone_number === 'string' ? req.body.phone_number.trim() : '';
+    const username = typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password.trim() : '';
+    const allowedRoles = {
+        teacher: 'Teacher',
+        patron: 'Patron',
+        matron: 'Matron'
+    };
+    const role = typeof req.body.role === 'string' ? allowedRoles[req.body.role.trim().toLowerCase()] : null;
+
+    if (!fullName || !allocation || !phoneNumber || !username || !password || !role) {
+        return res.status(400).json({ success: false, error: "All fields are required, and the role must be Teacher, Patron, or Matron." });
+    }
+
+    if (fullName.length > 100 || allocation.length > 100 || phoneNumber.length > 30 ||
+        !/^[a-z0-9._-]{3,32}$/.test(username) || Buffer.byteLength(password, 'utf8') < 8 ||
+        Buffer.byteLength(password, 'utf8') > 72) {
+        return res.status(400).json({ success: false, error: "Please check the field lengths and password requirements." });
+    }
+
+    try {
+        const existingUser = await db.get('SELECT id FROM users WHERE LOWER(username) = ?', [username]);
+        if (existingUser) {
+            return res.status(409).json({ success: false, error: "Username already exists. Please choose another." });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+        const insertSql = 'INSERT INTO users (username, password_hash, role, full_name, allocation, phone_number) VALUES (?, ?, ?, ?, ?, ?)';
+        const insertParams = [username, passwordHash, role, fullName, allocation, phoneNumber];
+        let userId;
+        if (db.isPostgres) {
+            const result = await db.run(insertSql, insertParams);
+            userId = result.rows[0].id;
+        } else {
+            userId = await new Promise((resolve, reject) => {
+                db.run(insertSql, insertParams, function (err) {
+                    if (err) return reject(err);
+                    resolve(this.lastID);
+                });
+            });
+        }
+
+        const { supabaseAdmin } = require('./database/supabase');
+        if (supabaseAdmin) {
+            const { data, error } = await supabaseAdmin.auth.admin.createUser({
+                email: `${username}@system.local`,
+                password,
+                email_confirm: true,
+                user_metadata: { username, full_name: fullName, role }
+            });
+            if (error) {
+                console.error("⚠️ Supabase Sync Error (Registration):", error.message);
+            } else if (data.user) {
+                await db.run('UPDATE users SET supabase_id = ? WHERE id = ?', [data.user.id, userId]);
+            }
+        }
+
+        return res.status(201).json({ success: true, username });
+    } catch (err) {
+        if ((err.message && err.message.includes('UNIQUE')) || err.code === '23505') {
+            return res.status(409).json({ success: false, error: "Username already exists. Please choose another." });
+        }
+        console.error("❌ Registration Error:", err);
+        return res.status(500).json({ success: false, error: "Unable to create account right now. Please try again." });
+    }
+});
+
 app.post('/api/login', loginLimiter, async (req, res) => {
     let { username, password } = req.body;
     const { supabaseAuth, supabaseAdmin } = require('./database/supabase');

@@ -193,6 +193,11 @@ const App = {
     },
 
     renderView: (viewName) => {
+        if (viewName === 'students' && !Auth.canAccessStudentRegistry()) {
+            window.location.hash = '#dashboard';
+            viewName = 'dashboard';
+        }
+
         App.cleanup();
         const container = document.getElementById('view-container');
         const title = document.getElementById('pageTitle');
@@ -253,7 +258,7 @@ const App = {
                 Tracking.render(container);
                 break;
             case 'detentions':
-                title.textContent = 'Detention Records';
+                title.textContent = 'Detention';
                 Detentions.render(container);
                 break;
             case 'suspensions':

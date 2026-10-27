@@ -18,7 +18,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .login-wrapper {
@@ -26,6 +26,8 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 24px 16px;
+            box-sizing: border-box;
             /* Premium Teal Gradient */
             background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
             position: relative;
@@ -74,7 +76,10 @@
             border-radius: 16px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 380px;
+            max-width: 440px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            box-sizing: border-box;
             text-align: center;
             position: relative;
             z-index: 10;
@@ -152,6 +157,22 @@
             box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1);
         }
 
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #fff;
+        }
+
+        select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1);
+        }
+
         .btn-login {
             width: 100%;
             padding: 14px;
@@ -170,6 +191,33 @@
             background-color: var(--primary-dark);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 105, 92, 0.3);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            color: var(--primary-dark);
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 105, 92, 0.08);
+        }
+
+        .signup-step-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .signup-step-actions button {
+            flex: 1;
+            margin-top: 10px;
         }
 
         .error-msg {
@@ -228,26 +276,82 @@
                 <p style="color: var(--text-secondary); font-size: 0.9rem;">Sign in to manage records</p>
             </div>
 
-            <div id="errorMsg" class="error-msg"></div>
+            <div id="errorMsg" class="error-msg" role="alert"></div>
+            <div id="successMsg" class="error-msg" role="status"
+                style="display: none; background: #e8f5e9; color: #2e7d32;"></div>
 
             <form id="loginForm">
                 <div class="form-group">
-                    <label>Username</label>
+                    <label for="username">Username</label>
                     <div style="position: relative;">
-                        <input type="text" id="username" placeholder="e.g. admin" required>
+                        <input type="text" id="username" placeholder="e.g. admin" autocomplete="username" required>
                         <i class='bx bx-user' style="position: absolute; right: 12px; top: 14px; color: #999;"></i>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
+                    <label for="password">Password</label>
                     <div style="position: relative;">
-                        <input type="password" id="password" placeholder="••••••••" required>
+                        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
                         <i class='bx bx-lock-alt' style="position: absolute; right: 12px; top: 14px; color: #999;"></i>
                     </div>
                 </div>
 
                 <button type="submit" class="btn-login">Sign In</button>
+            </form>
+
+            <button type="button" class="btn-secondary" id="showSignup">Create an account</button>
+
+            <form id="signupForm" hidden novalidate>
+                <p id="signupStepIndicator" aria-live="polite">Step 1 of 3: Personal data</p>
+                <section data-signup-step="0">
+                    <div class="form-group">
+                        <label for="signupFullName">Full Name</label>
+                        <input type="text" id="signupFullName" name="full_name" autocomplete="name" maxlength="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPhone">Phone Number</label>
+                        <input type="tel" id="signupPhone" name="phone_number" autocomplete="tel" maxlength="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" name="username" autocomplete="username"
+                            minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" required>
+                    </div>
+                </section>
+                <section data-signup-step="1" hidden>
+                    <div class="form-group">
+                        <label for="signupRole">Role</label>
+                        <select id="signupRole" name="role" required>
+                            <option value="" selected disabled>Choose your role</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Patron">Patron</option>
+                            <option value="Matron">Matron</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupAllocation">Allocation (class, department, or dormitory)</label>
+                        <input type="text" id="signupAllocation" name="allocation" maxlength="100" required>
+                    </div>
+                </section>
+                <section data-signup-step="2" hidden>
+                    <div class="form-group">
+                        <label for="signupPassword">Password (at least 8 characters)</label>
+                        <input type="password" id="signupPassword" name="password" autocomplete="new-password"
+                            minlength="8" maxlength="72" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPasswordConfirm">Confirm Password</label>
+                        <input type="password" id="signupPasswordConfirm" name="password_confirm"
+                            autocomplete="new-password" minlength="8" maxlength="72" required>
+                    </div>
+                </section>
+                <div class="signup-step-actions">
+                    <button type="button" class="btn-secondary" id="signupPrevious" hidden>Previous</button>
+                    <button type="button" class="btn-login" id="signupNext">Next</button>
+                    <button type="submit" class="btn-login" id="signupSubmit" hidden>Create Account</button>
+                </div>
+                <button type="button" class="btn-secondary" id="showLogin">Back to sign in</button>
             </form>
 
             <div class="footer">
@@ -258,12 +362,138 @@
 
     <script defer src="js/pwa.js"></script>
     <script defer>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const showSignup = document.getElementById('showSignup');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const signupSteps = [...signupForm.querySelectorAll('[data-signup-step]')];
+        const signupStepIndicator = document.getElementById('signupStepIndicator');
+        const signupPrevious = document.getElementById('signupPrevious');
+        const signupNext = document.getElementById('signupNext');
+        const signupSubmit = document.getElementById('signupSubmit');
+        let currentSignupStep = 0;
+
+        function setSignupStep(step) {
+            currentSignupStep = step;
+            signupSteps.forEach((section, index) => {
+                section.hidden = index !== step;
+            });
+            signupStepIndicator.textContent = `Step ${step + 1} of 3: ${
+                ['Personal data', 'Role and allocation', 'Passwords'][step]
+            }`;
+            signupPrevious.hidden = step === 0;
+            signupNext.hidden = step === signupSteps.length - 1;
+            signupSubmit.hidden = step !== signupSteps.length - 1;
+            errorMsg.style.display = 'none';
+        }
+
+        function validateSignupStep(step) {
+            const fields = signupSteps[step].querySelectorAll('input, select');
+            for (const field of fields) {
+                if (!field.reportValidity()) return false;
+            }
+            return true;
+        }
+
+        function showMessage(element, message) {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        showSignup.addEventListener('click', () => {
+            loginForm.hidden = true;
+            showSignup.hidden = true;
+            signupForm.hidden = false;
+            setSignupStep(0);
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        });
+
+        signupNext.addEventListener('click', () => {
+            if (validateSignupStep(currentSignupStep)) {
+                setSignupStep(currentSignupStep + 1);
+            }
+        });
+
+        signupPrevious.addEventListener('click', () => {
+            setSignupStep(currentSignupStep - 1);
+        });
+
+        document.getElementById('showLogin').addEventListener('click', () => {
+            signupForm.hidden = true;
+            loginForm.hidden = false;
+            showSignup.hidden = false;
+            signupForm.reset();
+            setSignupStep(0);
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            const form = e.currentTarget;
+            for (let step = 0; step < signupSteps.length; step++) {
+                setSignupStep(step);
+                if (!validateSignupStep(step)) {
+                    return;
+                }
+            }
+
+            const password = form.elements.password.value;
+            if (password !== form.elements.password_confirm.value) {
+                setSignupStep(2);
+                showMessage(errorMsg, 'Passwords do not match.');
+                return;
+            }
+
+            const btn = signupSubmit;
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: form.elements.full_name.value.trim(),
+                        role: form.elements.role.value,
+                        allocation: form.elements.allocation.value.trim(),
+                        phone_number: form.elements.phone_number.value.trim(),
+                        username: form.elements.username.value.trim(),
+                        password
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || data.error || 'Unable to create account.');
+                }
+
+                signupForm.reset();
+                setSignupStep(0);
+                loginForm.elements.username.value = data.username;
+                showMessage(successMsg, 'Account created. You can now sign in with your new username and password.');
+                signupForm.hidden = true;
+                loginForm.hidden = false;
+                showSignup.hidden = false;
+            } catch (err) {
+                showMessage(errorMsg, err.message || 'Connection error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
-            const errorMsg = document.getElementById('errorMsg');
             const btn = e.target.querySelector('button');
 
             errorMsg.style.display = 'none';

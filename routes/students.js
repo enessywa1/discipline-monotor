@@ -2,6 +2,25 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 
+const registryRoles = new Set([
+    'developer', 'director', 'principal', 'associate principal', 'dean of students',
+    'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance',
+    'patron', 'matron', 'head patron', 'head matron', 'pastor'
+]);
+
+router.use((req, res, next) => {
+    const role = typeof req.session.user?.role === 'string'
+        ? req.session.user.role.trim().toLowerCase()
+        : '';
+    if (!registryRoles.has(role)) {
+        return res.status(req.session.user ? 403 : 401).json({
+            success: false,
+            error: 'Student registry access is restricted to administrators and patrons/matrons.'
+        });
+    }
+    next();
+});
+
 // GET /api/students - Fetch all students
 router.get('/', (req, res) => {
     db.all(`SELECT id, name, class, stream, gender, parent_phone, email, picture_data FROM students ORDER BY name ASC`, [], (err, rows) => {

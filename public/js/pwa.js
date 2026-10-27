@@ -93,9 +93,7 @@ const PWA = {
     
     safeFetch: async (url, options = {}) => {
         try {
-            const response = await window.originalFetch(url, options);
-            if (!response.ok && response.status !== 401) throw new Error('API Error');
-            return response;
+            return await window.originalFetch(url, options);
         } catch (error) {
             if (!PWA.isOnline || error.message.includes('Failed to fetch')) {
                 await PWA.queueRequest(url, options);

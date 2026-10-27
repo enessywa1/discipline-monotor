@@ -10,6 +10,14 @@ const Auth = {
         }
     },
 
+    canAccessStudentRegistry: () => {
+        const user = Auth.getUser();
+        const role = (user?.role || '').trim().toLowerCase();
+        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
+        const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
+        return adminRoles.includes(role) || patronMatronRoles.includes(role);
+    },
+
     check: () => {
         const user = Auth.getUser();
         if (!user) {

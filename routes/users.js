@@ -5,8 +5,23 @@ const bcrypt = require('bcryptjs');
 
 const db = require('../database/db');
 
+const adminRoles = [
+    'developer', 'director', 'principal', 'associate principal', 'dean of students',
+    'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'
+];
+
+const requireAdmin = (req, res, next) => {
+    const role = req.session.user && typeof req.session.user.role === 'string'
+        ? req.session.user.role.trim().toLowerCase()
+        : '';
+    if (!adminRoles.includes(role)) {
+        return res.status(req.session.user ? 403 : 401).json({ error: 'Administrator access required' });
+    }
+    next();
+};
+
 // GET /api/users - List users
-router.get('/', (req, res) => {
+router.get('/', requireAdmin, (req, res) => {
     db.all(`SELECT id, username, role, full_name, allocation, phone_number, created_at FROM users`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, users: rows });
@@ -16,7 +31,7 @@ router.get('/', (req, res) => {
 const { supabaseAdmin } = require('../database/supabase');
 
 // POST /api/users - Create new user (Admin only)
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
     const { username, password, role, full_name, allocation, phone_number, email } = req.body;
     const createdBy = req.session.user ? req.session.user.id : null;
 
@@ -61,7 +76,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/users/:id - Update user
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { username, password, role, full_name, allocation, phone_number, email } = req.body;
 
@@ -113,7 +128,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/users/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
 
     // Get supabase_id first
@@ -133,7 +148,7 @@ router.delete('/:id', async (req, res) => {
     });
 });
 
-router.get('/log/activity', (req, res) => {
+router.get('/log/activity', requireAdmin, (req, res) => {
     // Standardize query to work with both SQLite and Postgres
     const sql = `
         SELECT full_name, role FROM users 
