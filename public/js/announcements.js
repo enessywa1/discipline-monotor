@@ -29,8 +29,9 @@ const Announcements = {
                         <div class="control-row">
                             <div style="display: flex; gap: 12px;">
                                 <select name="visibility" class="premium-select">
+                                    <option value="Patrons/Matrons">👥 Patrons/Matrons</option>
+                                    <option value="Teachers">👩‍🏫 Teachers</option>
                                     <option value="All">📢 Everyone</option>
-                                    <option value="Staff">👥 Staff Only</option>
                                 </select>
                                 <select name="duration" class="premium-select">
                                     <option value="Permanent">♾️ Permanent</option>
@@ -92,7 +93,7 @@ const Announcements = {
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <span class="badge-outline ${a.visibility === 'Staff' ? 'staff' : 'all'}">${a.visibility}</span>
+                                <span class="badge-outline ${a.visibility === 'Staff' ? 'staff' : a.visibility === 'Teachers' ? 'teacher' : a.visibility === 'Patrons/Matrons' ? 'patron-matron' : 'all'}">${a.visibility === 'All' ? 'Everyone' : a.visibility}</span>
                                 ${canDelete ? `
                                     <button data-action="delete" data-id="${a.id}" class="delete-action">
                                         <i class='bx bx-trash'></i>

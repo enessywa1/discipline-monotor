@@ -30,17 +30,21 @@ const Dashboard = {
                 </a>
             </div>
 
-            <section class="glass-panel admin-only hidden" data-role="admin" style="margin-bottom: 25px;">
+            <section class="glass-panel maintenance-only hidden" data-role="maintenance" style="margin-bottom: 25px; border-top: 4px solid var(--primary-color);">
                 <div class="panel-header">
-                    <h4 class="panel-title"><i class='bx bx-shield-quarter'></i> Admin Control Panel</h4>
+                    <div>
+                        <h4 class="panel-title"><i class='bx bx-shield-quarter'></i> Maintenance Admin Panel</h4>
+                        <p style="margin: 4px 0 0; color: var(--text-secondary);">System administration and staff-wide controls</p>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-                    <a href="#users" class="btn btn-primary">Manage Staff</a>
-                    <a href="#announcements" class="btn">Announcements</a>
-                    <a href="#reports" class="btn">Reports</a>
+                <div class="layout-grid layout-grid-2" style="gap: 12px; margin: 18px 0 22px;">
+                    <a href="#users" class="btn btn-primary"><i class='bx bx-user-plus'></i> Manage Staff</a>
+                    <a href="#announcements" class="btn"><i class='bx bx-megaphone'></i> Manage Announcements</a>
+                    <a href="#reports" class="btn"><i class='bx bx-line-chart'></i> Weekly Reports</a>
+                    <a href="#general_reports" class="btn"><i class='bx bx-bar-chart-alt-2'></i> General Reports</a>
                 </div>
                 <form id="popupNotificationForm">
-                    <h4 style="margin-bottom: 12px;">Send a pop-up notification to all users</h4>
+                    <h4 style="margin-bottom: 12px;"><i class='bx bx-bell'></i> Send a pop-up notification to all users</h4>
                     <div class="form-group">
                         <label for="popupNotificationTitle">Title</label>
                         <input id="popupNotificationTitle" name="title" type="text" maxlength="120" required
@@ -105,7 +109,7 @@ const Dashboard = {
         // Load Data concurrently
         Dashboard.loadAnnouncements();
         Dashboard.loadStats();
-        if (typeof Notifications !== 'undefined') {
+        if (Auth.hasMaintenanceAccess(user) && typeof Notifications !== 'undefined') {
             Notifications.bindBroadcastForm(container);
         }
 

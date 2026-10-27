@@ -3,22 +3,30 @@ const router = express.Router();
 
 const db = require('../database/db');
 const PushService = require('../services/push');
+const { isVisibleToRole, getPushRoleFilter } = require('../utils/announcement-audience');
 
 // GET /api/announcements
 router.get('/', (req, res) => {
-    // Fetch non-expired announcements
     db.all(`SELECT a.*, u.full_name as author FROM announcements a 
             JOIN users u ON a.posted_by = u.id 
             WHERE (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP)
             ORDER BY a.created_at DESC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, announcements: rows });
+        const role = req.session.user?.role;
+        res.json({
+            success: true,
+            announcements: rows.filter(announcement => isVisibleToRole(announcement.visibility, role))
+        });
     });
 });
 
 // POST /api/announcements
 router.post('/', (req, res) => {
     const { title, content, visibility, posted_by, duration } = req.body;
+    const audience = visibility || 'All';
+    if (!['All', 'Patrons/Matrons', 'Teachers'].includes(audience)) {
+        return res.status(400).json({ success: false, error: 'Choose a valid announcement audience.' });
+    }
     let expiresAt = null;
 
     if (duration && duration !== 'Permanent') {
@@ -31,16 +39,15 @@ router.post('/', (req, res) => {
     }
 
     db.run(`INSERT INTO announcements (title, content, visibility, posted_by, expires_at) VALUES (?, ?, ?, ?, ?)`,
-        [title, content, visibility || 'All', posted_by, expiresAt],
+        [title, content, audience, posted_by, expiresAt],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             
-            // Trigger Push Notification for everyone
             PushService.sendToAll({
                 title: 'New Announcement: ' + title,
                 body: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
                 url: '/dashboard.html#announcements'
-            });
+            }, getPushRoleFilter(audience));
 
             if (req.io) req.io.emit('dashboard_update', { type: 'announcement', action: 'create' });
             res.json({ success: true, id: this.lastID });
@@ -52,6 +59,9 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
     const { title, content, visibility } = req.body;
     const { id } = req.params;
+    if (!['All', 'Staff', 'Patrons/Matrons', 'Teachers'].includes(visibility)) {
+        return res.status(400).json({ success: false, error: 'Choose a valid announcement audience.' });
+    }
 
     db.run(
         `UPDATE announcements SET title = ?, content = ?, visibility = ? WHERE id = ?`,

@@ -16,6 +16,9 @@ const Auth = {
             'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'].includes(role);
     },
 
+    hasMaintenanceAccess: (user = Auth.getUser()) =>
+        (user?.role || '').trim().toLowerCase() === 'maintenance',
+
     canAccessStudentRegistry: () => {
         const user = Auth.getUser();
         const role = (user?.role || '').trim().toLowerCase();
@@ -55,6 +58,7 @@ const Auth = {
             if (roles.includes('matron') && userRole === 'matron') show = true;
             if (roles.includes('teacher') && isTeacher) show = true;
             if (roles.includes('patron-matron') && isPatronMatron) show = true;
+            if (roles.includes('maintenance') && Auth.hasMaintenanceAccess(user)) show = true;
             if (roles.includes('all')) show = true;
 
             if (show) el.classList.remove('hidden');

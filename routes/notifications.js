@@ -3,48 +3,30 @@ const router = express.Router();
 
 const db = require('../database/db');
 const PushService = require('../services/push');
+const { isVisibleToRole } = require('../utils/announcement-audience');
 
-const adminRoles = new Set([
-    'developer', 'director', 'principal', 'associate principal', 'dean of students',
-    'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'
-]);
-
-const requireAdmin = (req, res, next) => {
-    const role = (req.session.user?.role || '').trim().toLowerCase();
-    if (!adminRoles.has(role)) {
-        return res.status(req.session.user ? 403 : 401).json({ success: false, error: 'Administrator access required.' });
+const requireMaintenance = (req, res, next) => {
+    if ((req.session.user?.role || '').trim().toLowerCase() !== 'maintenance') {
+        return res.status(req.session.user ? 403 : 401).json({ success: false, error: 'Maintenance access required.' });
     }
     next();
 };
 
 // GET /api/notifications?user_id=X&role=Y
 router.get('/', (req, res) => {
-    let { user_id, role } = req.query;
     const sessionUser = req.session.user;
-
-    // Helper for Admin Check
-    const isAdmin = (user) => {
-        if (!user || !user.role) return false;
-        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
-        return adminRoles.includes(user.role.toLowerCase());
-    };
-
-    // Security: Non-admins can only see THEIR OWN notifications
-    if (!isAdmin(sessionUser)) {
-        if (sessionUser) {
-            user_id = sessionUser.id;
-        } else {
-            return res.json({ success: false, error: "Session expired", auth_error: true });
-        }
+    if (!sessionUser || !sessionUser.id) {
+        return res.status(401).json({ success: false, error: 'Session expired', auth_error: true });
     }
+    const userId = sessionUser.id;
 
     const notifications = [];
 
     db.serialize(() => {
         // 1. New Tasks Assigned to User (Pending)
         db.all(`SELECT id, title, created_at, 'task' as type FROM tasks 
-                WHERE assigned_to = ? AND status = 'Pending' 
-                ORDER BY created_at DESC`, [user_id], (err, tasks) => {
+                WHERE assigned_to = ? AND status = 'Pending'
+                ORDER BY created_at DESC`, [userId], (err, tasks) => {
 
             if (err) {
                 console.error('Error fetching task notifications:', err.message);
@@ -64,20 +46,20 @@ router.get('/', (req, res) => {
             // Handle cross-database date filtering for announcements
             let annSql;
             if (db.isPostgres) {
-                annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
+                annSql = `SELECT id, title, created_at, visibility, 'announcement' as type FROM announcements
                           WHERE posted_by != ? AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'`;
             } else {
-                annSql = `SELECT id, title, created_at, 'announcement' as type FROM announcements 
+                annSql = `SELECT id, title, created_at, visibility, 'announcement' as type FROM announcements
                           WHERE posted_by != ? AND created_at >= datetime('now', '-7 days')`;
             }
 
-            db.all(annSql, [user_id], (err, anns) => {
+            db.all(annSql, [userId], (err, anns) => {
                 if (err) {
                     console.error('Error fetching announcement notifications:', err.message);
                     return res.status(500).json({ success: false, error: 'Unable to load notifications.' });
                 }
                 if (anns) {
-                    anns.forEach(a => notifications.push({
+                    anns.filter(a => isVisibleToRole(a.visibility, sessionUser.role)).forEach(a => notifications.push({
                         message: `New Announcement: ${a.title}`,
                         date: a.created_at,
                         link: '#announcements',
@@ -91,12 +73,14 @@ router.get('/', (req, res) => {
                         WHERE user_id = ? AND is_read = FALSE 
                         ORDER BY created_at DESC`;
 
-                db.all(persistentSql, [user_id], (err, persistents) => {
+                db.all(persistentSql, [userId], (err, persistents) => {
 
-                    if (err) console.error("Error fetching notifications:", err);
-                    // console.log("Fetched notifications for user", user_id, ":", persistents);
+                    if (err) {
+                        console.error("Error fetching notifications:", err.message);
+                        return res.status(500).json({ success: false, error: 'Unable to load notifications.' });
+                    }
 
-                    if (!err && persistents) {
+                    if (persistents) {
                         persistents.forEach(p => notifications.push({
                             id: p.id,
                             title: p.title,
@@ -156,7 +140,7 @@ router.put('/read-all', (req, res) => {
     );
 });
 
-router.post('/broadcast', requireAdmin, (req, res) => {
+router.post('/broadcast', requireMaintenance, (req, res) => {
     const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
     const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
     const link = typeof req.body.link === 'string' && /^#[a-zA-Z0-9_-]+$/.test(req.body.link)
@@ -185,7 +169,7 @@ router.post('/broadcast', requireAdmin, (req, res) => {
 });
 
 // POST /api/notifications
-router.post('/', requireAdmin, (req, res) => {
+router.post('/', requireMaintenance, (req, res) => {
     const { user_id, title, message, type, link } = req.body;
     db.run(`INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)`,
         [user_id, title || 'Notification', message, type || 'info', link],
