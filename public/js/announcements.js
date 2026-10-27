@@ -1,8 +1,7 @@
 const Announcements = {
     render: async (container) => {
         const user = Auth.getUser();
-        const adminRoles = ['Developer', 'Director', 'Principal', 'Associate Principal', 'Dean of Students', 'Discipline Master', 'Assistant Discipline Master', 'QA', 'CIE', 'Head Patron', 'Head Matron'];
-        const canPost = adminRoles.includes(user.role);
+        const canPost = Auth.isAdmin(user) || ['head patron', 'head matron'].includes((user.role || '').trim().toLowerCase());
 
         container.innerHTML = `
             <div class="announcements-container">
@@ -80,8 +79,7 @@ const Announcements = {
 
             if (data.success && data.announcements.length) {
                 const user = Auth.getUser();
-                const adminRoles = ['Developer', 'Director', 'Principal', 'Associate Principal', 'Dean of Students', 'Discipline Master', 'Assistant Discipline Master', 'QA', 'CIE', 'Head Patron', 'Head Matron'];
-                const canDelete = adminRoles.includes(user.role);
+                const canDelete = Auth.isAdmin(user) || ['head patron', 'head matron'].includes((user.role || '').trim().toLowerCase());
 
                 feed.innerHTML = data.announcements.map((a, i) => `
                     <div class="announcement-card-full fade-in" style="animation-delay: ${i * 0.1}s">

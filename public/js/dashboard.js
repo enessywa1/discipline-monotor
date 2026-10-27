@@ -30,6 +30,34 @@ const Dashboard = {
                 </a>
             </div>
 
+            <section class="glass-panel admin-only hidden" data-role="admin" style="margin-bottom: 25px;">
+                <div class="panel-header">
+                    <h4 class="panel-title"><i class='bx bx-shield-quarter'></i> Admin Control Panel</h4>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <a href="#users" class="btn btn-primary">Manage Staff</a>
+                    <a href="#announcements" class="btn">Announcements</a>
+                    <a href="#reports" class="btn">Reports</a>
+                </div>
+                <form id="popupNotificationForm">
+                    <h4 style="margin-bottom: 12px;">Send a pop-up notification to all users</h4>
+                    <div class="form-group">
+                        <label for="popupNotificationTitle">Title</label>
+                        <input id="popupNotificationTitle" name="title" type="text" maxlength="120" required
+                            placeholder="Notification title">
+                    </div>
+                    <div class="form-group">
+                        <label for="popupNotificationMessage">Message</label>
+                        <textarea id="popupNotificationMessage" name="message" rows="3" maxlength="1000" required
+                            placeholder="Write the notification message"></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                        <i class='bx bx-bell'></i> Send Pop-up
+                    </button>
+                    <span id="popupNotificationStatus" role="status" style="margin-left: 10px;"></span>
+                </form>
+            </section>
+
             <!-- Announcements Panel (Full Width at Top) -->
             <div class="glass-panel" style="margin-bottom: 25px;">
                 <div class="panel-header">
@@ -77,6 +105,9 @@ const Dashboard = {
         // Load Data concurrently
         Dashboard.loadAnnouncements();
         Dashboard.loadStats();
+        if (typeof Notifications !== 'undefined') {
+            Notifications.bindBroadcastForm(container);
+        }
 
         // Only load active staff if the user has access and it's visible.
         // Delayed slightly so that Auth.check() has a chance to remove .hidden class first.

@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../database/db');
+const PushService = require('../services/push');
+
+const adminRoles = new Set([
+    'developer', 'director', 'principal', 'associate principal', 'dean of students',
+    'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'
+]);
+
+const requireAdmin = (req, res, next) => {
+    const role = (req.session.user?.role || '').trim().toLowerCase();
+    if (!adminRoles.has(role)) {
+        return res.status(req.session.user ? 403 : 401).json({ success: false, error: 'Administrator access required.' });
+    }
+    next();
+};
 
 // GET /api/notifications?user_id=X&role=Y
 router.get('/', (req, res) => {
@@ -32,7 +46,11 @@ router.get('/', (req, res) => {
                 WHERE assigned_to = ? AND status = 'Pending' 
                 ORDER BY created_at DESC`, [user_id], (err, tasks) => {
 
-            if (!err && tasks) {
+            if (err) {
+                console.error('Error fetching task notifications:', err.message);
+                return res.status(500).json({ success: false, error: 'Unable to load notifications.' });
+            }
+            if (tasks) {
                 tasks.forEach(t => notifications.push({
                     message: `New Task Assigned: ${t.title}`,
                     date: t.created_at,
@@ -54,7 +72,11 @@ router.get('/', (req, res) => {
             }
 
             db.all(annSql, [user_id], (err, anns) => {
-                if (!err && anns) {
+                if (err) {
+                    console.error('Error fetching announcement notifications:', err.message);
+                    return res.status(500).json({ success: false, error: 'Unable to load notifications.' });
+                }
+                if (anns) {
                     anns.forEach(a => notifications.push({
                         message: `New Announcement: ${a.title}`,
                         date: a.created_at,
@@ -99,14 +121,71 @@ router.get('/', (req, res) => {
 // PUT /api/notifications/read/:id
 router.put('/read/:id', (req, res) => {
     const { id } = req.params;
-    db.run('UPDATE notifications SET is_read = TRUE WHERE id = ?', [id], function (err) {
+    const user = req.session.user;
+    if (!user || !user.id) return res.status(401).json({ success: false, error: 'Session expired' });
+    db.run('UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?', [id, user.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
 });
 
+// PUT /api/notifications/read-all
+router.put('/read-all', (req, res) => {
+    const user = req.session.user;
+    if (!user || !user.id) {
+        return res.status(401).json({ success: false, error: 'Session expired' });
+    }
+
+    const ids = req.body && req.body.ids;
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > 500 ||
+        ids.some((id) => !Number.isInteger(Number(id)) || Number(id) <= 0)) {
+        return res.status(400).json({ success: false, error: 'Valid notification IDs are required.' });
+    }
+
+    const placeholders = ids.map(() => '?').join(', ');
+    db.run(
+        `UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND id IN (${placeholders})`,
+        [user.id, ...ids.map(Number)],
+        (err) => {
+            if (err) {
+                console.error('Error marking notifications as read:', err.message);
+                return res.status(500).json({ success: false, error: 'Unable to clear notifications.' });
+            }
+            return res.json({ success: true });
+        }
+    );
+});
+
+router.post('/broadcast', requireAdmin, (req, res) => {
+    const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+    const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
+    const link = typeof req.body.link === 'string' && /^#[a-zA-Z0-9_-]+$/.test(req.body.link)
+        ? req.body.link
+        : '#dashboard';
+
+    if (!title || !message || title.length > 120 || message.length > 1000) {
+        return res.status(400).json({ success: false, error: 'A title and message are required (maximum 120 and 1000 characters).' });
+    }
+
+    db.run(
+        `INSERT INTO notifications (user_id, title, message, type, link)
+         SELECT id, ?, ?, 'broadcast', ? FROM users WHERE id != ?`,
+        [title, message, link, req.session.user.id],
+        function (err) {
+            if (err) {
+                console.error('Notification broadcast database error:', err.message);
+                return res.status(500).json({ success: false, error: 'Could not send the notification.' });
+            }
+
+            PushService.sendToAll({ title, body: message, url: `/dashboard.html${link}` });
+            if (req.io) req.io.emit('dashboard_update', { type: 'notification', action: 'create' });
+            return res.json({ success: true, recipients: this.changes || 0 });
+        }
+    );
+});
+
 // POST /api/notifications
-router.post('/', (req, res) => {
+router.post('/', requireAdmin, (req, res) => {
     const { user_id, title, message, type, link } = req.body;
     db.run(`INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)`,
         [user_id, title || 'Notification', message, type || 'info', link],

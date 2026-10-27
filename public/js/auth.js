@@ -10,12 +10,17 @@ const Auth = {
         }
     },
 
+    isAdmin: (user = Auth.getUser()) => {
+        const role = (user?.role || '').trim().toLowerCase();
+        return ['developer', 'director', 'principal', 'associate principal', 'dean of students',
+            'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'].includes(role);
+    },
+
     canAccessStudentRegistry: () => {
         const user = Auth.getUser();
         const role = (user?.role || '').trim().toLowerCase();
-        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
         const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
-        return adminRoles.includes(role) || patronMatronRoles.includes(role);
+        return Auth.isAdmin(user) || patronMatronRoles.includes(role);
     },
 
     check: () => {
@@ -34,11 +39,10 @@ const Auth = {
         // Role Based Visibility Logic (Case-Insensitive)
         const userRole = (user.role || '').trim().toLowerCase();
 
-        const adminRoles = ['developer', 'director', 'principal', 'associate principal', 'dean of students', 'discipline master', 'assistant discipline master', 'qa', 'cie', 'maintenance'];
         const patronMatronRoles = ['patron', 'matron', 'head patron', 'head matron', 'pastor'];
         const teacherRoles = ['teacher'];
 
-        const isAdmin = adminRoles.includes(userRole);
+        const isAdmin = Auth.isAdmin(user);
         const isPatronMatron = patronMatronRoles.includes(userRole);
         const isTeacher = teacherRoles.includes(userRole);
 
